@@ -15,7 +15,6 @@ import {
   resolveMaxPlies,
   type GameResult,
 } from "../src/runner";
-import { standingsMarkdown } from "../src/standings";
 import type { Agent, Move } from "../src/types";
 
 function sameMove(a: Move, b: Move): boolean {
@@ -247,10 +246,10 @@ test("packaged bin wrapper still runs the CLI after the entry-point guard", () =
   const out = execFileSync("node", ["bin/laplacebench.js", "standings"], {
     encoding: "utf8",
   });
-  assert.match(out, /Community standings/);
+  assert.match(out, /Community matchups/);
 });
 
-test("summary and standings report draw rates separately by cause", async () => {
+test("summary reports draw rates separately by cause", async () => {
   const runDir = fs.mkdtempSync(path.join(os.tmpdir(), "laplace-drawstats-"));
   const games: GameResult[] = [
     await playGame({
@@ -283,11 +282,6 @@ test("summary and standings report draw rates separately by cause", async () => 
   assert.equal(shuttle.draw_rate, 1);
   const rand = summary.agents["random"];
   assert.equal(rand.draw_reasons.horizon_draw, 2);
-
-  const md = standingsMarkdown([runDir]);
-  assert.match(md, /D:horizon \| D:repetition/);
-  const shuttleRow = md.split("\n").find((l) => l.includes("shuttle-test"));
-  assert.ok(shuttleRow);
-  // G W D L center elim D:horizon D:repetition
-  assert.match(shuttleRow, /\| 2 \| 0 \| 2 \| 0 \| 0 \| 0 \| 0 \| 2 \|/);
+  // The matchup side of draw-cause reporting lives in matchups.test.ts: these
+  // baseline agents never reach the public list, so there is no row here.
 });

@@ -1,5 +1,5 @@
 ---
-status: draft
+status: approved
 direction: direction-community-lane-v2
 owner: bench
 risk_tier: heavy

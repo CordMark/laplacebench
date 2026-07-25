@@ -394,24 +394,24 @@ async function main(): Promise<void> {
     });
     console.log(JSON.stringify(summary, null, 2));
   } else if (cmd === "standings") {
-    const { standingsJson, standingsMarkdown } = require("./standings") as typeof import("./standings");
+    const { matchupsJson, matchupsMarkdown } = require("./standings") as typeof import("./standings");
     const dirs = positionals(rest).map((d) => path.resolve(d));
-    const md = standingsMarkdown(dirs);
+    const md = matchupsMarkdown(dirs);
     let printed = false;
     if (args["out"]) {
       fs.writeFileSync(path.resolve(String(args["out"])), md);
-      console.log(`standings written: ${args["out"]}`);
+      console.log(`matchups written: ${args["out"]}`);
       printed = true;
     }
     if (args["json-out"]) {
-      fs.writeFileSync(path.resolve(String(args["json-out"])), standingsJson(dirs));
-      console.log(`standings json written: ${args["json-out"]}`);
+      fs.writeFileSync(path.resolve(String(args["json-out"])), matchupsJson(dirs));
+      console.log(`matchups json written: ${args["json-out"]}`);
       printed = true;
     }
     if (!printed) console.log(md);
   } else {
     console.log(
-      "usage:\n  laplacebench play                                 (interactive match wizard — pick providers, models, effort)\n  laplacebench arena --team-a <spec> --team-b <spec> [--games N] [--swap] [--seed N] [--max-plies N] [--output-token-budget N] [--turn-timeout-ms N]\n  laplacebench summarize <runDir>\n  laplacebench regret <runDir> [--oracle product-cpu:cpu-v4:level_5]  (offline per-move regret vs product oracle)\n  laplacebench export-web <runDir> [--out <dir>]   (verify + export replay JSON)\n  laplacebench verify <runDir...>                  (deterministic replay verification)\n  laplacebench standings <runDir...> [--out <md>] [--json-out <json>]  (aggregate standings table + public JSON)\n\nmatch resources:\n  --output-token-budget N  per team/game, in-game output tokens; default 250000 for LLM matches (canonical envelope), none for baseline-only\n  --turn-timeout-ms N      shared across both attempts in a turn; default 1200000 for LLM matches (backstop), 300000 otherwise\n  --max-plies N            default 100 (canonical cap for laplace-8x8-v1 matches)\n\nproduct CPU (arena + regret):\n  --product-repo <path>    product checkout (or env LAPLACE_PRODUCT_REPO)\n  --product-commit <sha>   required commit pin (or env LAPLACE_PRODUCT_COMMIT)\n\n" +
+      "usage:\n  laplacebench play                                 (interactive match wizard — pick providers, models, effort)\n  laplacebench arena --team-a <spec> --team-b <spec> [--games N] [--swap] [--seed N] [--max-plies N] [--output-token-budget N] [--turn-timeout-ms N]\n  laplacebench summarize <runDir>\n  laplacebench regret <runDir> [--oracle product-cpu:cpu-v4:level_5]  (offline per-move regret vs product oracle)\n  laplacebench export-web <runDir> [--out <dir>]   (verify + export replay JSON)\n  laplacebench verify <runDir...>                  (deterministic replay verification)\n  laplacebench standings <runDir...> [--out <md>] [--json-out <json>]  (matchup records + public JSON; CI regenerates these after merge)\n\nmatch resources:\n  --output-token-budget N  per team/game, in-game output tokens; default 250000 for LLM matches (canonical envelope), none for baseline-only\n  --turn-timeout-ms N      shared across both attempts in a turn; default 1200000 for LLM matches (backstop), 300000 otherwise\n  --max-plies N            default 100 (canonical cap for laplace-8x8-v1 matches)\n\nproduct CPU (arena + regret):\n  --product-repo <path>    product checkout (or env LAPLACE_PRODUCT_REPO)\n  --product-commit <sha>   required commit pin (or env LAPLACE_PRODUCT_COMMIT)\n\n" +
         usageAgentSpecsLine() +
         "\n  (claude-cli/codex-cli run under your Claude/ChatGPT subscription — no API key)"
     );

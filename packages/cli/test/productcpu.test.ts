@@ -6,7 +6,7 @@ import test from "node:test";
 import { randomAgent } from "../src/agents/random";
 import { summarize } from "../src/metrics";
 import { playGame } from "../src/runner";
-import { standingsMarkdown } from "../src/standings";
+import { matchupsMarkdown } from "../src/standings";
 import type { Agent } from "../src/types";
 
 // ---------------------------------------------------------------------------
@@ -66,7 +66,7 @@ test("colon-containing agent names stay verbatim in run data, summary, standings
   const summary = summarize(runDir) as { agents: Record<string, object> };
   assert.ok(summary.agents["product-cpu:cpu-v4:level_3"]);
 
-  const md = standingsMarkdown([runDir]);
+  const md = matchupsMarkdown([runDir]);
   assert.match(md, /`product-cpu:cpu-v4:level_3`/);
 });
 
@@ -161,6 +161,6 @@ gated("real arena game: names and provenance are consistent end to end", async (
   assert.equal(finalJson.teams.A.agent, "product-cpu:cpu-v4:level_1");
   const summary = JSON.parse(fs.readFileSync(path.join(runDir, "summary.json"), "utf8"));
   assert.ok(summary.agents["product-cpu:cpu-v4:level_1"]);
-  const md = standingsMarkdown([runDir]);
+  const md = matchupsMarkdown([runDir]);
   assert.match(md, /`product-cpu:cpu-v4:level_1`/);
 });

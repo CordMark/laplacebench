@@ -116,4 +116,5 @@ the match wallet and match usage summary.
   laplace-8x8-v1 cap, see `docs/match-conduct-laplace-8x8-v1.md`) as
   `horizon_draw`, and threefold repetition of the same game-relevant
   state as `repetition_draw`. Draw rates are reported separately by
-  cause in summaries and standings. No adjudication of truncated games.
+  cause in summaries and in each matchup breakdown. No adjudication of
+  truncated games.

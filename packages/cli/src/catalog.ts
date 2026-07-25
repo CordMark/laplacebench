@@ -123,6 +123,95 @@ export const PROVIDERS: ProviderEntry[] = [
   },
 ];
 
+/**
+ * Harnesses whose spec strings this repo knows how to decompose. Membership —
+ * NOT the shape of the string — decides whether a spec is parsed: `takeshi:d2`
+ * looks exactly like `claude-cli:opus` but is not ours to interpret, so it stays
+ * an opaque raw identity. Adding an entry here is the only way to make a new
+ * harness parseable (docs/plans/2026-07-25-community-lane-v2.md).
+ *
+ * `claude-cli-learn` is deliberately included even though it is not a PROVIDERS
+ * key: the learning harness is reachable as a free-form spec and appears in real
+ * runs, and it folds into the same model headline as every other harness.
+ */
+export const RECOGNIZED_HARNESSES: readonly string[] = [
+  "claude-cli",
+  "claude-cli-learn",
+  "codex-cli",
+  "anthropic",
+  "product-cpu",
+];
+
+/**
+ * Harnesses that drive an actual language model. Used to keep baseline-only and
+ * product-CPU-only games out of the public matchup list. These are SPEC
+ * PREFIXES — `anthropic-api` is a usage-accounting source label (agents/llm.ts),
+ * never a spec prefix, and must not appear here.
+ */
+export const LLM_HARNESSES: readonly string[] = [
+  "claude-cli",
+  "claude-cli-learn",
+  "codex-cli",
+  "anthropic",
+];
+
+export interface ParsedAgentSpec {
+  /** Recognized harness, or null when the spec is opaque to us. */
+  harness: string | null;
+  /**
+   * Model identity within the harness, or null when the harness runs its own
+   * default. For product-cpu this keeps the policy generation attached
+   * (`cpu-v4:level_5`) so a future cpu-v5 is a different identity, never a
+   * silent redefinition of the same one.
+   */
+  model: string | null;
+  effort: string | null;
+  raw: string;
+}
+
+/**
+ * Decompose an agent spec into {harness, model, effort}, mirroring the
+ * `buildSpec` grammar above. Unrecognized harnesses fall back to raw identity
+ * rather than being guessed at, so `random`, `center-greedy` and `takeshi:d2`
+ * all stay whole.
+ */
+export function parseAgentSpec(spec: string): ParsedAgentSpec {
+  const at = spec.lastIndexOf("@");
+  const head = at >= 0 ? spec.slice(0, at) : spec;
+  const effort = at >= 0 ? spec.slice(at + 1) : "";
+  const colon = head.indexOf(":");
+  const harness = colon >= 0 ? head.slice(0, colon) : head;
+  if (!RECOGNIZED_HARNESSES.includes(harness)) {
+    return { harness: null, model: null, effort: null, raw: spec };
+  }
+  // `codex-cli:@medium` carries an empty model segment — the plan's default
+  // model, not a model literally named "".
+  const model = colon >= 0 ? head.slice(colon + 1) : "";
+  return {
+    harness,
+    model: model || null,
+    effort: effort || null,
+    raw: spec,
+  };
+}
+
+/**
+ * The identity a matchup headline is grouped by: the model, with every harness
+ * folded together (a given model at a given effort is expected to play the same
+ * whether it is driven through a subscription CLI or the API). Opaque specs
+ * group by themselves.
+ */
+export function headlineKey(spec: string): string {
+  const parsed = parseAgentSpec(spec);
+  return parsed.model ?? parsed.raw;
+}
+
+/** Whether this spec drives a language model (see LLM_HARNESSES). */
+export function isLlmSpec(spec: string): boolean {
+  const parsed = parseAgentSpec(spec);
+  return parsed.harness !== null && LLM_HARNESSES.includes(parsed.harness);
+}
+
 /** CLI-help agent-specs lines, generated so help can never drift from the
  * catalog. Free-form specs stay allowed; takeshi:dN etc. remain usable via
  * spec strings even though the wizard does not list them. */
