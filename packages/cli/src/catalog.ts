@@ -8,21 +8,39 @@
  */
 
 /**
- * Anthropic API model shorthands (moved here from agents/llm.ts).
+ * Typing conveniences for the Anthropic API track only: `anthropic:opus`
+ * resolves to a full id before the call, and the run records the resolved id.
  *
- * **Append-only, and an existing key never gets repointed.** This table also
- * resolves model identity for the published matchup headlines, which are
- * rebuilt from `community/runs` on every merge — so repointing `opus` at a new
- * generation would retroactively rename, merge, or split matchups that were
- * played against the old one. Same rule the product CPU already follows by
- * carrying `cpu-v4` in its identity: a new generation is a new name.
+ * This is NOT model identity. A shorthand names whichever generation it points
+ * at today, so it cannot be what a published record is grouped by — the menus
+ * below deliberately offer full ids, and `headlineKey` reads the recorded
+ * string as-is. That keeps a name in a published record meaning one model
+ * forever, and lets an alias be repointed at a new generation without rewriting
+ * history.
  */
 export const MODEL_SHORTHAND: Record<string, string> = {
-  opus: "claude-opus-4-8",
+  opus: "claude-opus-5",
   sonnet: "claude-sonnet-5",
   haiku: "claude-haiku-4-5",
   fable: "claude-fable-5",
 };
+
+/**
+ * Models offered in the menus, newest first. Values are full ids so that every
+ * spec a menu can produce names exactly one model — `opus` could be any
+ * generation, `claude-opus-5` cannot.
+ *
+ * A newly released model needs a line here to appear in the menu, and nothing
+ * else: it is usable the day it ships by typing its id, because every LLM
+ * provider accepts a free-form model.
+ */
+export const CLAUDE_MODELS: { value: string; label: string }[] = [
+  { value: "claude-opus-5", label: "Opus 5" },
+  { value: "claude-opus-4-8", label: "Opus 4.8" },
+  { value: "claude-sonnet-5", label: "Sonnet 5" },
+  { value: "claude-fable-5", label: "Fable 5" },
+  { value: "claude-haiku-4-5", label: "Haiku 4.5" },
+];
 
 /** Product policy generation the wizard offers. Bump here when the product
  * ships a new policy; the bridge hello check stays fail-closed at runtime. */
@@ -58,11 +76,7 @@ export const PROVIDERS: ProviderEntry[] = [
   {
     key: "claude-cli",
     label: "Claude (subscription / claude CLI)",
-    models: [
-      { value: "opus", label: "opus (Opus 4.8)" },
-      { value: "sonnet", label: "sonnet (Sonnet 5)" },
-      { value: "haiku", label: "haiku (Haiku 4.5)" },
-    ],
+    models: CLAUDE_MODELS,
     allowCustomModel: true,
     efforts: ["", "low", "medium", "high", "xhigh"],
     buildSpec: (model, effort) =>
@@ -90,10 +104,7 @@ export const PROVIDERS: ProviderEntry[] = [
   {
     key: "anthropic",
     label: "Anthropic API (API key)",
-    models: Object.keys(MODEL_SHORTHAND).map((k) => ({
-      value: k,
-      label: `${k} (${MODEL_SHORTHAND[k]})`,
-    })),
+    models: CLAUDE_MODELS,
     allowCustomModel: true,
     efforts: [],
     buildSpec: (model) => `anthropic:${model}`,
@@ -205,17 +216,6 @@ export function parseAgentSpec(spec: string): ParsedAgentSpec {
 }
 
 /**
- * Model names that stand for the same model. What lands in `final.json` is the
- * agent's own name, and the harnesses disagree about it: the Anthropic API
- * agent resolves shorthands (`anthropic:claude-opus-4-8`) while the Claude CLI
- * agent keeps them (`claude-cli:opus`). Folding on the raw string would split
- * one model in two at exactly the harness boundary the fold exists to erase.
- */
-function canonicalModel(model: string): string {
-  return MODEL_SHORTHAND[model] ?? model;
-}
-
-/**
  * A harness running its own unnamed model. The Codex agent writes this
  * literally when the player takes their plan's default model, and "default" is
  * not a model identity — two harnesses could each claim it — so these group
@@ -230,10 +230,17 @@ function canonicalModel(model: string): string {
 const UNNAMED_MODEL = "default";
 
 /**
- * The identity a matchup headline is grouped by: the model, with every harness
- * folded together (a given model at a given effort is expected to play the same
- * whether it is driven through a subscription CLI or the API). Opaque specs
- * group by themselves.
+ * The identity a matchup headline is grouped by: the model as it was recorded,
+ * with every harness folded together (a given model at a given effort is
+ * expected to play the same whether it is driven through a subscription CLI or
+ * the API). Opaque specs group by themselves.
+ *
+ * The recorded string is taken literally — no alias table is consulted. A
+ * published record must keep meaning the same model forever, and resolving
+ * `opus` at publish time would move past matchups onto whichever generation
+ * that alias points at today. The menus emit full ids so the folding still
+ * works; a spec that names a model ambiguously simply groups under the
+ * ambiguous name, which is the honest reading of it.
  */
 export function headlineKey(spec: string): string {
   const parsed = parseAgentSpec(spec);
@@ -242,7 +249,7 @@ export function headlineKey(spec: string): string {
     // Group by harness so its efforts still fold together.
     return parsed.harness;
   }
-  return canonicalModel(parsed.model);
+  return parsed.model;
 }
 
 /** Whether this spec drives a language model (see LLM_HARNESSES). */

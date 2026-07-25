@@ -46,7 +46,7 @@ No clone, no install, no API key:
 npx laplacebench arena --team-a takeshi --team-b center-greedy --games 2 --swap
 
 # with a Claude subscription (Claude Code CLI installed & logged in)
-npx laplacebench arena --team-a claude-cli:sonnet@low --team-b takeshi --games 2 --swap
+npx laplacebench arena --team-a claude-cli:claude-sonnet-5@low --team-b takeshi --games 2 --swap
 
 # frontier vs frontier on your own subscriptions
 npx laplacebench arena \
@@ -55,7 +55,7 @@ npx laplacebench arena \
 
 # learning-vs-cold: same model, only the accumulation loop differs
 npx laplacebench arena \
-  --team-a claude-cli-learn:sonnet@low --team-b claude-cli:sonnet@low --games 4 --swap
+  --team-a claude-cli-learn:claude-sonnet-5@low --team-b claude-cli:claude-sonnet-5@low --games 4 --swap
 
 # verify any run's log against the frozen engine, or share it
 npx laplacebench verify runs/<run-id>

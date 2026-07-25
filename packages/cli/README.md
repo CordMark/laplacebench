@@ -24,7 +24,7 @@ npx tsx src/cli.ts arena --team-a takeshi --team-b greedy --games 2 --swap
 
 # LLM vs baseline (needs ANTHROPIC_API_KEY)
 export ANTHROPIC_API_KEY=sk-ant-...
-npx tsx src/cli.ts arena --team-a anthropic:opus --team-b takeshi \
+npx tsx src/cli.ts arena --team-a anthropic:claude-opus-5 --team-b takeshi \
   --games 2 --swap
 
 # re-summarize a finished run

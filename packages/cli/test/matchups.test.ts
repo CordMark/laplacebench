@@ -37,11 +37,11 @@ test("matchup golden bytes: property order, orientation, rounding, one trailing 
   // Fable (claude-cli) vs GPT (codex-cli), sides swapped between the two games.
   writeRun(runDir, "game-000", {
     winner: "A", reason: "center",
-    teams: { A: team("claude-cli:fable@medium"), B: team("codex-cli:gpt@medium") },
+    teams: { A: team("claude-cli:claude-fable-5@medium"), B: team("codex-cli:gpt@medium") },
   });
   writeRun(runDir, "game-001", {
     winner: "A", reason: "elimination",
-    teams: { A: team("codex-cli:gpt@medium"), B: team("claude-cli:fable@medium", 3, 1, 0) },
+    teams: { A: team("codex-cli:gpt@medium"), B: team("claude-cli:claude-fable-5@medium", 3, 1, 0) },
   });
   const json = matchupsJson([runDir]);
   const expected = `{
@@ -64,7 +64,7 @@ test("matchup golden bytes: property order, orientation, rounding, one trailing 
       "last_game": "run-a/game-001",
       "breakdown": [
         {
-          "left_agent": "claude-cli:fable@medium",
+          "left_agent": "claude-cli:claude-fable-5@medium",
           "right_agent": "codex-cli:gpt@medium",
           "games": 2,
           "left_wins": 1,
@@ -82,7 +82,7 @@ test("matchup golden bytes: property order, orientation, rounding, one trailing 
   ],
   "agents": [
     {
-      "agent": "claude-cli:fable@medium",
+      "agent": "claude-cli:claude-fable-5@medium",
       "games": 2,
       "err_per_turn": 0.077
     },
@@ -100,13 +100,16 @@ test("matchup golden bytes: property order, orientation, rounding, one trailing 
 });
 
 test("headline folds every harness onto the model; unknown specs stay whole", () => {
-  // These are the strings the agents actually write into final.json — the CLI
-  // keeps the shorthand, the API agent resolves it. Both must land together.
-  assert.equal(headlineKey("claude-cli:opus@high"), "claude-opus-4-8");
-  assert.equal(headlineKey("anthropic:claude-opus-4-8"), "claude-opus-4-8");
+  // Menus emit full ids, so the same model folds across harnesses on the
+  // recorded string alone — no alias table is consulted at publish time.
+  assert.equal(headlineKey("claude-cli:claude-opus-5@high"), "claude-opus-5");
+  assert.equal(headlineKey("anthropic:claude-opus-5"), "claude-opus-5");
   // The learning harness folds in too — it is part of the harness axis, not a
   // separate contender (direction correction 363555d9).
-  assert.equal(headlineKey("claude-cli-learn:opus@high"), "claude-opus-4-8");
+  assert.equal(headlineKey("claude-cli-learn:claude-opus-5@high"), "claude-opus-5");
+  // A shorthand names whichever generation it points at today, so it groups
+  // under itself rather than being resolved into a model it may not be.
+  assert.equal(headlineKey("claude-cli:opus@high"), "opus");
   // A harness running its own unnamed model groups by harness: "default" is
   // not a model identity, and its efforts should still fold together.
   assert.equal(headlineKey("codex-cli:default@medium"), "codex-cli");
@@ -168,7 +171,7 @@ test("the strings actually recorded in final.json fold as intended", () => {
   // they are NOT the same string. These are the recorded forms
   // (agents/llm.ts:27, agents/cli.ts:135, agents/cli.ts:249).
   const recorded = {
-    claudeCli: "claude-cli:fable@medium",
+    claudeCli: "claude-cli:claude-fable-5@medium",
     claudeCliLearn: "claude-cli-learn:claude-fable-5@low",
     anthropicApi: "anthropic:claude-fable-5",
     codexDefault: "codex-cli:default@medium",
@@ -197,25 +200,25 @@ test("publication conditions: baseline-only out, one-sided LLM in, self-matchup 
   // one side is a real model against the reference opponent — public
   writeRun(runDir, "game-001", {
     winner: "A", reason: "center",
-    teams: { A: team("claude-cli:opus@high"), B: team("product-cpu:cpu-v4:level_5") },
+    teams: { A: team("claude-cli:claude-opus-5@high"), B: team("product-cpu:cpu-v4:level_5") },
   });
   // harness comparison: same model AND effort, so both sides fold to "opus"
   writeRun(runDir, "game-002", {
     winner: "A", reason: "center",
-    teams: { A: team("claude-cli-learn:opus@high"), B: team("claude-cli:opus@high") },
+    teams: { A: team("claude-cli-learn:claude-opus-5@high"), B: team("claude-cli:claude-opus-5@high") },
   });
   const data = matchupData([runDir]);
   assert.equal(data.matchup_count, 1);
   assert.deepEqual(data.matchups[0].headline, {
-    left: "claude-opus-4-8", right: "cpu-v4:level_5",
+    left: "claude-opus-5", right: "cpu-v4:level_5",
   });
   // Excluded games are still counted in the ledger totals and participants.
   assert.equal(data.game_count, 3);
   assert.deepEqual(
     data.agents.map((a) => a.agent),
     [
-      "claude-cli-learn:opus@high",
-      "claude-cli:opus@high",
+      "claude-cli-learn:claude-opus-5@high",
+      "claude-cli:claude-opus-5@high",
       "greedy",
       "product-cpu:cpu-v4:level_5",
       "random",
@@ -258,11 +261,11 @@ test("output is a total order: independent of runDirs order and of tied rows", (
   // position — only the raw specs can break the tie.
   writeRun(r1, "game-000", {
     winner: "A", reason: "center",
-    teams: { A: team("claude-cli:opus@high"), B: team("codex-cli:gpt") },
+    teams: { A: team("claude-cli:claude-opus-5@high"), B: team("codex-cli:gpt") },
   });
   writeRun(r2, "game-000", {
     winner: "A", reason: "center",
-    teams: { A: team("anthropic:opus"), B: team("codex-cli:gpt") },
+    teams: { A: team("anthropic:claude-opus-5"), B: team("codex-cli:gpt") },
   });
   const forward = matchupsJson([r1, r2]);
   const reversed = matchupsJson([r2, r1]);
@@ -273,8 +276,8 @@ test("output is a total order: independent of runDirs order and of tied rows", (
   assert.deepEqual(
     breakdown.map((b) => [b.left_agent, b.right_agent]),
     [
-      ["anthropic:opus", "codex-cli:gpt"],
-      ["claude-cli:opus@high", "codex-cli:gpt"],
+      ["anthropic:claude-opus-5", "codex-cli:gpt"],
+      ["claude-cli:claude-opus-5@high", "codex-cli:gpt"],
     ]
   );
 });
@@ -283,11 +286,11 @@ test("breakdown reports draw causes separately", () => {
   const runDir = path.join(tmp("laplace-draws-"), "run-d");
   writeRun(runDir, "game-000", {
     winner: null, reason: "horizon_draw",
-    teams: { A: team("claude-cli:opus"), B: team("codex-cli:gpt") },
+    teams: { A: team("claude-cli:claude-opus-5"), B: team("codex-cli:gpt") },
   });
   writeRun(runDir, "game-001", {
     winner: null, reason: "repetition_draw",
-    teams: { A: team("claude-cli:opus"), B: team("codex-cli:gpt") },
+    teams: { A: team("claude-cli:claude-opus-5"), B: team("codex-cli:gpt") },
   });
   const b = matchupData([runDir]).matchups[0].breakdown[0];
   assert.equal(b.draws, 2);
@@ -300,21 +303,21 @@ test("matchups are ordered by games played, most first", () => {
   const runDir = path.join(tmp("laplace-rank-"), "run-r");
   writeRun(runDir, "game-000", {
     winner: "A", reason: "center",
-    teams: { A: team("claude-cli:opus"), B: team("codex-cli:gpt") },
+    teams: { A: team("claude-cli:claude-opus-5"), B: team("codex-cli:gpt") },
   });
   writeRun(runDir, "game-001", {
     winner: "A", reason: "center",
-    teams: { A: team("claude-cli:opus"), B: team("codex-cli:gpt") },
+    teams: { A: team("claude-cli:claude-opus-5"), B: team("codex-cli:gpt") },
   });
   writeRun(runDir, "game-002", {
     winner: "A", reason: "center",
-    teams: { A: team("claude-cli:haiku"), B: team("codex-cli:gpt") },
+    teams: { A: team("claude-cli:claude-haiku-4-5"), B: team("codex-cli:gpt") },
   });
   const data = matchupData([runDir]);
   assert.deepEqual(
     data.matchups.map((m) => [m.headline.left, m.headline.right, m.games]),
     [
-      ["claude-opus-4-8", "gpt", 2],
+      ["claude-opus-5", "gpt", 2],
       ["claude-haiku-4-5", "gpt", 1],
     ]
   );
@@ -347,11 +350,11 @@ test("markdown says CI owns the file and keeps the self-reported caveat", () => 
   const runDir = path.join(tmp("laplace-md-"), "run-m");
   writeRun(runDir, "game-000", {
     winner: "A", reason: "center",
-    teams: { A: team("claude-cli:opus"), B: team("codex-cli:gpt") },
+    teams: { A: team("claude-cli:claude-opus-5"), B: team("codex-cli:gpt") },
   });
   const md = matchupsMarkdown([runDir]);
   assert.ok(md.includes("do not edit by hand"));
-  assert.ok(md.includes("## claude-opus-4-8 vs gpt"));
+  assert.ok(md.includes("## claude-opus-5 vs gpt"));
   assert.ok(md.includes("self-reported"));
   // No regeneration command is advertised to submitters any more.
   assert.ok(!md.includes("npx laplacebench standings"));

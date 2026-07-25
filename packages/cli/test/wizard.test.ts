@@ -39,8 +39,8 @@ test("catalog specs agree with the resolvers", () => {
   }
   // effort labeling flows into the spec (condition-label auto consistency)
   const claude = PROVIDERS.find((p) => p.key === "claude-cli")!;
-  assert.equal(claude.buildSpec("opus", "high"), "claude-cli:opus@high");
-  assert.equal(claude.buildSpec("opus", ""), "claude-cli:opus");
+  assert.equal(claude.buildSpec("claude-opus-5", "high"), "claude-cli:claude-opus-5@high");
+  assert.equal(claude.buildSpec("claude-opus-5", ""), "claude-cli:claude-opus-5");
   // baselines are random/greedy only (takeshi deliberately unlisted)
   const baseline = PROVIDERS.find((p) => p.key === "baseline")!;
   assert.deepEqual(
@@ -59,9 +59,21 @@ test("usage agent-specs line covers published providers and keeps free-form noti
   assert.match(line, /free-form/);
 });
 
-test("MODEL_SHORTHAND moved to catalog keeps the published aliases", () => {
-  assert.equal(MODEL_SHORTHAND.opus, "claude-opus-4-8");
-  assert.equal(MODEL_SHORTHAND.fable, "claude-fable-5");
+test("published model choices are full ids, never ambiguous shorthands", () => {
+  // A menu selection has to name exactly one model: `opus` is whichever
+  // generation the alias points at today, and a published record grouped by it
+  // would change meaning when the alias moves.
+  for (const key of ["claude-cli", "anthropic"]) {
+    const provider = PROVIDERS.find((p) => p.key === key)!;
+    for (const m of provider.models) {
+      assert.ok(!(m.value in MODEL_SHORTHAND), `${key}: ${m.value} is a shorthand`);
+      assert.match(m.value, /^claude-[a-z]+-[\d-]+$/, `${key}: ${m.value}`);
+    }
+  }
+  // Newest first, so the current flagship is the default selection.
+  assert.equal(PROVIDERS.find((p) => p.key === "claude-cli")!.models[0].value, "claude-opus-5");
+  // Shorthands survive as a typing convenience for the API track only.
+  assert.equal(MODEL_SHORTHAND.opus, "claude-opus-5");
 });
 
 // ---------------------------------------------------------------------------
@@ -105,7 +117,7 @@ const providerIndex = (key: string) => PROVIDERS.findIndex((p) => p.key === key)
 test("wizard flow: claude-cli:opus@high vs product-cpu level_3 with canonical preset", async () => {
   const io = scriptedIO([
     providerIndex("claude-cli"), // Team A provider
-    0, // model: opus
+    0, // model: Opus 5 (newest first)
     3, // effort: ["", low, medium, high, xhigh] -> index 3 = high
     providerIndex("product-cpu"), // Team B provider
     2, // level_3
@@ -116,7 +128,7 @@ test("wizard flow: claude-cli:opus@high vs product-cpu level_3 with canonical pr
   const result = await runWizardFlow(io, okDeps);
   assert.ok(!isCancelled(result));
   const plan = result as WizardPlan;
-  assert.equal(plan.specA, "claude-cli:opus@high");
+  assert.equal(plan.specA, "claude-cli:claude-opus-5@high");
   assert.equal(plan.specB, `product-cpu:${PRODUCT_CPU_POLICY}:level_3`);
   assert.equal(plan.games, 2);
   assert.equal(plan.swap, true);
@@ -128,7 +140,7 @@ test("wizard flow: claude-cli:opus@high vs product-cpu level_3 with canonical pr
 test("wizard flow: default effort omits @effort; custom model input works", async () => {
   const io = scriptedIO([
     providerIndex("claude-cli"),
-    3, // (手入力) — after opus/sonnet/haiku
+    5, // (手入力) — after the five published models
     "my-custom-model", // custom model input
     0, // effort default
     providerIndex("baseline"),
@@ -167,7 +179,7 @@ test("auth gate: missing claude CLI loops until recheck succeeds", async () => {
     checkCommand: () => (ok ? { ok: true, version: "v" } : { ok: false }),
   };
   const io = scriptedIO([
-    providerIndex("claude-cli"), 0, 0, // A: claude-cli opus default-effort
+    providerIndex("claude-cli"), 0, 0, // A: claude-cli Opus 5, default effort
     providerIndex("baseline"), 0, // B: random
     0, // canonical preset
     "", // seed

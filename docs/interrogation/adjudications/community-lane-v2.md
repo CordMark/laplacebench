@@ -434,3 +434,31 @@ publish は**実行時点の main** から生成・公開し、トリガ SHA は
     `matchup_count: 0` で、v2 の集計経路は実データを一度も通っていない。
   - 設計上受容した限界: 完全に自己整合した偽の対局ログは検出できない
     （Direction Brief の「偽ラベルの検出は守らない」と同種）。
+
+## 2026-07-25 catalog-model-identity [impl]（tier: light / bounded corrective）
+
+Slice: 公開メニューのモデル値を full id 化し、見出し identity から可変別名
+テーブルへの依存を撤去する。community-lane-v2 の impl review で class C
+（規範をコメントで固定）として閉じた箇所を、ユーザー裁定により構造で閉じ直す。
+
+Requirement source: ユーザー指示 2026-07-25「opus をしっかり opus 4.8 とかに
+変えてくれない？つまりしっかりとモデルが一意に特定できる名前にしておかないと
+いけない」。
+
+Tier defense: schema/migration・認可 enforcement・identity trust・payment・
+cutover・不可逆操作・新概念のいずれも変更しない。legacy data semantics は
+ユーザーが「既存のデータはそこまで重要じゃない」と明示し、実データは既に
+full id を使用。blast radius は catalog のメニュー値と headlineKey の1行。
+
+- Q(review/stale-wording): 非 TTY 時の案内が `claude-cli:sonnet` を勧めており、
+  正規のドキュメント経路から曖昧な識別子が記録されうるのではないか。
+  - 弁明: そのとおり。メニューを full id 化しても、文言が短縮名を勧めていれば
+    同じ欠陥が別経路から入る。
+  - 裁定: revise（source: 本スライスの要求そのもの; class: C）。wizard の案内と
+    README 2箇所・cli README 1箇所を full id へ差し替え。catalog.ts に残る2件は
+    「短縮名とは何か」「同じ形でも解釈しない」の説明対象としての言及なので保持。
+    FINDINGS.md は過去の実験記録なので不変。
+  - by: auto
+  - prediction: miss
+
+- ラウンド2・指摘計 1 件で APPROVED（confidence 0.99、tier-escalation なし）

@@ -71,10 +71,13 @@ Two things about headlines are worth stating plainly:
   that was, so its headline is the harness name (for example `codex-cli`)
   rather than a model. That headline can cover more than one model over time.
   Naming a model we did not observe would be worse.
-- Model shorthands resolve to canonical ids so the same model folds together
-  across harnesses. That table is append-only and an existing shorthand is
-  never repointed at a newer generation — otherwise past matchups would be
-  renamed under a model they never played.
+- Headlines are the model name exactly as the run recorded it. The menus offer
+  full model ids (`claude-opus-5`, not `opus`), so the same model folds together
+  across harnesses without anything being resolved at publish time. A name in a
+  published record therefore keeps meaning the same model forever. If a run
+  names its model ambiguously — a hand-typed `opus`, which is whichever
+  generation that alias meant that day — it groups under that ambiguous name
+  rather than being assigned to a model we did not observe.
 
 ## Reproducing the aggregate locally
 
