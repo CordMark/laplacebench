@@ -6,7 +6,8 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspaces",
+    "//build": "Explicit order: npm runs workspaces in directory order, so cli (packages/cli) would build before the engine it imports and fail on a clean checkout. It only ever passed locally because an older packages/engine/dist survived.",
+    "build": "npm run build -w packages/engine && npm run build -w packages/cli",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present"
   }
