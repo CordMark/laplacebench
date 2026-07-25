@@ -124,19 +124,34 @@ export function checkRateLimit(mergedInWindow) {
   return { ok: true };
 }
 
-/** Search query counting THIS author's merged submissions in the window. */
-export function rateLimitQuery(repo, author, now) {
-  const since = new Date(
-    now - RATE_WINDOW_HOURS * 60 * 60 * 1000
-  ).toISOString();
-  return [
-    `repo:${repo}`,
-    "is:pr",
-    "is:merged",
-    `label:${SUBMISSION_LABEL}`,
-    `author:${author}`,
-    `merged:>=${since}`,
-  ].join("+");
+/**
+ * A legitimate run is a handful of files. An inventory anywhere near the API's
+ * pagination ceiling is not one, and treating a truncated page as "that was all
+ * of them" would let the rest through unchecked — so it holds instead.
+ */
+export const MAX_SUBMISSION_FILES = 200;
+
+/**
+ * The compare endpoint returns its changed-file list once and stops here; its
+ * pagination walks commits, not files. A list of exactly this length is
+ * indistinguishable from a truncated one, so it is never treated as complete.
+ */
+export const COMPARE_FILE_CEILING = 300;
+
+/**
+ * Count this author's merged submissions in the window, from closed pull
+ * requests rather than the search index. Search is eventually consistent: a
+ * submission merged seconds ago can still be missing from it, which is exactly
+ * when the count matters.
+ */
+export function countMergedSubmissions(closedPulls, author, now) {
+  const since = now - RATE_WINDOW_HOURS * 60 * 60 * 1000;
+  return closedPulls.filter((p) => {
+    if (!p.merged_at) return false;
+    if (p.user?.login !== author) return false;
+    if (!(p.labels ?? []).some((l) => l.name === SUBMISSION_LABEL)) return false;
+    return Date.parse(p.merged_at) >= since;
+  }).length;
 }
 
 /** Which label a hold reason should carry. */
@@ -166,3 +181,25 @@ export function classify({ files, modes, author, mergedInWindow }) {
 
   return { ok: true, dir: allow.dir };
 }
+
+/**
+ * Closed pull requests updated within the rate window, newest first. Sorted by
+ * `updated_at`, and a pull request merged inside the window cannot have been
+ * updated before it — so the first entry older than the window ends the walk.
+ * Search is deliberately not used: it is eventually consistent, and the
+ * submission that matters most is the one merged seconds ago.
+ */
+export async function closedPullsInWindow(fetchJson, repo, now) {
+  const since = now - RATE_WINDOW_HOURS * 60 * 60 * 1000;
+  const out = [];
+  for (let page = 1; ; page++) {
+    const batch = await fetchJson(
+      `/repos/${repo}/pulls?state=closed&sort=updated&direction=desc&per_page=100&page=${page}`
+    );
+    out.push(...batch);
+    if (batch.length < 100) return out;
+    const oldest = batch[batch.length - 1];
+    if (Date.parse(oldest.updated_at) < since) return out;
+  }
+}
+

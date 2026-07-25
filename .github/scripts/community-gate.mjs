@@ -11,9 +11,16 @@
  */
 import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { SUBMISSION_ROOT, classify, rateLimitQuery } from "./gate-rules.mjs";
+import {
+  COMPARE_FILE_CEILING,
+  MAX_SUBMISSION_FILES,
+  SUBMISSION_ROOT,
+  classify,
+  closedPullsInWindow,
+  countMergedSubmissions,
+} from "./gate-rules.mjs";
 
-const { GH_TOKEN, PR, AUTHOR, VERIFIED_SHA, REPO } = process.env;
+const { GH_TOKEN, PR, AUTHOR, VERIFIED_SHA, BASE_SHA, REPO } = process.env;
 const API = "https://api.github.com";
 
 async function api(path) {
@@ -50,15 +57,25 @@ function output(verdict, reason, submissionDir = "") {
   console.log(`verdict=${verdict} reason=${reason}`);
 }
 
-async function changedFiles() {
-  const files = [];
-  for (let page = 1; ; page++) {
-    const batch = await api(
-      `/repos/${REPO}/pulls/${PR}/files?per_page=100&page=${page}`
-    );
-    files.push(...batch);
-    if (batch.length < 100) return files;
-  }
+/**
+ * Enumerate the diff of the SHA under review — not "the pull request's current
+ * files". `/pulls/{n}/files` describes whatever the head is at request time, so
+ * a push landing mid-run would let the allowlist and the replay look at
+ * different trees. `compare` is keyed to two commits and cannot drift.
+ *
+ * The endpoint is also paginated with a documented ceiling; a submission that
+ * approaches it is not a legitimate run, so an oversized inventory is a hold
+ * rather than a silently truncated pass.
+ */
+async function changedFiles(baseSha) {
+  const cmp = await api(`/repos/${REPO}/compare/${baseSha}...${VERIFIED_SHA}`);
+  const files = cmp.files ?? [];
+  // `compare` paginates COMMITS, not files: the file list is returned once and
+  // stops at the API's ceiling. Past that we cannot tell a complete list from a
+  // truncated one, so anything at or above it is a hold — treating a short list
+  // as complete is how the rest would ride in unchecked.
+  const truncated = files.length >= COMPARE_FILE_CEILING;
+  return { truncated, overLimit: files.length > MAX_SUBMISSION_FILES, files };
 }
 
 /** Fetch the submitted data at the pinned SHA into the base checkout. */
@@ -73,21 +90,28 @@ async function materialize(files) {
   }
 }
 
-const files = await changedFiles();
+const { truncated, overLimit, files } = await changedFiles(BASE_SHA);
+if (truncated) {
+  output("hold", `inventory-truncated:>=${COMPARE_FILE_CEILING}`);
+  process.exit(0);
+}
+if (overLimit) {
+  output("hold", `too-many-files:>${MAX_SUBMISSION_FILES}`);
+  process.exit(0);
+}
 
-// Modes are not in the files API, so read the tree at the SHA under review.
+// Modes are not in the compare payload, so read the tree at the SHA under
+// review — the same commit the file list was derived from.
 const tree = await api(`/repos/${REPO}/git/trees/${VERIFIED_SHA}?recursive=1`);
 const modes = new Map(tree.tree.map((e) => [e.path, e.mode]));
 
-const q = rateLimitQuery(REPO, AUTHOR, Date.now());
-const merged = await api(`/search/issues?q=${q}&per_page=1`);
+const mergedInWindow = countMergedSubmissions(
+  await closedPullsInWindow(api, REPO, Date.now()),
+  AUTHOR,
+  Date.now()
+);
 
-const verdict = classify({
-  files,
-  modes,
-  author: AUTHOR,
-  mergedInWindow: merged.total_count,
-});
+const verdict = classify({ files, modes, author: AUTHOR, mergedInWindow });
 
 if (!verdict.ok) {
   output("hold", verdict.reason);

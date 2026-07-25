@@ -362,3 +362,75 @@ merge API への `sha` 必須指定、不一致時 hold を追加した。
     head SHA 競合、verify crash の fail-closed、連鎖の発火）。
     (b) example run 未差し替えのため公開成果物は matchup_count: 0 で、
     v2 の集計経路は実データを一度も通っていない。
+
+## Implementation review（codex-impl-review）
+
+### Q(review/invariant) — 検証と集計が別の入力を信用していた
+
+指摘: `verifyRun` は `events.jsonl` だけを再生し、公開記録が実際に読むのは
+`final.json` だった。events.jsonl の無い game ディレクトリは skip され、
+正しい event log の横に偽の final.json を置けば検証を通過して任意の対戦結果を
+公開できた。
+
+弁明: そのとおり。「リプレイ検証が結果を証明する」という公開上の中核の主張に
+対する穴で、テストは集計側と検証側を別々にしか見ていなかった。
+
+裁定: **revise（source: community/README.md の「what verification covers」+
+価値序列 第1項; class: A）**。全 game ディレクトリに events.jsonl と final.json
+の両方を要求し、`final.json` を replay 由来の値と突合する
+`checkFinalMatchesReplay` を追加。突合対象は winner / reason / plies /
+teams.{A,B}.agent / turns / formatFailures / legalityFailures。
+
+### Q(review/invariant) — 「replay 由来」とした値の一部が実は log 由来だった
+
+指摘: `reason` と `plies` は `game_end` イベント（提出者が書ける）から取って
+いた。また center↔elimination、horizon↔repetition のクラス内すり替えは通り、
+move の手番帰属が logged `e.player` 依存だったため turns を移し替えて
+err_per_turn を操作できた。
+
+弁明: 指摘のとおり。replay 由来と称していた meta が実際にはログの自己申告
+だった。
+
+裁定: **revise（source: 同上; class: A）**。`meta.replayed` を新設し、
+plies は再生手数、turns は `manager.state.currentPlayer` 基準、failure は
+再生時の手番に帰属して再計算。reason は `winReason` と `repetitionKey` の
+出現数から referee と同じ優先順で導出し、厳密一致で突合する。
+
+### Q(review/enforcement) — ゲートの入力が SHA に束縛されていなかった
+
+指摘: `/pulls/{n}/files` は「その時点の head」の差分で、固定した
+`VERIFIED_SHA` に束縛されていない。加えて 3000 件上限を短いページで完全と
+見なしていた。`compare` はファイル一覧をページングしない（300 で打ち切り）。
+
+弁明: 指摘のとおり。head SHA を固定した意味が列挙側で失われていた。
+
+裁定: **revise（source: direction T002「判定入力を3つに限定」; class: A）**。
+`compare/{BASE_SHA}...{VERIFIED_SHA}` へ変更して2コミットに束縛し、
+`COMPARE_FILE_CEILING = 300` に達したら `inventory-truncated` で hold、
+`MAX_SUBMISSION_FILES = 200` を上限とした。
+
+### Q(review/concurrency) — レート制限と公開順序の競合
+
+指摘: レート制限が per-PR concurrency 下の check-then-merge で、同一作者の
+複数 PR が同じ事前カウントを見て同時に通る。集計元の search API も
+eventually consistent。また publish がキュー内で古い SOURCE_SHA を保持し、
+新しい実行の後に古い台帳で上書きしうる。
+
+弁明: いずれも指摘のとおり。
+
+裁定: **revise（source: プラン item 7a / item 9; class: A）**。`decide` job を
+**作者単位**の concurrency で直列化し、その内側でマージ直前に予算を再取得。
+集計元を closed pull requests の窓内走査（`closedPullsInWindow`）へ変更。
+publish は**実行時点の main** から生成・公開し、トリガ SHA は provenance
+としてのみ残す。
+
+---
+
+- ラウンド4・指摘計 8 件で APPROVED（confidence 0.98）
+  - 条件: 実装として未解決の指摘は無いが、レーンが本番で動くことの証明では
+    ない。未観測のまま残るもの: (a) プラン Verification の Phase 2 実測
+    （実 PR での allowlist 違反、head SHA 競合、verify crash の fail-closed、
+    連鎖の発火）、(b) example run 未差し替えのため公開成果物は
+    `matchup_count: 0` で、v2 の集計経路は実データを一度も通っていない。
+  - 設計上受容した限界: 完全に自己整合した偽の対局ログは検出できない
+    （Direction Brief の「偽ラベルの検出は守らない」と同種）。

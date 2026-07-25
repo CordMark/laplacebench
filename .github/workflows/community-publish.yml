@@ -25,18 +25,24 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Resolve the commit to publish from
-        id: src
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "sha=${{ inputs.merged_sha }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "sha=${{ github.sha }}" >> "$GITHUB_OUTPUT"
-          fi
-
+      # Publish from whatever main is when this job actually runs, not from the
+      # commit that triggered it. Runs queue, and a queued or manually
+      # dispatched older commit executing after a newer one would otherwise
+      # overwrite the published ledger with an older view of it. The trigger
+      # commit is kept only as provenance in the commit message.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ steps.src.outputs.sha }}
+          ref: main
+
+      - name: Record which commit is being published
+        id: src
+        env:
+          TRIGGER_SHA: ${{ github.event_name == 'workflow_dispatch' && inputs.merged_sha || github.sha }}
+        run: |
+          published=$(git rev-parse HEAD)
+          echo "sha=$published" >> "$GITHUB_OUTPUT"
+          echo "trigger=$TRIGGER_SHA" >> "$GITHUB_OUTPUT"
+          echo "publishing main@$published (triggered by $TRIGGER_SHA)"
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -71,6 +77,7 @@ jobs:
       - name: Publish to the standings branch
         env:
           SOURCE_SHA: ${{ steps.src.outputs.sha }}
+          TRIGGER_SHA: ${{ steps.src.outputs.trigger }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -89,7 +96,7 @@ jobs:
               echo "records unchanged; nothing to publish"
               return 0
             fi
-            git -C ../standings commit -m "Publish matchup records from ${SOURCE_SHA}" || return 1
+            git -C ../standings commit -m "Publish matchup records from main@${SOURCE_SHA} (trigger ${TRIGGER_SHA})" || return 1
             git -C ../standings push origin HEAD:standings || return 1
           }
           # One retry: a concurrent publish can land between fetch and push.

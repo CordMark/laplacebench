@@ -1,7 +1,7 @@
 import "./env";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { newGame, playerTeam } from "./engine";
+import { newGame, playerTeam, repetitionKey, winReason } from "./engine";
 import { COLOR_NAMES } from "./types";
 
 function appRoot(): string {
@@ -52,6 +52,16 @@ interface BenchMeta {
   winner: "A" | "B" | null;
   reason: string;
   plies: number;
+  /** Values recomputed from the replay, independent of the log's own summary. */
+  replayed?: {
+    plies: number;
+    reason: string | null;
+    turns: { A: number; B: number };
+    failures: {
+      A: { format: number; legality: number };
+      B: { format: number; legality: number };
+    };
+  };
   exported_at: string;
   stats?: { A: BenchTeamStats; B: BenchTeamStats };
   failures?: BenchFailure[];
@@ -88,6 +98,17 @@ export function exportGame(
   const history: object[] = [manager.getState() as unknown as object];
   const failures: BenchFailure[] = [];
   const commentary: BenchCommentary[] = [];
+  // Turns each side actually took, counted from the replay rather than from the
+  // log's own tally.
+  const turnsTaken = { A: 0, B: 0 };
+  // Threefold repetition is one of the four published endings, so it has to be
+  // observed here rather than taken from the log's word for it.
+  const seenStates = new Map<string, number>();
+  const countState = () => {
+    const key = repetitionKey(manager.state);
+    seenStates.set(key, (seenStates.get(key) ?? 0) + 1);
+  };
+  countState();
 
   for (const e of events) {
     if (e.t === "move" && typeof e.raw === "string" && e.raw.trim()) {
@@ -108,6 +129,10 @@ export function exportGame(
       });
     }
     if (e.t === "move") {
+      // Whoever the engine says is on move — a logged `player` that disagreed
+      // would otherwise shift turns (and so the published error rate) between
+      // the two sides without making a single move illegal.
+      const acting = playerTeam(manager.state.currentPlayer);
       const res = manager.makeMove(e.from[0], e.from[1], e.to[0], e.to[1]);
       if (!res.valid) {
         throw new Error(
@@ -125,10 +150,14 @@ export function exportGame(
           `${gameId} ply ${e.ply}: capture mismatch on re-play. logged=${JSON.stringify(loggedCaps)} replayed=${JSON.stringify(replayCaps)}`
         );
       }
+      turnsTaken[acting]++;
       history.push(manager.getState() as unknown as object);
+      countState();
     } else if (e.t === "pass") {
+      turnsTaken[playerTeam(manager.state.currentPlayer)]++;
       manager.advanceTurn();
       history.push(manager.getState() as unknown as object);
+      countState();
     }
   }
 
@@ -167,6 +196,36 @@ export function exportGame(
     stats = { A: toStats(fin.teams.A), B: toStats(fin.teams.B) };
   }
 
+  // Derived from the replay itself, not from the log's own summary. `plies` is
+  // the number of turns actually re-played; the per-side failure counts come
+  // from the failure events attributed to whoever was on move at the time.
+  // The exact ending, derived rather than believed. Precedence matches the
+  // referee's: a decided game first, then threefold repetition, then the cap.
+  const repeated = [...seenStates.values()].some((n) => n >= 3);
+  const replayedReason = finalState.winningTeam
+    ? winReason(finalState, false)
+    : repeated
+      ? "repetition_draw"
+      : "horizon_draw";
+
+  const replayed = {
+    // `history` opens with the starting position, so the played turns are one
+    // fewer than its length.
+    plies: history.length - 1,
+    reason: replayedReason,
+    turns: { A: turnsTaken.A, B: turnsTaken.B },
+    failures: {
+      A: {
+        format: failures.filter((f) => f.team === "A" && f.kind === "format").length,
+        legality: failures.filter((f) => f.team === "A" && f.kind === "legality").length,
+      },
+      B: {
+        format: failures.filter((f) => f.team === "B" && f.kind === "format").length,
+        legality: failures.filter((f) => f.team === "B" && f.kind === "legality").length,
+      },
+    },
+  };
+
   const meta: BenchMeta = {
     file: `${runId}--${gameId}.json`,
     run_id: runId,
@@ -176,6 +235,7 @@ export function exportGame(
     winner: end.winner ?? null,
     reason: end.reason,
     plies: end.plies,
+    replayed,
     exported_at: new Date().toISOString(),
     stats,
     failures,
@@ -197,10 +257,74 @@ export interface RunVerification {
 }
 
 /**
+ * The `final.json` fields the published records are actually built from, and
+ * therefore the ones a replay has to agree with. Everything else in that file
+ * is per-side telemetry that no public claim rests on.
+ */
+function checkFinalMatchesReplay(
+  runDir: string,
+  gameId: string,
+  meta: BenchMeta
+): void {
+  const finalPath = path.join(runDir, "games", gameId, "final.json");
+  if (!fs.existsSync(finalPath)) {
+    throw new Error("final.json is missing");
+  }
+  const fin = JSON.parse(fs.readFileSync(finalPath, "utf8"));
+  const r = meta.replayed;
+  const expected: Record<string, unknown> = {
+    winner: meta.winner,
+    // The exact ending the replay reached, not the logged one: standings
+    // publishes centre wins, eliminations, horizon draws and repetition draws
+    // as separate counts, so a within-class swap is a forgeable claim too.
+    reason: r?.reason,
+    plies: r?.plies,
+    "teams.A.agent": meta.team_a,
+    "teams.B.agent": meta.team_b,
+    "teams.A.formatFailures": r?.failures.A.format,
+    "teams.A.legalityFailures": r?.failures.A.legality,
+    "teams.B.formatFailures": r?.failures.B.format,
+    "teams.B.legalityFailures": r?.failures.B.legality,
+    // The denominator of the published error rate: inflating it would quietly
+    // shrink the rate, so it is pinned to the turns actually replayed.
+    "teams.A.turns": r?.turns.A,
+    "teams.B.turns": r?.turns.B,
+  };
+  const actual: Record<string, unknown> = {
+    winner: fin.winner ?? null,
+    reason: fin.reason,
+    plies: fin.plies,
+    "teams.A.agent": fin.teams?.A?.agent,
+    "teams.B.agent": fin.teams?.B?.agent,
+    "teams.A.formatFailures": fin.teams?.A?.formatFailures,
+    "teams.A.legalityFailures": fin.teams?.A?.legalityFailures,
+    "teams.B.formatFailures": fin.teams?.B?.formatFailures,
+    "teams.B.legalityFailures": fin.teams?.B?.legalityFailures,
+    "teams.A.turns": fin.teams?.A?.turns,
+    "teams.B.turns": fin.teams?.B?.turns,
+  };
+  for (const key of Object.keys(expected)) {
+    if (actual[key] !== expected[key]) {
+      throw new Error(
+        `final.json disagrees with the replay on ${key}: ` +
+          `recorded=${JSON.stringify(actual[key])} replayed=${JSON.stringify(expected[key])}`
+      );
+    }
+  }
+}
+
+/**
  * Replay every game in a run through the frozen engine. Single owner of "is
  * this run sound?" — the CLI reports the whole list, `submit` refuses to
  * publish when it is non-empty, and CI uses the same command. A second
  * implementation would eventually disagree with this one.
+ *
+ * The replay reads `events.jsonl`, but the published matchup records are built
+ * from `final.json`. Verifying only the former would leave the file that
+ * actually becomes a public claim unchecked — a valid event log beside a forged
+ * `final.json`, or a game directory with no event log at all, would both pass.
+ * So every game directory must carry both files, and `final.json` must agree
+ * with what the replay produced.
  */
 export function verifyRun(runDir: string): RunVerification {
   const gamesDir = path.join(runDir, "games");
@@ -209,10 +333,13 @@ export function verifyRun(runDir: string): RunVerification {
   }
   const result: RunVerification = { games: 0, failures: [] };
   for (const gameId of fs.readdirSync(gamesDir).sort()) {
-    if (!fs.existsSync(path.join(gamesDir, gameId, "events.jsonl"))) continue;
     result.games++;
     try {
-      exportGame(runDir, gameId);
+      if (!fs.existsSync(path.join(gamesDir, gameId, "events.jsonl"))) {
+        throw new Error("events.jsonl is missing — nothing to replay");
+      }
+      const { meta } = exportGame(runDir, gameId);
+      checkFinalMatchesReplay(runDir, gameId, meta);
     } catch (err) {
       result.failures.push({
         gameId,
@@ -221,7 +348,7 @@ export function verifyRun(runDir: string): RunVerification {
     }
   }
   if (result.games === 0) {
-    result.failures.push({ gameId: "-", message: "no games with an event log" });
+    result.failures.push({ gameId: "-", message: "no games in this run" });
   }
   return result;
 }

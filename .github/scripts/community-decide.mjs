@@ -5,12 +5,19 @@
  *
  * docs/plans/2026-07-25-community-lane-v2.md
  */
-import { SUBMISSION_LABEL, holdLabelFor } from "./gate-rules.mjs";
+import {
+  SUBMISSION_LABEL,
+  checkRateLimit,
+  closedPullsInWindow,
+  countMergedSubmissions,
+  holdLabelFor,
+} from "./gate-rules.mjs";
 
 const {
   GH_TOKEN,
   PR,
   REPO,
+  AUTHOR,
   VERIFY_RESULT,
   VERDICT,
   REASON,
@@ -61,8 +68,19 @@ if (VERDICT !== "pass") {
   process.exit(0);
 }
 
-// Label before merging: the rate-limit query counts merged pull requests
-// carrying this label, so an unlabelled merge would be uncountable forever.
+// Re-check the budget here, inside the per-author serialized job. The count
+// taken during verification was a cheap early reject; by the time we are about
+// to merge, an earlier pull request from the same author may have landed.
+const now = Date.now();
+const closed = await closedPullsInWindow(api, REPO, now);
+const budget = checkRateLimit(countMergedSubmissions(closed, AUTHOR, now));
+if (!budget.ok) {
+  await hold(budget.reason);
+  process.exit(0);
+}
+
+// Label before merging: the count above only sees merged pull requests carrying
+// this label, so an unlabelled merge would be uncountable forever.
 await label(SUBMISSION_LABEL);
 
 // The head may have moved while we verified. Re-read it, and pass the pinned

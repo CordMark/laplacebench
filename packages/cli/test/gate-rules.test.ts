@@ -103,14 +103,34 @@ test("rate limit holds at the boundary, not before it", () => {
   assert.equal(classify(good, { merged: rules.RATE_LIMIT + 1 }).ok, false);
 });
 
-test("the rate-limit query counts only labelled community submissions", () => {
-  const q = rules.rateLimitQuery("owner/repo", "alice", Date.parse("2026-07-25T12:00:00Z"));
-  // Without the label, a contributor's ordinary code pull requests would spend
-  // their submission budget.
-  assert.ok(q.includes(`label:${rules.SUBMISSION_LABEL}`));
-  assert.ok(q.includes("author:alice"));
-  assert.ok(q.includes("is:merged"));
-  assert.ok(q.includes("merged:>=2026-07-24T12:00:00.000Z"));
+test("only this author's labelled, merged, in-window submissions are counted", () => {
+  const now = Date.parse("2026-07-25T12:00:00Z");
+  const pull = (over: Record<string, unknown>) => ({
+    user: { login: "alice" },
+    labels: [{ name: rules.SUBMISSION_LABEL }],
+    merged_at: "2026-07-25T11:00:00Z",
+    ...over,
+  });
+  const pulls = [
+    pull({}),                                              // counts
+    pull({ merged_at: null }),                             // closed, not merged
+    pull({ user: { login: "bob" } }),                      // someone else
+    pull({ labels: [] }),                                  // an ordinary code PR
+    pull({ labels: [{ name: "needs-human" }] }),           // a different label
+    pull({ merged_at: "2026-07-23T11:00:00Z" }),           // outside the window
+  ];
+  assert.equal(rules.countMergedSubmissions(pulls, "alice", now), 1);
+  // Counting from closed pull requests rather than the search index is the
+  // point: search is eventually consistent, and a just-merged submission is
+  // exactly the one that must already be visible.
+  assert.equal(rules.countMergedSubmissions([], "alice", now), 0);
+});
+
+test("an oversized inventory has a bound rather than a truncated pass", () => {
+  // The API paginates with a ceiling; treating a short page as "that was all"
+  // would let everything past it through unchecked.
+  assert.ok(rules.MAX_SUBMISSION_FILES > 0);
+  assert.ok(rules.MAX_SUBMISSION_FILES < 3000);
 });
 
 test("hold reasons route to the right label", () => {

@@ -56,6 +56,7 @@ jobs:
           PR: ${{ github.event.pull_request.number }}
           AUTHOR: ${{ github.event.pull_request.user.login }}
           VERIFIED_SHA: ${{ steps.pin.outputs.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
           REPO: ${{ github.repository }}
         run: node .github/scripts/community-gate.mjs
 
@@ -76,6 +77,13 @@ jobs:
     # pull request.
     if: always() && needs.verify.result != 'cancelled'
     runs-on: ubuntu-latest
+    # Serialized per AUTHOR, not per pull request: the rate limit is a
+    # check-then-merge, and two of one author's pull requests deciding at once
+    # would both read the same pre-merge count. Queue rather than cancel — every
+    # decision still has to be made.
+    concurrency:
+      group: community-decide-${{ github.event.pull_request.user.login }}
+      cancel-in-progress: false
     permissions:
       contents: write
       pull-requests: write
@@ -93,6 +101,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
           REPO: ${{ github.repository }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
           VERIFY_RESULT: ${{ needs.verify.result }}
           VERDICT: ${{ needs.verify.outputs.verdict }}
           REASON: ${{ needs.verify.outputs.reason }}
