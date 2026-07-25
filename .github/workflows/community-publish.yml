@@ -1,0 +1,92 @@
+name: Publish community matchups
+
+# Two entry points for one job. The gate dispatches this after it merges,
+# because a push made with GITHUB_TOKEN starts no workflow runs; `push` covers
+# a human pushing to main directly, which does. They cannot both fire for the
+# same commit, so this is not a double-run.
+on:
+  workflow_dispatch:
+    inputs:
+      merged_sha:
+        description: Commit to publish from
+        required: true
+  push:
+    branches: [main]
+
+# Queue rather than cancel: every merged commit should get its records rebuilt,
+# and the branch push below is a read-modify-write.
+concurrency:
+  group: community-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Resolve the commit to publish from
+        id: src
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "sha=${{ inputs.merged_sha }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "sha=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.src.outputs.sha }}
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci --ignore-scripts
+      - run: npm run build
+
+      # The gate replay-verifies only what a pull request adds. This is the
+      # standing audit that main as a whole is still internally consistent —
+      # and it runs BEFORE publishing, so a broken ledger never gets published.
+      - name: Replay-verify every community run
+        run: |
+          shopt -s nullglob
+          dirs=(community/runs/*/)
+          if [ ${#dirs[@]} -eq 0 ]; then
+            echo "no community runs found"; exit 1
+          fi
+          node packages/cli/dist/cli.js verify "${dirs[@]}"
+
+      - name: Rebuild the matchup records
+        run: |
+          mkdir -p out
+          node packages/cli/dist/cli.js standings community/runs/*/ \
+            --out out/MATCHUPS.md --json-out out/standings.json
+
+      # The published aggregate lives on its own branch: main stays the raw
+      # ledger, and exactly one workflow writes the derived artifact. Bootstrap
+      # is manual and one-time, so there is no "create it if missing" branch
+      # here to go wrong quietly.
+      - name: Publish to the standings branch
+        env:
+          SOURCE_SHA: ${{ steps.src.outputs.sha }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          publish() {
+            git fetch origin standings
+            git worktree add ../standings origin/standings
+            cp out/MATCHUPS.md out/standings.json ../standings/
+            git -C ../standings add -A
+            if git -C ../standings diff --cached --quiet; then
+              echo "records unchanged; nothing to publish"
+              git worktree remove ../standings --force
+              return 0
+            fi
+            git -C ../standings commit -m "Publish matchup records from ${SOURCE_SHA}"
+            git -C ../standings push origin HEAD:standings
+            git worktree remove ../standings --force
+          }
+          # One retry: a concurrent publish can land between fetch and push.
+          publish || { git worktree remove ../standings --force || true; publish; }

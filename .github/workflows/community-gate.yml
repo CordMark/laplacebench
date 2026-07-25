@@ -1,0 +1,95 @@
+name: Community submission gate
+
+# `pull_request_target` runs THIS file as it exists on the base branch, with a
+# token, so a fork cannot swap the gate out for one that passes. The price is
+# that the pull request's code must never execute here: we read its data files
+# and nothing else — no checkout of the head, no `npm ci` against its manifest,
+# no scripts from it. A required status check would not have been enough; a
+# fork can rewrite its own workflows and publish a same-named passing check.
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+# Supersede an in-flight run for the same pull request. Combined with the head
+# SHA re-check before merging, this is what stops a push landing mid-verify from
+# riding in on an older run's approval.
+concurrency:
+  group: community-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    # No write anywhere. Everything this job touches is attacker-influenced.
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      verdict: ${{ steps.decide.outputs.verdict }}
+      reason: ${{ steps.decide.outputs.reason }}
+      verified_sha: ${{ steps.pin.outputs.sha }}
+      submission_dir: ${{ steps.decide.outputs.submission_dir }}
+    steps:
+      - name: Pin the head SHA under review
+        id: pin
+        run: echo "sha=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Check out the base branch only
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+
+      # Base manifest, base lockfile — never the pull request's.
+      - run: npm ci --ignore-scripts
+      - run: npm run build
+
+      - name: Classify the submission
+        id: decide
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+          VERIFIED_SHA: ${{ steps.pin.outputs.sha }}
+          REPO: ${{ github.repository }}
+        run: node .github/scripts/community-gate.mjs
+
+      - name: Replay-verify the added games
+        if: steps.decide.outputs.verdict == 'pass'
+        run: node packages/cli/dist/cli.js verify "${{ steps.decide.outputs.submission_dir }}"
+
+  decide:
+    needs: verify
+    # `always()` matters: a hold has to be labelled, and so does an unexpected
+    # crash in verify. Without it the gate would go quiet exactly when a human
+    # needs to be told. A cancelled run writes nothing — a newer run owns the
+    # pull request.
+    if: always() && needs.verify.result != 'cancelled'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      actions: write
+    steps:
+      - name: Check out the base branch only
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+
+      - name: Merge, or label for a human
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          VERIFY_RESULT: ${{ needs.verify.result }}
+          VERDICT: ${{ needs.verify.outputs.verdict }}
+          REASON: ${{ needs.verify.outputs.reason }}
+          VERIFIED_SHA: ${{ needs.verify.outputs.verified_sha }}
+        run: node .github/scripts/community-decide.mjs
