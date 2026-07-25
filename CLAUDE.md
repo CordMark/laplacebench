@@ -1,3 +1,4 @@
+
 <!-- BEGIN SHARED INSTRUCTIONS (auto-synced from agent-skills) -->
 
 ## リスク階層ゲート（スライスごとの検証構成）
@@ -59,3 +60,4 @@
 `docs/decisions/` には壊れやすい判断・ワークアラウンド・直感に反する実装だけを記録する（テンプレートは `docs/decisions/README.md`）。コードを変更する前に関連 DR を確認する。
 
 <!-- END SHARED INSTRUCTIONS -->
+
