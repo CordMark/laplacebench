@@ -1,0 +1,94 @@
+{
+  "gameId": "game-000",
+  "ruleset": "laplace-8x8-v1",
+  "seed": 5601,
+  "winner": "B",
+  "reason": "elimination",
+  "plies": 41,
+  "losses": {
+    "Red": 2,
+    "Blue": 2,
+    "Yellow": 3,
+    "Green": 0
+  },
+  "teams": {
+    "A": {
+      "agent": "codex-cli:gpt-5.6-sol@high",
+      "turns": 21,
+      "moves": 18,
+      "actCalls": 18,
+      "formatFailures": 0,
+      "legalityFailures": 0,
+      "failedTurns": 0,
+      "forcedPasses": 0,
+      "timeoutSkips": 0,
+      "tokenBudgetSkips": 3,
+      "inputTokens": 5176113,
+      "outputTokens": 254272,
+      "cacheReadTokens": 4188928,
+      "latencyMs": 1095899,
+      "usage": {
+        "schema": "laplace-model-usage-v1",
+        "adapterCalls": 18,
+        "reportedCalls": 18,
+        "unreportedCalls": 0,
+        "legacyUnversionedCalls": 0,
+        "providers": [
+          "openai"
+        ],
+        "sources": [
+          "codex-cli"
+        ],
+        "inputTotalTokens": 5176113,
+        "inputUncachedTokens": 987185,
+        "cacheReadTokens": 4188928,
+        "cacheWriteTokens": 0,
+        "cacheWriteReportedCalls": 0,
+        "outputTotalTokens": 254272,
+        "reasoningTokens": 249142,
+        "reasoningReportedCalls": 18,
+        "applicationInputBytes": 18133,
+        "applicationOutputBytes": 1044
+      }
+    },
+    "B": {
+      "agent": "claude-cli:claude-opus-5@high",
+      "turns": 20,
+      "moves": 20,
+      "actCalls": 20,
+      "formatFailures": 0,
+      "legalityFailures": 0,
+      "failedTurns": 0,
+      "forcedPasses": 0,
+      "timeoutSkips": 0,
+      "tokenBudgetSkips": 0,
+      "inputTokens": 2223571,
+      "outputTokens": 183502,
+      "cacheReadTokens": 2020039,
+      "latencyMs": 2232578,
+      "usage": {
+        "schema": "laplace-model-usage-v1",
+        "adapterCalls": 20,
+        "reportedCalls": 20,
+        "unreportedCalls": 0,
+        "legacyUnversionedCalls": 0,
+        "providers": [
+          "anthropic"
+        ],
+        "sources": [
+          "claude-cli"
+        ],
+        "inputTotalTokens": 2223571,
+        "inputUncachedTokens": 203532,
+        "cacheReadTokens": 2020039,
+        "cacheWriteTokens": 203493,
+        "cacheWriteReportedCalls": 20,
+        "outputTotalTokens": 183502,
+        "reasoningTokens": 0,
+        "reasoningReportedCalls": 0,
+        "applicationInputBytes": 19333,
+        "applicationOutputBytes": 23039
+      }
+    }
+  }
+}

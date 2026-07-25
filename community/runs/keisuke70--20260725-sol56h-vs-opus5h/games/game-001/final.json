@@ -1,0 +1,94 @@
+{
+  "gameId": "game-001",
+  "ruleset": "laplace-8x8-v1",
+  "seed": 6601,
+  "winner": "A",
+  "reason": "center",
+  "plies": 37,
+  "losses": {
+    "Red": 0,
+    "Blue": 2,
+    "Yellow": 4,
+    "Green": 1
+  },
+  "teams": {
+    "A": {
+      "agent": "claude-cli:claude-opus-5@high",
+      "turns": 19,
+      "moves": 19,
+      "actCalls": 19,
+      "formatFailures": 0,
+      "legalityFailures": 0,
+      "failedTurns": 0,
+      "forcedPasses": 0,
+      "timeoutSkips": 0,
+      "tokenBudgetSkips": 0,
+      "inputTokens": 2351948,
+      "outputTokens": 159038,
+      "cacheReadTokens": 2164484,
+      "latencyMs": 1986983,
+      "usage": {
+        "schema": "laplace-model-usage-v1",
+        "adapterCalls": 19,
+        "reportedCalls": 19,
+        "unreportedCalls": 0,
+        "legacyUnversionedCalls": 0,
+        "providers": [
+          "anthropic"
+        ],
+        "sources": [
+          "claude-cli"
+        ],
+        "inputTotalTokens": 2351948,
+        "inputUncachedTokens": 187464,
+        "cacheReadTokens": 2164484,
+        "cacheWriteTokens": 187427,
+        "cacheWriteReportedCalls": 19,
+        "outputTotalTokens": 159038,
+        "reasoningTokens": 0,
+        "reasoningReportedCalls": 0,
+        "applicationInputBytes": 18754,
+        "applicationOutputBytes": 22017
+      }
+    },
+    "B": {
+      "agent": "codex-cli:gpt-5.6-sol@high",
+      "turns": 18,
+      "moves": 16,
+      "actCalls": 16,
+      "formatFailures": 0,
+      "legalityFailures": 0,
+      "failedTurns": 0,
+      "forcedPasses": 0,
+      "timeoutSkips": 0,
+      "tokenBudgetSkips": 2,
+      "inputTokens": 4101235,
+      "outputTokens": 283682,
+      "cacheReadTokens": 3048192,
+      "latencyMs": 1101484,
+      "usage": {
+        "schema": "laplace-model-usage-v1",
+        "adapterCalls": 16,
+        "reportedCalls": 16,
+        "unreportedCalls": 0,
+        "legacyUnversionedCalls": 0,
+        "providers": [
+          "openai"
+        ],
+        "sources": [
+          "codex-cli"
+        ],
+        "inputTotalTokens": 4101235,
+        "inputUncachedTokens": 1053043,
+        "cacheReadTokens": 3048192,
+        "cacheWriteTokens": 0,
+        "cacheWriteReportedCalls": 0,
+        "outputTotalTokens": 283682,
+        "reasoningTokens": 279602,
+        "reasoningReportedCalls": 16,
+        "applicationInputBytes": 17239,
+        "applicationOutputBytes": 928
+      }
+    }
+  }
+}
