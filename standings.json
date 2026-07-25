@@ -1,0 +1,20 @@
+{
+  "schema": "laplace-bench-standings-v2",
+  "lane": "community",
+  "game_count": 4,
+  "run_count": 1,
+  "matchup_count": 0,
+  "matchups": [],
+  "agents": [
+    {
+      "agent": "center-greedy",
+      "games": 4,
+      "err_per_turn": 0
+    },
+    {
+      "agent": "takeshi",
+      "games": 4,
+      "err_per_turn": 0
+    }
+  ]
+}
