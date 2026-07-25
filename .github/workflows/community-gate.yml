@@ -59,9 +59,14 @@ jobs:
           REPO: ${{ github.repository }}
         run: node .github/scripts/community-gate.mjs
 
+      # The path goes through the environment, never through `${{ }}` expansion
+      # into the script text. Combined with the gate's path-alphabet check, a
+      # crafted directory name cannot become shell syntax here.
       - name: Replay-verify the added games
         if: steps.decide.outputs.verdict == 'pass'
-        run: node packages/cli/dist/cli.js verify "${{ steps.decide.outputs.submission_dir }}"
+        env:
+          SUBMISSION_DIR: ${{ steps.decide.outputs.submission_dir }}
+        run: node packages/cli/dist/cli.js verify "$SUBMISSION_DIR"
 
   decide:
     needs: verify

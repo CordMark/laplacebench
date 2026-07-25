@@ -60,10 +60,21 @@ directly), so it is a public data contract: schema changes must bump the
 `schema` field, never silently reshape it.
 
 Matchups are grouped by **model**, folding harness and effort into a breakdown
-inside each matchup, and ordered by games played. Two kinds of game are counted
-in the totals but kept off the public list: games where neither side is a
-language model, and games where both sides fold to the same headline (a
-harness-only comparison).
+inside each matchup, and ordered by games played (ties broken by the most
+recent run). Two kinds of game are counted in the totals but kept off the
+public list: games where neither side is a language model, and games where both
+sides fold to the same headline (a harness-only comparison).
+
+Two things about headlines are worth stating plainly:
+
+- A run that used a harness's own default model does not record which model
+  that was, so its headline is the harness name (for example `codex-cli`)
+  rather than a model. That headline can cover more than one model over time.
+  Naming a model we did not observe would be worse.
+- Model shorthands resolve to canonical ids so the same model folds together
+  across harnesses. That table is append-only and an existing shorthand is
+  never repointed at a newer generation — otherwise past matchups would be
+  renamed under a model they never played.
 
 ## Reproducing the aggregate locally
 

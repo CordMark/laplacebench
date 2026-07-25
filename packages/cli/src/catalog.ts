@@ -7,7 +7,16 @@
  * docs/plans/2026-07-25-play-wizard.md.
  */
 
-/** Anthropic API model shorthands (moved here from agents/llm.ts). */
+/**
+ * Anthropic API model shorthands (moved here from agents/llm.ts).
+ *
+ * **Append-only, and an existing key never gets repointed.** This table also
+ * resolves model identity for the published matchup headlines, which are
+ * rebuilt from `community/runs` on every merge — so repointing `opus` at a new
+ * generation would retroactively rename, merge, or split matchups that were
+ * played against the old one. Same rule the product CPU already follows by
+ * carrying `cpu-v4` in its identity: a new generation is a new name.
+ */
 export const MODEL_SHORTHAND: Record<string, string> = {
   opus: "claude-opus-4-8",
   sonnet: "claude-sonnet-5",
@@ -196,6 +205,31 @@ export function parseAgentSpec(spec: string): ParsedAgentSpec {
 }
 
 /**
+ * Model names that stand for the same model. What lands in `final.json` is the
+ * agent's own name, and the harnesses disagree about it: the Anthropic API
+ * agent resolves shorthands (`anthropic:claude-opus-4-8`) while the Claude CLI
+ * agent keeps them (`claude-cli:opus`). Folding on the raw string would split
+ * one model in two at exactly the harness boundary the fold exists to erase.
+ */
+function canonicalModel(model: string): string {
+  return MODEL_SHORTHAND[model] ?? model;
+}
+
+/**
+ * A harness running its own unnamed model. The Codex agent writes this
+ * literally when the player takes their plan's default model, and "default" is
+ * not a model identity — two harnesses could each claim it — so these group
+ * under the harness instead.
+ *
+ * This costs real information: the run does not record which model the plan
+ * actually served, so a headline of `codex-cli` can cover more than one model
+ * over time. Naming it anyway would be worse — the honest label for an
+ * unrecorded model is the harness that ran it. Recording the resolved model at
+ * match time is the fix, and it belongs to the harness work, not here.
+ */
+const UNNAMED_MODEL = "default";
+
+/**
  * The identity a matchup headline is grouped by: the model, with every harness
  * folded together (a given model at a given effort is expected to play the same
  * whether it is driven through a subscription CLI or the API). Opaque specs
@@ -203,7 +237,12 @@ export function parseAgentSpec(spec: string): ParsedAgentSpec {
  */
 export function headlineKey(spec: string): string {
   const parsed = parseAgentSpec(spec);
-  return parsed.model ?? parsed.raw;
+  if (parsed.harness === null) return parsed.raw;
+  if (parsed.model === null || parsed.model === UNNAMED_MODEL) {
+    // Group by harness so its efforts still fold together.
+    return parsed.harness;
+  }
+  return canonicalModel(parsed.model);
 }
 
 /** Whether this spec drives a language model (see LLM_HARNESSES). */

@@ -53,13 +53,14 @@ test("matchup golden bytes: property order, orientation, rounding, one trailing 
   "matchups": [
     {
       "headline": {
-        "left": "fable",
+        "left": "claude-fable-5",
         "right": "gpt"
       },
       "games": 2,
       "left_wins": 1,
       "right_wins": 1,
       "draws": 0,
+      "last_played": "",
       "last_game": "run-a/game-001",
       "breakdown": [
         {
@@ -99,11 +100,18 @@ test("matchup golden bytes: property order, orientation, rounding, one trailing 
 });
 
 test("headline folds every harness onto the model; unknown specs stay whole", () => {
-  assert.equal(headlineKey("claude-cli:opus@high"), "opus");
-  assert.equal(headlineKey("anthropic:opus"), "opus");
+  // These are the strings the agents actually write into final.json — the CLI
+  // keeps the shorthand, the API agent resolves it. Both must land together.
+  assert.equal(headlineKey("claude-cli:opus@high"), "claude-opus-4-8");
+  assert.equal(headlineKey("anthropic:claude-opus-4-8"), "claude-opus-4-8");
   // The learning harness folds in too — it is part of the harness axis, not a
   // separate contender (direction correction 363555d9).
-  assert.equal(headlineKey("claude-cli-learn:opus@high"), "opus");
+  assert.equal(headlineKey("claude-cli-learn:opus@high"), "claude-opus-4-8");
+  // A harness running its own unnamed model groups by harness: "default" is
+  // not a model identity, and its efforts should still fold together.
+  assert.equal(headlineKey("codex-cli:default@medium"), "codex-cli");
+  assert.equal(headlineKey("codex-cli:default@high"), "codex-cli");
+  assert.equal(headlineKey("codex-cli"), "codex-cli");
 
   // `anthropic-api` is a usage-accounting label, NOT a spec prefix: it must not
   // be mistaken for the anthropic harness.
@@ -152,7 +160,31 @@ test("every published catalog spec round-trips through parseAgentSpec", () => {
   assert.deepEqual(parseAgentSpec("codex-cli:@medium"), {
     harness: "codex-cli", model: null, effort: "medium", raw: "codex-cli:@medium",
   });
-  assert.equal(headlineKey("codex-cli:@medium"), "codex-cli:@medium");
+  assert.equal(headlineKey("codex-cli:@medium"), "codex-cli");
+});
+
+test("the strings actually recorded in final.json fold as intended", () => {
+  // `buildSpec` is what a user types; `agent.name` is what the run records, and
+  // they are NOT the same string. These are the recorded forms
+  // (agents/llm.ts:27, agents/cli.ts:135, agents/cli.ts:249).
+  const recorded = {
+    claudeCli: "claude-cli:fable@medium",
+    claudeCliLearn: "claude-cli-learn:claude-fable-5@low",
+    anthropicApi: "anthropic:claude-fable-5",
+    codexDefault: "codex-cli:default@medium",
+    codexNamed: "codex-cli:gpt-5.6-sol@medium",
+    productCpu: "product-cpu:cpu-v4:level_5",
+  };
+  // Same model through three different harnesses, one headline.
+  assert.equal(headlineKey(recorded.claudeCli), "claude-fable-5");
+  assert.equal(headlineKey(recorded.claudeCliLearn), "claude-fable-5");
+  assert.equal(headlineKey(recorded.anthropicApi), "claude-fable-5");
+  assert.equal(headlineKey(recorded.codexDefault), "codex-cli");
+  assert.equal(headlineKey(recorded.codexNamed), "gpt-5.6-sol");
+  assert.equal(headlineKey(recorded.productCpu), "cpu-v4:level_5");
+  for (const spec of Object.values(recorded)) {
+    assert.notEqual(parseAgentSpec(spec).harness, null, spec);
+  }
 });
 
 test("publication conditions: baseline-only out, one-sided LLM in, self-matchup out", () => {
@@ -175,7 +207,7 @@ test("publication conditions: baseline-only out, one-sided LLM in, self-matchup 
   const data = matchupData([runDir]);
   assert.equal(data.matchup_count, 1);
   assert.deepEqual(data.matchups[0].headline, {
-    left: "cpu-v4:level_5", right: "opus",
+    left: "claude-opus-4-8", right: "cpu-v4:level_5",
   });
   // Excluded games are still counted in the ledger totals and participants.
   assert.equal(data.game_count, 3);
@@ -236,14 +268,13 @@ test("output is a total order: independent of runDirs order and of tied rows", (
   const reversed = matchupsJson([r2, r1]);
   assert.equal(forward, reversed);
   assert.equal(matchupsJson([r1, r2]), forward);
-  // Headline is gpt|opus, so both rows share left_agent — the tie can only be
-  // broken by the LAST comparator, right_agent.
+  // Both rows share right_agent, so the tie falls to the raw-spec comparators.
   const breakdown = matchupData([r1, r2]).matchups[0].breakdown;
   assert.deepEqual(
     breakdown.map((b) => [b.left_agent, b.right_agent]),
     [
-      ["codex-cli:gpt", "anthropic:opus"],
-      ["codex-cli:gpt", "claude-cli:opus@high"],
+      ["anthropic:opus", "codex-cli:gpt"],
+      ["claude-cli:opus@high", "codex-cli:gpt"],
     ]
   );
 });
@@ -282,7 +313,10 @@ test("matchups are ordered by games played, most first", () => {
   const data = matchupData([runDir]);
   assert.deepEqual(
     data.matchups.map((m) => [m.headline.left, m.headline.right, m.games]),
-    [["gpt", "opus", 2], ["gpt", "haiku", 1]]
+    [
+      ["claude-opus-4-8", "gpt", 2],
+      ["claude-haiku-4-5", "gpt", 1],
+    ]
   );
 });
 
@@ -317,7 +351,7 @@ test("markdown says CI owns the file and keeps the self-reported caveat", () => 
   });
   const md = matchupsMarkdown([runDir]);
   assert.ok(md.includes("do not edit by hand"));
-  assert.ok(md.includes("## gpt vs opus"));
+  assert.ok(md.includes("## claude-opus-4-8 vs gpt"));
   assert.ok(md.includes("self-reported"));
   // No regeneration command is advertised to submitters any more.
   assert.ok(!md.includes("npx laplacebench standings"));

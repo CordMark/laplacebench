@@ -194,11 +194,18 @@ last_updated: 2026-07-25
      除外された対戦も `game_count` / `run_count` には算入する（台帳としての
      総数は正しく保つ）。
    - **決定論のバイト契約を維持（全順序を両レベルで閉じる）**:
-     - 見出しの並び: 対局数 desc → 最終対局 desc → **`headline.left` の
-       序数比較 asc → `headline.right` の序数比較 asc**
-     - 内訳の並び: 対局数 desc → 最終対局 desc → **`left_agent` の序数比較
-       asc → `right_agent` の序数比較 asc**。内訳同士は headline key が
-       同一なので、raw spec を最終 tie-breaker に置かないと全順序にならない
+     - 見出しの並び: 対局数 desc → **`last_played` desc** → `last_game` desc
+       → **`headline.left` の序数比較 asc → `headline.right` の序数比較 asc**
+     - 内訳の並び: 対局数 desc → `last_played` desc → `last_game` desc →
+       **`left_agent` の序数比較 asc → `right_agent` の序数比較 asc**。
+       内訳同士は headline key が同一なので、raw spec を最終 tie-breaker に
+       置かないと全順序にならない
+     - **`last_played` は `run.json.started_at`**。`last_game` は
+       `<run-id>/<game-id>` の序数最大だが、公開台帳では run-id の先頭が
+       提出者ログインになるため**時系列の代理にならない**（並び順が
+       アルファベット順になる）。したがって recency の正本は `last_played`
+       で、`last_game` は特定ログへの参照として持つ。`started_at` が無い run
+       は `""` で最後尾
      - **入力 `runDirs` の順序に依存しないこと**を契約とする（並べ替えても
        バイト一致）
      JSON はプロパティ挿入順をスキーマ記載順に固定、
@@ -214,6 +221,7 @@ last_updated: 2026-07-25
      matchups: [{
        headline: { left, right },            // 序数昇順で正準化。向きの唯一の正本
        games, left_wins, right_wins, draws,
+       last_played: <ISO8601>,               // run.json.started_at の最大。第2ソートキー
        last_game: <run-id/game-id>,
        breakdown: [{
          left_agent, right_agent,            // headline の向きに揃えた raw spec

@@ -28,10 +28,24 @@ async function api(path) {
   return res.json();
 }
 
+/**
+ * Write job outputs. Values are refused rather than escaped if they contain a
+ * newline: `key=value` lines are how a crafted value would forge a second
+ * output (a `verdict=pass` of its own choosing), and there is no legitimate
+ * multi-line value here.
+ */
 function output(verdict, reason, submissionDir = "") {
+  const values = { verdict, reason, submission_dir: submissionDir };
+  for (const [k, v] of Object.entries(values)) {
+    if (/[\r\n]/.test(String(v))) {
+      throw new Error(`refusing to write a multi-line output: ${k}`);
+    }
+  }
   appendFileSync(
     process.env.GITHUB_OUTPUT,
-    `verdict=${verdict}\nreason=${reason}\nsubmission_dir=${submissionDir}\n`
+    Object.entries(values)
+      .map(([k, v]) => `${k}=${v}\n`)
+      .join("")
   );
   console.log(`verdict=${verdict} reason=${reason}`);
 }

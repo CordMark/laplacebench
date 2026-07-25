@@ -73,20 +73,37 @@ if (pr.head.sha !== VERIFIED_SHA) {
   process.exit(0);
 }
 
-const merge = await api(`/repos/${REPO}/pulls/${PR}/merge`, {
-  method: "PUT",
-  body: JSON.stringify({ sha: VERIFIED_SHA, merge_method: "squash" }),
-});
+// The merge itself can be refused — a conflict, a required check still
+// running, a branch rule. Letting that throw would leave the pull request
+// merged-nowhere AND unlabelled, which reads exactly like success from the
+// outside. Anything that is not a completed merge goes to the human queue.
+let merge;
+try {
+  merge = await api(`/repos/${REPO}/pulls/${PR}/merge`, {
+    method: "PUT",
+    body: JSON.stringify({ sha: VERIFIED_SHA, merge_method: "squash" }),
+  });
+} catch (e) {
+  await hold(`merge-refused:${e instanceof Error ? e.message : String(e)}`);
+  process.exit(1);
+}
 console.log(`merged ${VERIFIED_SHA} as ${merge.sha}`);
 
 // A push made with GITHUB_TOKEN does not start new workflow runs, so the
 // publish step has to be asked for explicitly or the published records would
 // silently stop tracking main.
-await api(`/repos/${REPO}/actions/workflows/${PUBLISH_WORKFLOW}/dispatches`, {
-  method: "POST",
-  body: JSON.stringify({
-    ref: "main",
-    inputs: { merged_sha: merge.sha },
-  }),
-});
+try {
+  await api(`/repos/${REPO}/actions/workflows/${PUBLISH_WORKFLOW}/dispatches`, {
+    method: "POST",
+    body: JSON.stringify({
+      ref: "main",
+      inputs: { merged_sha: merge.sha },
+    }),
+  });
+} catch (e) {
+  // The run is already merged; the records are now behind. Fail loudly so it
+  // is visible, and flag it for a human to re-dispatch.
+  await hold(`dispatch-failed:${e instanceof Error ? e.message : String(e)}`);
+  process.exit(1);
+}
 console.log(`dispatched ${PUBLISH_WORKFLOW} for ${merge.sha}`);

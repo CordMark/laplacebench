@@ -125,3 +125,44 @@ test("structural checks run before the account lookup", () => {
   const v = classify([added("packages/cli/src/cli.ts")], { merged: 999 });
   assert.match(v.reason, /^outside-submission-root:/);
 });
+
+test("a crafted path cannot become shell syntax or a forged job output", () => {
+  // git allows any byte but NUL and `/` in a path component, and the directory
+  // name reaches both a `run:` block and $GITHUB_OUTPUT. These are the shapes
+  // that would turn the replay step into a no-op while still reporting a pass.
+  for (const dir of [
+    'alice--x"; exit 0; #',
+    "alice--x$(id)",
+    "alice--x`id`",
+    "alice--x;rm -rf /",
+    "alice--x\nverdict=pass",
+    "alice--x'y",
+    "alice--x y",
+  ]) {
+    const files = [added(`community/runs/${dir}/run.json`)];
+    const v = classify(files, { modes: modesFor(files) });
+    assert.equal(v.ok, false, dir);
+    assert.match(v.reason, /^unsafe-path-segment:/, dir);
+  }
+  // Nested segments are checked too, not just the run directory.
+  const nested = [added('community/runs/alice--ok/games/g"0/final.json')];
+  assert.match(
+    classify(nested, { modes: modesFor(nested) }).reason,
+    /^unsafe-path-segment:/
+  );
+  // `..` satisfies the alphabet but is traversal, and the fetched bytes are
+  // written to these paths.
+  for (const traversal of [
+    "community/runs/alice--ok/../../escaped.json",
+    "community/runs/alice--ok/./final.json",
+  ]) {
+    const files = [added(traversal)];
+    assert.match(
+      classify(files, { modes: modesFor(files) }).reason,
+      /^unsafe-path-segment:/,
+      traversal
+    );
+  }
+  // Ordinary run layouts still pass.
+  assert.equal(classify(good).ok, true);
+});

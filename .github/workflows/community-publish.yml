@@ -74,19 +74,27 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Every step is checked explicitly: inside a function called on the
+          # left of `||`, bash suppresses errexit, so a failing `git push` would
+          # otherwise be swallowed and the step would end green with stale data
+          # published — the exact "quietly broken" outcome this lane avoids.
           publish() {
-            git fetch origin standings
-            git worktree add ../standings origin/standings
-            cp out/MATCHUPS.md out/standings.json ../standings/
-            git -C ../standings add -A
+            rm -rf ../standings
+            git worktree remove ../standings --force 2>/dev/null || true
+            git fetch origin standings || return 1
+            git worktree add ../standings origin/standings || return 1
+            cp out/MATCHUPS.md out/standings.json ../standings/ || return 1
+            git -C ../standings add -A || return 1
             if git -C ../standings diff --cached --quiet; then
               echo "records unchanged; nothing to publish"
-              git worktree remove ../standings --force
               return 0
             fi
-            git -C ../standings commit -m "Publish matchup records from ${SOURCE_SHA}"
-            git -C ../standings push origin HEAD:standings
-            git worktree remove ../standings --force
+            git -C ../standings commit -m "Publish matchup records from ${SOURCE_SHA}" || return 1
+            git -C ../standings push origin HEAD:standings || return 1
           }
           # One retry: a concurrent publish can land between fetch and push.
-          publish || { git worktree remove ../standings --force || true; publish; }
+          if ! publish; then
+            echo "publish failed; retrying once"
+            publish || { echo "::error::publishing the matchup records failed"; exit 1; }
+          fi
+          git worktree remove ../standings --force 2>/dev/null || true

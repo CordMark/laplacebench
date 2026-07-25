@@ -23,6 +23,24 @@ export const SUBMISSION_ROOT = "community/runs/";
 export const ALLOWED_EXTENSIONS = [".json", ".jsonl"];
 
 /**
+ * Paths inside a submission are attacker-chosen and end up in a shell command
+ * and in $GITHUB_OUTPUT. git permits any byte except NUL and `/` in a path
+ * component, so a name like `alice--x"; exit 0; #` would be perfectly legal —
+ * and would turn the replay-verification step into a no-op while the gate still
+ * reported a pass. Restricting the alphabet is what makes "the pull request's
+ * content never executes here" true rather than merely intended.
+ */
+export const SAFE_PATH_SEGMENT = /^[A-Za-z0-9._-]+$/;
+
+/**
+ * `.` and `..` satisfy the alphabet above but are traversal, not names. git's
+ * own fsck rejects them in a tree and GitHub runs fsck on receive, so this is
+ * belt-and-braces — but this gate is built not to depend on the other side
+ * behaving, and the fetched bytes are written to these paths.
+ */
+export const TRAVERSAL_SEGMENTS = [".", ".."];
+
+/**
  * git modes for a regular file. A symlink (120000) would be fetched as its
  * target path rather than as data, and a gitlink (160000) is a submodule
  * pointer — neither is something to replay or to merge unexamined.
@@ -56,6 +74,13 @@ export function checkAllowlist(files) {
     const slash = rest.indexOf("/");
     if (slash <= 0) {
       return { ok: false, reason: `not-in-a-run-dir:${f.filename}` };
+    }
+    // Check EVERY segment, not just the run directory: the whole path is what
+    // gets handed to the verifier.
+    for (const segment of rest.split("/")) {
+      if (!SAFE_PATH_SEGMENT.test(segment) || TRAVERSAL_SEGMENTS.includes(segment)) {
+        return { ok: false, reason: `unsafe-path-segment:${f.filename}` };
+      }
     }
     dirs.add(rest.slice(0, slash));
   }

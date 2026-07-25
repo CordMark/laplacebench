@@ -303,6 +303,32 @@ test("opting into auto-submit publishes the run instead of printing instructions
   assert.ok(!io.printed.join("\n").includes("cp -R runs/"));
 });
 
+test("a failed auto-submit falls back to the manual route instead of throwing", async () => {
+  const io = scriptedIO([
+    providerIndex("baseline"), 0,
+    providerIndex("baseline"), 1,
+    0, "",
+    1, // 自動提出: する
+  ]);
+  const code = await runPlay(
+    {
+      ...okDeps,
+      runArena: async () => {},
+      submitRun: () => {
+        throw new Error("push rejected (non-fast-forward)");
+      },
+      isTTY: true,
+      now: () => new Date("2026-07-25T12:00:00Z"),
+    },
+    io
+  );
+  // The match happened and its log is on disk — this is not a failed session.
+  assert.equal(code, 0);
+  const out = io.printed.join("\n");
+  assert.ok(out.includes("push rejected"));
+  assert.ok(out.includes("cp -R runs/"));
+});
+
 test("the auto-submit choice is asked once, up front, and defaults to off", async () => {
   const io = scriptedIO([
     providerIndex("baseline"), 0,

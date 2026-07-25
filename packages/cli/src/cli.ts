@@ -382,10 +382,18 @@ async function main(): Promise<void> {
     const { submitRun, defaultSubmitDeps } = require("./submit") as typeof import("./submit");
     const runDir = String(rest.find((a) => !a.startsWith("--")) ?? "");
     if (!runDir) throw new Error("submit needs a run directory: laplacebench submit <runDir>");
-    const outcome = submitRun(runDir, defaultSubmitDeps());
-    // An unauthenticated machine is a normal state with printed instructions,
-    // not a crash; a run that fails verification is a real failure.
-    if (outcome.status === "blocked" && outcome.reason === "verify-failed") {
+    try {
+      const outcome = submitRun(runDir, defaultSubmitDeps());
+      // An unauthenticated machine is a normal state with printed instructions,
+      // not a crash; a run that fails verification is a real failure.
+      if (outcome.status === "blocked" && outcome.reason === "verify-failed") {
+        process.exitCode = 1;
+      }
+    } catch (e) {
+      // git/gh failures (push conflict, network, an existing pull request) are
+      // reportable outcomes, not something to hand back as a stack trace.
+      console.error(`submit failed: ${e instanceof Error ? e.message : String(e)}`);
+      console.error("手動提出の手順は community/README.md を参照してください。");
       process.exitCode = 1;
     }
   } else if (cmd === "regret") {

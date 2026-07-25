@@ -291,7 +291,15 @@ export async function runPlay(
     });
     if (result.autoSubmit) {
       rlio.print("── 公開台帳へ提出 ──");
-      deps.submitRun(path.join("runs", runId));
+      try {
+        deps.submitRun(path.join("runs", runId));
+      } catch (e) {
+        // The match itself succeeded and its log is on disk; a push conflict or
+        // a git failure must not end the session with a stack trace and no way
+        // forward. Fall back to the manual route.
+        rlio.print(`提出に失敗しました: ${e instanceof Error ? e.message : String(e)}`);
+        submissionGuidance(runId).forEach((l) => rlio.print(l));
+      }
     } else {
       submissionGuidance(runId).forEach((l) => rlio.print(l));
     }

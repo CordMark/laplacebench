@@ -219,3 +219,146 @@ merge API への `sha` 必須指定、不一致時 hold を追加した。
   }
 }
 ```
+
+## 2026-07-25 community-lane-v2 [impl]（tier: heavy）
+
+- Q(impl/1): 提出ディレクトリ名は攻撃者が完全に制御でき、allowlist は接頭辞・
+  拡張子・status・mode しか見ていない。その値が `run:` へ式展開され
+  $GITHUB_OUTPUT へ改行検査なしで書かれる。リプレイ検証を no-op 化したまま
+  verdict=pass でマージされる経路は成立しないと言えるか。
+  - 弁明: 成立しないとは言えない。git のパス構成要素は NUL と `/` 以外の任意
+    バイトを許すので `alice--x"; exit 0; #` は合法なディレクトリ名であり、
+    `checkPrefix` は接頭辞しか見ていない。純粋関数テストは文字種を検査して
+    いないため構造上この経路を通らない。指摘のとおり。
+  - 裁定: revise（source: Direction Brief の「PR のコードを一切実行しない」/
+    plan T002; class: A）。全パスセグメントを `^[A-Za-z0-9._-]+$` で検証、
+    `$GITHUB_OUTPUT` は改行を含む値を拒否、`run:` の `${{ }}` 展開を env 渡しへ
+    変更。反例7件 + ネストセグメントの回帰テストを追加。
+  - by: auto
+  - prediction: miss
+
+- Q(impl/2): パーサは `buildSpec` から導出したが、`final.json` に載るのは
+  `agent.name` である。correction 363555d9 の「全ハーネスを一律にモデル単位へ
+  畳む」は実データ上で成立しているか。
+  - 弁明: 成立していない。`agents/llm.ts:27` は shorthand を解決して
+    `anthropic:claude-opus-4-8`、`agents/cli.ts:135` は解決せず
+    `claude-cli:opus`、`agents/cli.ts:249` は `codex-cli:default@medium`。
+    畳み込みが、それが存在する理由であるハーネス境界でちょうど効いていない。
+    テストもシステムが生成しない文字列を固定していた。
+  - 裁定: revise（source: correction 363555d9 / 価値序列 第1項「出す数字が
+    嘘をつかない」; class: A）。`headlineKey` を MODEL_SHORTHAND で正規化し、
+    `default` / model 無しはハーネス単位へ寄せる。実記録文字列を起点にした
+    テストを追加。
+  - by: auto
+  - prediction: miss
+
+- Q(impl/3): `publish || { ...; publish; }` は左辺の関数内で errexit が無効に
+  なるため、push 失敗が飲み込まれてリトライが発火せず緑で終わるのではないか。
+  - 弁明: そのとおり。bash は `||` 左辺で errexit を抑制するため、
+    `git push` 失敗後も `git worktree remove` まで進み、その終了状態が関数の
+    戻り値になる。「CI 緑・公開データは古いまま」が残る。
+  - 裁定: revise（source: プラン item 9「1回だけ再試行し、それでも落ちたら
+    fail」/ dispatch 失敗を fail させる方針との整合; class: A）。各ステップを
+    `|| return 1` で明示し、`if ! publish` 形式へ変更、最終失敗は `exit 1`。
+  - by: auto
+  - prediction: miss
+
+- Q(impl/4): decide の merge API が 405/409 を返すと例外で落ち、
+  `community-submission` ラベルだけが付いて `needs-human` が付かない経路が
+  残っていないか。
+  - 弁明: 残っていた。`if: always()` は verify の結果分岐にしか効いておらず、
+    decide 自身の失敗は素通りする。ci.yml が pull_request で走る以上、
+    required check 未完了による 405 は現実的。
+  - 裁定: revise（source: プラン item 7「落ちたら人間キューへ」の fail-closed
+    方針; class: A）。merge と dispatch を try/catch で囲み、失敗時に hold
+    ラベルを付けてから非ゼロ終了。
+  - by: auto
+  - prediction: miss
+
+- Q(impl/5): `last_game` は `<login>--<run-id>/<game-id>` の序数最大なので、
+  「同数なら最終対局の新しい順」は実際には提出者ログインのアルファベット順に
+  なる。これは意図した契約か。
+  - 弁明: 意図ではない。ローカル run-id は先頭がタイムスタンプだが、公開台帳
+    では `<login>--` が前置されるため序数比較の支配項がログイン名になる。
+    公開データ契約の説明が実装と食い違う。
+  - 裁定: revise（source: community/README.md とプランの並び順記述; class: A）。
+    `run.json.started_at` を読む `last_played` を追加して第2ソートキーにし、
+    `last_game` は「参照」として残す。started_at 欠落は "" で最後尾。
+  - by: auto
+  - prediction: miss
+
+（round 2）
+
+- Q(impl/6): standings.ts に生の NUL バイトが2つ埋め込まれており git が binary
+  と判定している。中核ファイルの diff が見えないまま実装レビューへ進むのは
+  意図した選択か。
+  - 弁明: 意図ではない。`file` が `data` を返し、NUL はオフセット 6144 と 6505
+    に実在した。区切りに NUL を選んだこと自体は正しいが、エスケープではなく
+    生バイトで書いた副作用で集計ロジック全体がレビュー不能になっていた。
+    機能テストでは原理的に検出できない。
+  - 裁定: revise（source: CLAUDE.md のコミット規律「fresh context のエージェント
+    が git log から再構成する」+ 次段が diff を読む工程であること; class: B）。
+    ` ` エスケープへ置換。`file` が UTF-8 text を返すことと golden テストの
+    バイト一致を確認。
+  - by: auto
+  - prediction: miss
+
+- Q(impl/7): 見出しのモデル同一性が対局時の記録ではなく公開時の
+  MODEL_SHORTHAND 解釈に依存する。codex デフォルトモデル run は見出しが
+  ハーネス名になる。価値序列 第1項と両立するか。
+  - 弁明: (a) は現時点の事実。codex CLI はデフォルト時に
+    `codex-cli:default@medium` としか記録せず、実際のモデルがログに残らない。
+    ただし**観測していないモデル名を出すほうが「嘘をつかない」に反する**ので、
+    記録が無いときにハーネス名を出すのは正しい側の選択と考える。恒久的な解は
+    対局時に解決済みモデルを記録することで、それはハーネス側の作業。
+    (b) の可変テーブル依存は将来リスクとして正しい。
+  - 裁定: revise（source: 価値序列 第1項 + Direction Brief D7「バージョンは
+    識別子の一部」の類推; class: C）。挙動は維持し、MODEL_SHORTHAND を
+    **append-only・既存キーを別世代へ振り替えない**規範としてコメントで固定。
+    `UNNAMED_MODEL` に情報欠落と正しい直し方を明記。community/README.md に
+    見出しの2つの但し書きを追加。解決済みモデルの記録はハーネス側スライスへ。
+  - by: auto
+  - prediction: hit
+
+- Q(impl/8): `SAFE_PATH_SEGMENT` は `.` と `..` を通し、materialize は書き込み先が
+  提出ディレクトリ配下であることを検証していない。base checkout の外へ書けない
+  根拠は何か。
+  - 弁明: 根拠は git 側の fsck に依存しており、「相手が行儀よく振る舞うことに
+    依存しない」というゲートの立て方と食い違う。指摘のとおり。
+  - 裁定: revise（source: gate-rules.mjs 自身のコメントが主張する不変条件;
+    class: A）。`TRAVERSAL_SEGMENTS` を明示的に弾き、`..` と `.` の反例テストを
+    追加。
+  - by: auto
+  - prediction: miss
+
+- Q(impl/9): `last_played` を公開 JSON へ新設したが承認済みプランのスキーマ節に
+  無く、schema 文字列は v2 のまま。「schema changes must bump the schema field」
+  と整合するか。
+  - 弁明: 消費者（CommunityStandings.tsx）は未知キーを拒否しないので実害は
+    無いが、契約文書と実バイト列がずれているのは事実。
+  - 裁定: revise（source: community/README.md の消費契約; class: C）。
+    フィールドは維持し、プランのスキーマ節と並び順記述へ `last_played` を
+    追記。`last_game` が公開台帳では時系列の代理にならない理由も明記。
+  - by: auto
+  - prediction: hit
+
+- Q(impl/10): 引き継ぎ観察 — `wizard.ts` と `cli.ts` の `submitRun` 呼び出しに
+  catch が無く、内部の git/gh が非ゼロ終了で throw するため push 競合や既存 PR で
+  stack trace になり、自動提出時は代替案内も出ない。
+  - 弁明: 指摘のとおり。`submitRun` は回復可能な状態を戻り値でモデル化して
+    いるのに、呼び出し側がその契約に乗っていない設計内の不整合。実装レビューへ
+    回すより安いのでこの場で直した。
+  - 裁定: revise（source: submitRun 自身の戻り値契約; class: B）。両呼び出しを
+    try/catch で囲み、wizard は失敗理由 + 手動手順へフォールバック（対局自体は
+    成功しているので exit 0）、CLI は理由と README への案内を出して exit 1。
+    回帰テストを追加。
+  - by: auto
+  - prediction: hit
+
+- ラウンド3・指摘計 10 件で APPROVED（confidence 0.84）
+  - 条件: この承認は「実装チェックポイントとして未解決の問いが無い」ことを
+    意味し、レーンが本番で動くことの証明ではない。未観測のまま残るもの:
+    (a) プラン Verification の Phase 2 実測（実 PR での allowlist 違反、
+    head SHA 競合、verify crash の fail-closed、連鎖の発火）。
+    (b) example run 未差し替えのため公開成果物は matchup_count: 0 で、
+    v2 の集計経路は実データを一度も通っていない。
