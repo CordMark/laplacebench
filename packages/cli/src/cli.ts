@@ -342,6 +342,10 @@ async function main(): Promise<void> {
       },
       randomSeed: () => Math.floor(Math.random() * 90000) + 10000,
       runArena: (a) => arena(a),
+      submitRun: (runDir) => {
+        const { submitRun, defaultSubmitDeps } = require("./submit") as typeof import("./submit");
+        submitRun(runDir, defaultSubmitDeps());
+      },
       isTTY: Boolean(process.stdin.isTTY),
       now: () => new Date(),
     });
@@ -354,31 +358,36 @@ async function main(): Promise<void> {
     const outDir = args["out"] ? path.resolve(String(args["out"])) : defaultOutDir();
     exportRun(runDir, outDir);
   } else if (cmd === "verify") {
-    const { exportGame } = require("./exportweb") as typeof import("./exportweb");
+    const { verifyRun } = require("./exportweb") as typeof import("./exportweb");
     const runDirs = rest.filter((a) => !a.startsWith("--")).map((d) => path.resolve(d));
     let games = 0;
     let failed = 0;
     for (const runDir of runDirs) {
-      const gamesDir = path.join(runDir, "games");
-      if (!fs.existsSync(gamesDir)) {
-        console.error(`FAILED: ${runDir}: no games/ directory`);
-        failed++;
-        continue;
+      const result = verifyRun(runDir);
+      const name = path.basename(runDir);
+      games += result.games;
+      failed += result.failures.length;
+      for (const f of result.failures) {
+        console.error(`FAILED: ${name}/${f.gameId}: ${f.message}`);
       }
-      for (const gameId of fs.readdirSync(gamesDir).sort()) {
-        if (!fs.existsSync(path.join(gamesDir, gameId, "events.jsonl"))) continue;
-        games++;
-        try {
-          exportGame(runDir, gameId);
-          console.log(`verified: ${path.basename(runDir)}/${gameId}`);
-        } catch (err: any) {
-          failed++;
-          console.error(`FAILED: ${path.basename(runDir)}/${gameId}: ${err?.message ?? err}`);
-        }
+      if (result.failures.length === 0) {
+        console.log(`verified: ${name} (${result.games} game(s))`);
       }
     }
-    console.log(`${games - failed}/${games} games verified across ${runDirs.length} run(s)`);
+    console.log(
+      `${Math.max(0, games - failed)}/${games} games verified across ${runDirs.length} run(s)`
+    );
     if (failed > 0 || games === 0) process.exitCode = 1;
+  } else if (cmd === "submit") {
+    const { submitRun, defaultSubmitDeps } = require("./submit") as typeof import("./submit");
+    const runDir = String(rest.find((a) => !a.startsWith("--")) ?? "");
+    if (!runDir) throw new Error("submit needs a run directory: laplacebench submit <runDir>");
+    const outcome = submitRun(runDir, defaultSubmitDeps());
+    // An unauthenticated machine is a normal state with printed instructions,
+    // not a crash; a run that fails verification is a real failure.
+    if (outcome.status === "blocked" && outcome.reason === "verify-failed") {
+      process.exitCode = 1;
+    }
   } else if (cmd === "regret") {
     const runDir = path.resolve(String(args["run"] ?? rest[0]));
     const oracleSpec = String(args["oracle"] ?? "product-cpu:cpu-v4:level_5");
@@ -411,7 +420,7 @@ async function main(): Promise<void> {
     if (!printed) console.log(md);
   } else {
     console.log(
-      "usage:\n  laplacebench play                                 (interactive match wizard — pick providers, models, effort)\n  laplacebench arena --team-a <spec> --team-b <spec> [--games N] [--swap] [--seed N] [--max-plies N] [--output-token-budget N] [--turn-timeout-ms N]\n  laplacebench summarize <runDir>\n  laplacebench regret <runDir> [--oracle product-cpu:cpu-v4:level_5]  (offline per-move regret vs product oracle)\n  laplacebench export-web <runDir> [--out <dir>]   (verify + export replay JSON)\n  laplacebench verify <runDir...>                  (deterministic replay verification)\n  laplacebench standings <runDir...> [--out <md>] [--json-out <json>]  (matchup records + public JSON; CI regenerates these after merge)\n\nmatch resources:\n  --output-token-budget N  per team/game, in-game output tokens; default 250000 for LLM matches (canonical envelope), none for baseline-only\n  --turn-timeout-ms N      shared across both attempts in a turn; default 1200000 for LLM matches (backstop), 300000 otherwise\n  --max-plies N            default 100 (canonical cap for laplace-8x8-v1 matches)\n\nproduct CPU (arena + regret):\n  --product-repo <path>    product checkout (or env LAPLACE_PRODUCT_REPO)\n  --product-commit <sha>   required commit pin (or env LAPLACE_PRODUCT_COMMIT)\n\n" +
+      "usage:\n  laplacebench play                                 (interactive match wizard — pick providers, models, effort)\n  laplacebench arena --team-a <spec> --team-b <spec> [--games N] [--swap] [--seed N] [--max-plies N] [--output-token-budget N] [--turn-timeout-ms N]\n  laplacebench summarize <runDir>\n  laplacebench regret <runDir> [--oracle product-cpu:cpu-v4:level_5]  (offline per-move regret vs product oracle)\n  laplacebench export-web <runDir> [--out <dir>]   (verify + export replay JSON)\n  laplacebench verify <runDir...>                  (deterministic replay verification)\n  laplacebench submit <runDir>                     (verify + publish to the community ledger; needs gh auth)\n  laplacebench standings <runDir...> [--out <md>] [--json-out <json>]  (matchup records + public JSON; CI regenerates these after merge)\n\nmatch resources:\n  --output-token-budget N  per team/game, in-game output tokens; default 250000 for LLM matches (canonical envelope), none for baseline-only\n  --turn-timeout-ms N      shared across both attempts in a turn; default 1200000 for LLM matches (backstop), 300000 otherwise\n  --max-plies N            default 100 (canonical cap for laplace-8x8-v1 matches)\n\nproduct CPU (arena + regret):\n  --product-repo <path>    product checkout (or env LAPLACE_PRODUCT_REPO)\n  --product-commit <sha>   required commit pin (or env LAPLACE_PRODUCT_COMMIT)\n\n" +
         usageAgentSpecsLine() +
         "\n  (claude-cli/codex-cli run under your Claude/ChatGPT subscription — no API key)"
     );

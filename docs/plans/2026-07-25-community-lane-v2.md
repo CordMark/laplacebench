@@ -73,8 +73,14 @@ last_updated: 2026-07-25
      `pull_request` でワークフロー定義ごと差し替えられ、同名の pass する
      check を偽造できる）。
    - **`submit` / 自動提出**: 対局終了 → ローカル verify → `community/runs`
-     へ配置 → PR 作成 → ターミナルにリプレイ URL と PR URL を出す。push
-     権限のあるオーナーは PR を経由しない直接 push 経路を持つ。
+     へ配置 → PR 作成 → ターミナルに URL を出す。push 権限のあるオーナーは
+     PR を経由しない直接 push 経路を持つ。
+     （2026-07-25 correction `98ed0672`、source: author-runtime により
+     **リプレイ URL の提示を本スライスから外す**。laplace-main の
+     `/bench/replay` は `src` に内部パスのみを許可しており、外部 raw ソースを
+     受ける拡張は本スライスより後段の製品側スライスにある。今出すと必ず
+     壊れたリンクになるため、代わりに**生ログの raw URL と PR/commit URL**を
+     出す。リプレイ URL は製品側スライスの完了に合わせて追加する。）
    - **参加者と相手**: 参加側は `claude-cli` / `codex-cli`（プロバイダ追加
      可能な形を保つ）。基準相手は `product-cpu:cpu-v4:level_1..5`。
      **product CPU のコミットピンは上げない**（バージョンは識別子の一部。

@@ -111,6 +111,7 @@ test("wizard flow: claude-cli:opus@high vs product-cpu level_3 with canonical pr
     2, // level_3
     0, // games preset: canonical 2+swap
     "", // seed: accept default (4242)
+    0, // 自動提出: しない
   ]);
   const result = await runWizardFlow(io, okDeps);
   assert.ok(!isCancelled(result));
@@ -136,6 +137,7 @@ test("wizard flow: default effort omits @effort; custom model input works", asyn
     "4", // games count
     0, // swap: あり
     "777", // seed override
+    0, // 自動提出: しない
   ]);
   const result = await runWizardFlow(io, okDeps);
   const plan = result as WizardPlan;
@@ -151,6 +153,7 @@ test("wizard flow: baseline vs baseline passes with no auth requirements", async
     providerIndex("baseline"), 1, // greedy
     0, // canonical preset
     "", // seed default
+    0, // 自動提出: しない
   ]);
   const deps = { ...okDeps, checkCommand: () => ({ ok: false }) }; // no CLIs at all
   const result = await runWizardFlow(io, deps);
@@ -168,6 +171,7 @@ test("auth gate: missing claude CLI loops until recheck succeeds", async () => {
     providerIndex("baseline"), 0, // B: random
     0, // canonical preset
     "", // seed
+    0, // 自動提出: しない
     0, // auth failed -> 再チェック (flip ok before this resolves? we flip via wrapper below)
     0, // second recheck (now ok)
   ]);
@@ -190,7 +194,7 @@ test("auth gate: 中止 returns cancelled and arena is never called", async () =
   const io = scriptedIO([
     providerIndex("claude-cli"), 0, 0,
     providerIndex("baseline"), 0,
-    0, "",
+    0, "", 0,
     1, // 中止
   ]);
   const result = await runWizardFlow(io, deps);
@@ -204,13 +208,16 @@ test("auth gate: 中止 returns cancelled and arena is never called", async () =
       runArena: async () => {
         arenaCalled = true;
       },
+      submitRun: () => {
+        throw new Error("must not submit");
+      },
       isTTY: true,
       now: () => new Date("2026-07-25T00:00:00Z"),
     },
     scriptedIO([
       providerIndex("claude-cli"), 0, 0,
       providerIndex("baseline"), 0,
-      0, "",
+      0, "", 0,
       1, // 中止
     ])
   );
@@ -223,7 +230,7 @@ test("wizard flow: product-cpu env missing prompts for path/commit", async () =>
   const io = scriptedIO([
     providerIndex("product-cpu"), 4, // level_5
     providerIndex("baseline"), 0,
-    0, "",
+    0, "", 0,
     "/typed/repo", // product path input
     "deadbeef", // commit input
   ]);
@@ -242,13 +249,16 @@ test("runPlay passes an explicit run-id and prints submission guidance with it",
   const io = scriptedIO([
     providerIndex("baseline"), 0,
     providerIndex("baseline"), 1,
-    0, "",
+    0, "", 0, // 自動提出: しない
   ]);
   const code = await runPlay(
     {
       ...okDeps,
       runArena: async (a) => {
         seenArgs = a;
+      },
+      submitRun: () => {
+        throw new Error("must not submit");
       },
       isTTY: true,
       now: () => new Date("2026-07-25T12:00:00Z"),
@@ -267,6 +277,44 @@ test("runPlay passes an explicit run-id and prints submission guidance with it",
   );
 });
 
+test("opting into auto-submit publishes the run instead of printing instructions", async () => {
+  const submitted: string[] = [];
+  const io = scriptedIO([
+    providerIndex("baseline"), 0,
+    providerIndex("baseline"), 1,
+    0, "",
+    1, // 自動提出: する
+  ]);
+  const now = new Date("2026-07-25T12:00:00Z");
+  const code = await runPlay(
+    {
+      ...okDeps,
+      runArena: async () => {},
+      submitRun: (dir) => submitted.push(dir),
+      isTTY: true,
+      now: () => now,
+    },
+    io
+  );
+  assert.equal(code, 0);
+  const runId = wizardRunId("random", "greedy", now);
+  assert.deepEqual(submitted, [`runs/${runId}`]);
+  // The manual copy instructions would be noise once the run is already sent.
+  assert.ok(!io.printed.join("\n").includes("cp -R runs/"));
+});
+
+test("the auto-submit choice is asked once, up front, and defaults to off", async () => {
+  const io = scriptedIO([
+    providerIndex("baseline"), 0,
+    providerIndex("baseline"), 1,
+    0, "",
+    0, // 自動提出: しない
+  ]);
+  const plan = (await runWizardFlow(io, okDeps)) as WizardPlan;
+  assert.equal(plan.autoSubmit, false);
+  assert.ok(plan.summaryLines.some((l) => l.includes("自動提出: しない")));
+});
+
 test("submissionGuidance pins the exact copy command", () => {
   const lines = submissionGuidance("run-x");
   assert.ok(lines.some((l) => l.includes("cp -R runs/run-x community/runs/<github名>--run-x")));
@@ -277,6 +325,9 @@ test("runPlay without a TTY errors with flag guidance and exit 1", async () => {
     ...okDeps,
     runArena: async () => {
       throw new Error("must not run");
+    },
+    submitRun: () => {
+      throw new Error("must not submit");
     },
     isTTY: false,
     now: () => new Date(),
@@ -317,6 +368,7 @@ test("numeric inputs are validated: seed 0 honored, bad games re-prompted", asyn
     providerIndex("baseline"), 1,
     0, // canonical preset
     "0", // seed = 0 (valid override)
+    0, // 自動提出: しない
   ]);
   const plan1 = (await runWizardFlow(io1, okDeps)) as WizardPlan;
   assert.equal(plan1.seed, 0);
@@ -332,6 +384,7 @@ test("numeric inputs are validated: seed 0 honored, bad games re-prompted", asyn
     0, // swap あり
     "not-a-number", // invalid seed -> re-prompt
     "12", // valid seed
+    0, // 自動提出: しない
   ]);
   const plan2 = (await runWizardFlow(io2, okDeps)) as WizardPlan;
   assert.equal(plan2.games, 3);

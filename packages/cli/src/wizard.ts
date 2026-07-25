@@ -1,4 +1,5 @@
 import * as readline from "node:readline";
+import * as path from "node:path";
 import { PROVIDERS, type ProviderEntry } from "./catalog";
 
 /** Injectable I/O so the whole flow is testable with scripted answers. */
@@ -22,6 +23,8 @@ export interface WizardPlan {
   games: number;
   swap: boolean;
   seed: number;
+  /** Publish the finished run without a second prompt. */
+  autoSubmit: boolean;
   /** Extra arena args (e.g. product repo/commit collected interactively). */
   extraArgs: Record<string, string>;
   summaryLines: string[];
@@ -173,6 +176,15 @@ export async function runWizardFlow(
   const defaultSeed = deps.randomSeed();
   const seed = await promptInteger(io, "seed:", String(defaultSeed), () => true);
 
+  // Asked here, while the player is still making decisions, so the run itself
+  // ends hands-off. Publishing is on the player's account, so it is never the
+  // default.
+  const autoSubmit =
+    (await io.select("終了後に公開台帳へ自動提出しますか?", [
+      "しない",
+      "する (GitHub アカウントで提出・自動マージ)",
+    ])) === 1;
+
   const extraArgs: Record<string, string> = {};
   const gate = await authGate(io, deps, [a.provider, b.provider], extraArgs);
   if (gate === "cancelled") return { cancelled: true };
@@ -181,8 +193,9 @@ export async function runWizardFlow(
     `Team A: ${a.spec}`,
     `Team B: ${b.spec}`,
     `games=${games} swap=${swap ? "on" : "off"} seed=${seed}`,
+    `自動提出: ${autoSubmit ? "する" : "しない"}`,
   ];
-  return { specA: a.spec, specB: b.spec, games, swap, seed, extraArgs, summaryLines };
+  return { specA: a.spec, specB: b.spec, games, swap, seed, autoSubmit, extraArgs, summaryLines };
 }
 
 /** Same sanitization as arena's default run-id derivation. */
@@ -238,6 +251,8 @@ function makeReadlineIO(): WizardIO & { close(): void } {
 
 export interface RunPlayDeps extends WizardDeps {
   runArena(args: Record<string, string | boolean>): Promise<void>;
+  /** Publish a finished run; injected so the wizard stays testable offline. */
+  submitRun(runDir: string): void;
   isTTY: boolean;
   now(): Date;
 }
@@ -274,7 +289,12 @@ export async function runPlay(
       "run-id": runId,
       ...result.extraArgs,
     });
-    submissionGuidance(runId).forEach((l) => rlio.print(l));
+    if (result.autoSubmit) {
+      rlio.print("── 公開台帳へ提出 ──");
+      deps.submitRun(path.join("runs", runId));
+    } else {
+      submissionGuidance(runId).forEach((l) => rlio.print(l));
+    }
     return 0;
   } finally {
     (rlio as { close?: () => void }).close?.();

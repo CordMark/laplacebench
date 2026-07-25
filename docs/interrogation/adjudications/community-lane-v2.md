@@ -200,3 +200,22 @@ merge API への `sha` 必須指定、不一致時 hold を追加した。
 ---
 
 - ラウンド5・指摘計 19 件で APPROVED（confidence 0.98）
+
+
+```json
+{
+  "direction_correction_v1": {
+    "correction_id": "98ed0672-71bc-41b4-90fd-944df3563fc4",
+    "related_direction_event_id": "358445d2-088a-4112-a0a5-8f53c088dbf0",
+    "occurred_at": "2026-07-25T09:44:30.614Z",
+    "source": "author-runtime",
+    "missed_families": [
+      "time-scope",
+      "absence"
+    ],
+    "summary": "submit がターミナルへ出す2行のうち「リプレイURL」を本スライスから外す。リプレイビューア (laplace-main の /bench/replay) は src に内部パスのみを許可しており、外部 raw ソースを受ける拡張は別スライスで本スライスより後段に置かれている。今 URL を出すと必ず壊れたリンクになるため、代わりに生ログの raw URL と PR/commit URL を出す。リプレイURLの提示は製品側スライスの完了に合わせて追加する。",
+    "effect": "removed-work",
+    "high_risk": false
+  }
+}
+```

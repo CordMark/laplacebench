@@ -191,6 +191,41 @@ export function exportGame(
   return { payload, meta };
 }
 
+export interface RunVerification {
+  games: number;
+  failures: { gameId: string; message: string }[];
+}
+
+/**
+ * Replay every game in a run through the frozen engine. Single owner of "is
+ * this run sound?" — the CLI reports the whole list, `submit` refuses to
+ * publish when it is non-empty, and CI uses the same command. A second
+ * implementation would eventually disagree with this one.
+ */
+export function verifyRun(runDir: string): RunVerification {
+  const gamesDir = path.join(runDir, "games");
+  if (!fs.existsSync(gamesDir)) {
+    return { games: 0, failures: [{ gameId: "-", message: "no games/ directory" }] };
+  }
+  const result: RunVerification = { games: 0, failures: [] };
+  for (const gameId of fs.readdirSync(gamesDir).sort()) {
+    if (!fs.existsSync(path.join(gamesDir, gameId, "events.jsonl"))) continue;
+    result.games++;
+    try {
+      exportGame(runDir, gameId);
+    } catch (err) {
+      result.failures.push({
+        gameId,
+        message: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+  if (result.games === 0) {
+    result.failures.push({ gameId: "-", message: "no games with an event log" });
+  }
+  return result;
+}
+
 export function exportRun(runDir: string, outDir: string): BenchMeta[] {
   const gamesDir = path.join(runDir, "games");
   const gameIds = fs
