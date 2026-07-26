@@ -1,5 +1,5 @@
 ---
-status: approved
+status: implemented
 direction: direction-bench-thinking-channel
 owner: bench
 risk_tier: standard

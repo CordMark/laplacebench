@@ -24,6 +24,12 @@ both revolve around that square..."), while codex replies with the bare
 move JSON and nothing else. Same protocol, opposite communication
 styles — now visible per-move in the replay viewer.
 
+> **Condition note (2026-07-27):** this observation is specific to prompt
+> generation `p2-token-budget`, where narrating was invited but optional. From
+> `p3-move-note` the note is required, so silence is no longer a style choice
+> the protocol permits — it is recorded as `note_omission_rate_per_move`.
+> Do not read this entry as a standing property of either model.
+
 ## Run 7 — learning-vs-cold (fable@low, 4 games): modest edge, rich failure modes
 
 > **Status (2026-07-27):** this is the project's only excursion into

@@ -156,3 +156,46 @@ Requirement source: ユーザー対話 2026-07-27。「gpt側のモデルだけ�
   遵守定義（moves 分母）と食い違う → 受理、`note_omission_rate` として
   `noteOmissions / moves` を明示(revise, class: B)。
 - ラウンド 3・指摘計 9 件で APPROVED（confidence 0.98）
+
+## Impl review (codex-impl-review, session impl-bench-thinking-channel)
+
+- Q(review/compliant-note-unpublishable): プロンプトが長さ無制限を謳い runner が
+  4000 UTF-16 単位で保存する一方、公開リプレイは 2500 scalar を超える commentary を
+  拒否する。**遵守したモデルが自分の対局を公開不能にしうる** → 受理、公開側を
+  緩めるのではなく**イベント境界で揃えた**。`MAX_COMMENTARY_SCALARS` を
+  publicarena-contract から公開し、runner は scalar 単位で切る。「記録された ⇒
+  公開できる」が構造的に成立。プロンプトの「no length limit」も実態に合わせて
+  「先頭2500文字が記録される」へ訂正（簡潔さの要求は入れない）(revise, class: A)。
+- Q(review/wiring-untested): テストが純関数のみで、runner・metrics・両エクスポータの
+  配線が壊れても通ってしまう → 受理、playGame ベースのテストを追加（ノート無しは
+  `noteOmissions` を増やし `failedTurns` は 0／format 失敗で捨てられた返答は分子にも
+  分母にも入らない／`game_start` に `prompt_rev` が載る）＋エクスポータ側
+  （長いノートでも出力される／p3 の空ノートは commentary エントリを作らない）
+  (revise, class: B)。p2 フォールバックは publicarena.test.ts が実台帳
+  （`note` 無しログ）で既に end-to-end に通している。
+- Q(review/present-but-malformed-falls-through): `moveCommentary` が
+  `typeof note === "string"` で分岐しており、`note: null` の壊れたログが raw へ
+  落ちて素の着手 JSON を公開しうる → 受理、own-property の有無で判定し、
+  在るが文字列でない場合は fail-closed（commentary 無し）へ(revise, class: B)。
+- Q(review/utf16-vs-scalar-in-export): `exportGame` だけ UTF-16 の
+  `String.slice(0, 2500)` のままで、runner・公開検証との境界が食い違い、
+  サロゲートペアを分断しうる → 受理、共有定数と scalar 安全な切り出しへ統一。
+  astral 文字（1 scalar = 2 UTF-16 単位）のみのノートが全長そのまま出力される
+  回帰を追加(revise, class: B)。
+- ラウンド 3・指摘計 4 件で APPROVED（confidence 0.98）
+
+## 生対局の受け入れ結果（プランの合否基準）
+
+`runs/20260727-sol-high-vs-medium`（ユーザー指定の 1 試合）:
+
+| チーム | エージェント | moves | noteOmissions | 率 |
+|---|---|---|---|---|
+| A | `codex-cli:gpt-5.6-sol@high` | 6 | 0 | 0.000 |
+| B | `codex-cli:gpt-5.6-sol@medium` | 5 | 0 | 0.000 |
+
+合否基準は codex 側 ≤ 0.2、実測 0.000 で**両サイド遵守**。format/legality 失敗
+なし。A の中央占領勝ち、11 手。これまで常に空だった側から実際に取れたノートの例:
+
+> Red closes the upper half of the center by shifting to (3,4). With Red now
+> occupying both upper central squares and Yellow holding (4,3), Yellow at (4,5)
+> is poised to step into the sole remaining center square on its next turn.

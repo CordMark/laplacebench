@@ -157,8 +157,15 @@ export function assertText(value: string, field: string, maxScalars: number): vo
   if (Array.from(value).length > maxScalars) throw new Error(`${field} exceeds ${maxScalars}`);
 }
 
+/**
+ * Scalar cap for one published commentary entry. The producer bounds notes to
+ * this at the event boundary, so "recorded" always implies "publishable": a
+ * model that writes a very long note must not make its own game unexportable.
+ */
+export const MAX_COMMENTARY_SCALARS = 2_500;
+
 export function assertCommentaryText(value: string, field: string): void {
-  if (Array.from(value).length > 2_500 || UNSAFE_COMMENTARY.test(value)) {
+  if (Array.from(value).length > MAX_COMMENTARY_SCALARS || UNSAFE_COMMENTARY.test(value)) {
     throw new Error(`${field} exceeds the commentary content boundary`);
   }
 }

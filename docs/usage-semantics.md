@@ -111,7 +111,8 @@ condition.
 ## Match resource policy
 
 `--output-token-budget N` is a separate wallet for each team in each game.
-Since 2026-07-24 (prompt generation `p2-token-budget`) it is the canonical
+Since 2026-07-24 (prompt generation `p2-token-budget`, superseded on 2026-07-27 by
+`p3-move-note`, which requires a move note and therefore raises output volume) it is the canonical
 fairness envelope for matches involving LLM agents: **default 250,000 output
 tokens per team per game** (provisional-canonical, reviewed before the v1
 freeze — see `docs/match-conduct-laplace-8x8-v1.md`), disclosed to the model

@@ -204,14 +204,32 @@ The transport is independent of any provider. A request includes:
 - optional legal moves;
 - response deadline and output schema.
 
-A normalized response includes one coordinate move and, only in the dialogue
-variant, an optional public message. The adapter may keep arbitrary private
-assistant output or provider-native reasoning in its isolated persistent state;
-that private material is not part of the referee action schema.
+A normalized response includes one coordinate move, a move note, and — only in
+the dialogue variant — an optional public message. The adapter may keep
+arbitrary private assistant output or provider-native reasoning in its isolated
+persistent state; that private material is not part of the referee action
+schema.
 
-No benchmark requires or grades private chain of thought. Provider adapters may
-use native structured-output features, but the stored normalized response must
-validate against the same schema.
+The **move note** (required from prompt generation `p3-move-note`) is the
+model's own account of why it played this move, written to the observable
+channel. It is recorded for human spectators and is never shown to the
+opponent — showing it would turn the match into the separate `public-dialogue`
+condition of §3.4. It exists because the spectator value of an LLM match is
+seeing the reasoning, and that must not depend on which provider happens to
+expose a native reasoning stream: the note is produced by every model through
+the same channel, so a new model needs no adapter work to become watchable.
+
+**The note is not private chain of thought, and this section's rule is
+unchanged: no benchmark requires or grades private chain of thought.** What is
+required is an observable, published rationale — the same category as any other
+part of the model's visible reply. Provider-native reasoning summaries and
+thinking blocks remain private material that the benchmark neither requires nor
+grades, and they are not what fills the note. Note compliance is recorded as a
+reliability observation (`note_omission_rate_per_move`), never as a strength
+score, and a missing note never costs the turn.
+
+Provider adapters may use native structured-output features, but the stored
+normalized response must validate against the same schema.
 
 See `schemas/agent-request.schema.json` and
 `schemas/agent-response.schema.json`.

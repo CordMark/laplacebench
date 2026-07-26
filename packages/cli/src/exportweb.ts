@@ -2,6 +2,7 @@ import "./env";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { newGame, playerTeam, repetitionKey, winReason } from "./engine";
+import { MAX_COMMENTARY_SCALARS } from "./publicarena-contract";
 import { COLOR_NAMES } from "./types";
 
 function appRoot(): string {
@@ -71,6 +72,32 @@ interface BenchMeta {
 }
 
 /**
+ * What a move event publishes as spectator commentary, decided by whether the
+ * log carries a `note` at all — never by a generation string, so no exporter
+ * has to read `prompt_rev`:
+ *
+ * - no `note` field: a log recorded before the note was required. Its `raw`
+ *   reply is all there is, and dropping it would silently erase the commentary
+ *   of every already-published game in the append-only ledger.
+ * - `note` present and non-empty: publish the note. The adopted move JSON has
+ *   already been removed from it.
+ * - `note` present and empty: the model was required to write one and did not.
+ *   Publish nothing, so the viewer shows "no record for this move" — the truth.
+ *   Falling back to `raw` here would publish the bare move JSON as if it were
+ *   the model's reasoning.
+ */
+export function moveCommentary(event: { raw?: unknown; note?: unknown }): string {
+  // Own-property presence, not `typeof === "string"`: a malformed `note: null`
+  // is a log that HAS the field, so falling through to `raw` would publish the
+  // bare move JSON as if it were the model's reasoning. Present-but-unusable
+  // fails closed to no commentary.
+  if (Object.prototype.hasOwnProperty.call(event, "note")) {
+    return typeof event.note === "string" ? event.note.trim() : "";
+  }
+  return typeof event.raw === "string" ? event.raw.trim() : "";
+}
+
+/**
  * Re-plays a game's events.jsonl through the product engine (the same
  * referee that scored it) and emits the web app's replay payload:
  * {history: GameState[], boardSize, winningTeam}. Because the states are
@@ -111,13 +138,19 @@ export function exportGame(
   countState();
 
   for (const e of events) {
-    if (e.t === "move" && typeof e.raw === "string" && e.raw.trim()) {
-      commentary.push({
-        ply: e.ply,
-        team: playerTeam(e.player),
-        color: COLOR_NAMES[e.player - 1],
-        text: e.raw.slice(0, 2500),
-      });
+    if (e.t === "move") {
+      const text = moveCommentary(e as { raw?: unknown; note?: unknown });
+      if (text) {
+        commentary.push({
+          ply: e.ply,
+          team: playerTeam(e.player),
+          color: COLOR_NAMES[e.player - 1],
+          // Scalar-safe, and the same boundary publication enforces: a
+          // UTF-16 slice here could split a surrogate pair and would cut
+          // astral text short of the shared limit.
+          text: [...text].slice(0, MAX_COMMENTARY_SCALARS).join(""),
+        });
+      }
     }
     if (e.t === "failure") {
       failures.push({

@@ -1,32 +1,66 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://laplacebench.dev/schemas/agent-response-v1.json",
-  "title": "LaplaceBench Agent Response v1",
+  "$id": "https://laplacebench.dev/schemas/agent-response-v2.json",
+  "title": "LaplaceBench Agent Response v2",
   "type": "object",
   "additionalProperties": false,
-  "required": ["request_id", "move"],
+  "required": [
+    "request_id",
+    "move",
+    "note"
+  ],
   "properties": {
-    "request_id": { "type": "string", "minLength": 1 },
-    "move": { "$ref": "#/$defs/move" },
-    "public_message": { "type": "string", "maxLength": 64 }
+    "request_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "move": {
+      "$ref": "#/$defs/move"
+    },
+    "public_message": {
+      "type": "string",
+      "maxLength": 64,
+      "description": "Dialogue-variant only. Shown to the opponent, unlike `note`."
+    },
+    "note": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Why this move was chosen, in the model's own words, as written to the observable channel. Recorded for human spectators and never shown to the opponent (that is the separate public_message / public-dialogue condition). This is an observable rationale, not a transcript of private reasoning: the benchmark still neither requires nor grades private chain-of-thought. There is no length limit."
+    }
   },
   "$defs": {
     "position": {
       "type": "array",
       "prefixItems": [
-        { "type": "integer", "minimum": 0, "maximum": 7 },
-        { "type": "integer", "minimum": 0, "maximum": 7 }
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 7
+        },
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 7
+        }
       ],
       "items": false
     },
     "move": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["from", "to"],
+      "required": [
+        "from",
+        "to"
+      ],
       "properties": {
-        "from": { "$ref": "#/$defs/position" },
-        "to": { "$ref": "#/$defs/position" }
+        "from": {
+          "$ref": "#/$defs/position"
+        },
+        "to": {
+          "$ref": "#/$defs/position"
+        }
       }
     }
-  }
+  },
+  "description": "Design-level description of the normalized response. NOT a runtime validator: no code in this repository validates against this file. The CLI's actual contract lives in packages/cli/src/prompt.ts (buildInstructions plus PROMPT_REV) and has known drift from this document \u2014 it does not ask for request_id and it takes coordinates as objects rather than arrays. Reconciling that drift is deliberately out of scope for the slice that added `note`."
 }

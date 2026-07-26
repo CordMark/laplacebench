@@ -26,6 +26,7 @@ interface AgentAgg {
   forcedPasses: number;
   timeoutSkips: number;
   tokenBudgetSkips: number;
+  noteOmissions: number;
   usage: UsageAggregate;
   latencyMs: number;
   plies: number;
@@ -48,6 +49,7 @@ function blank(): AgentAgg {
     forcedPasses: 0,
     timeoutSkips: 0,
     tokenBudgetSkips: 0,
+    noteOmissions: 0,
     usage: blankUsage(),
     latencyMs: 0,
     plies: 0,
@@ -85,6 +87,7 @@ export function summarize(runDir: string): object {
       agg.forcedPasses += ts.forcedPasses;
       agg.timeoutSkips += ts.timeoutSkips ?? 0;
       agg.tokenBudgetSkips += ts.tokenBudgetSkips ?? 0;
+      agg.noteOmissions += ts.noteOmissions ?? 0;
       mergeUsage(
         agg.usage,
         isUsageAggregate(ts.usage) ? ts.usage : legacyUsageFromTeamStats(ts)
@@ -136,6 +139,15 @@ export function summarize(runDir: string): object {
           forced_passes: a.forcedPasses,
           timeout_skips: a.timeoutSkips,
           token_budget_skips: a.tokenBudgetSkips,
+          // Move-note compliance. Denominator is adopted moves, NOT turns:
+          // replies discarded by a failure are owned by the failure rates
+          // above, and a missing note never costs the turn. Runs recorded
+          // before the note was required report 0 here, which is the absence
+          // of the requirement rather than perfect compliance — read it with
+          // the run's prompt_rev.
+          note_omissions: a.noteOmissions,
+          note_omission_rate_per_move:
+            a.moves > 0 ? +(a.noteOmissions / a.moves).toFixed(3) : 0,
           turns: a.turns,
           // Backward-compatible aliases. `tokens_in` is now normalized total
           // input and includes cached input exactly once.
