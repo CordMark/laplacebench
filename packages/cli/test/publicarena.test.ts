@@ -57,11 +57,11 @@ test("current ledger publishes deterministic content-addressed public games", ()
   assert.equal(first.catalog.matchups.length, 1);
   assert.deepEqual(
     [first.catalog.matchups[0].left.id, first.catalog.matchups[0].right.id],
-    ["claude-opus-5", "gpt-5.6-sol"]
+    ["claude-opus-5@high", "gpt-5.6-sol@high"]
   );
   assert.deepEqual(
     [first.catalog.matchups[0].left.label, first.catalog.matchups[0].right.label],
-    ["Opus 5", "GPT-5.6 Sol"]
+    ["Opus 5 (high)", "GPT-5.6 Sol (high)"]
   );
   for (const game of first.catalog.matchups[0].games) {
     const bytes = first.replays.get(game.replay.id);
@@ -101,13 +101,56 @@ test("malformed endpoint timestamps fail the whole artifact set", () => {
 });
 
 test("every grammar-valid unknown headline remains publishable and verbatim", () => {
-  for (const model of ["gpt-5-", "gpt-5--turbo", `m${"x".repeat(99)}`]) {
+  // The last name is at the grammar's edge: `<122 chars>@high` is a 127-scalar
+  // id, and its composed label is 129 — longer than the identity it describes.
+  // Composing labels must not turn a publishable identity into a crash.
+  for (const model of ["gpt-5-", "gpt-5--turbo", `m${"x".repeat(99)}`, `m${"x".repeat(121)}`]) {
     const result = buildArenaArtifacts([copyRunWithCodexModel(model)], SHA, GENERATED);
+    // copyRunWithCodexModel records `codex-cli:<model>@high`, so the identity
+    // and the label both carry that effort.
+    const id = `${model}@high`;
     const participant = [result.catalog.matchups[0].left, result.catalog.matchups[0].right]
-      .find((item) => item.id === model);
+      .find((item) => item.id === id);
     assert.ok(participant, model);
-    assert.equal(participant.label, model);
+    // The product rejects the whole catalog over a label above 128 scalars, so
+    // an emitted label must never cross it. When composition would, the
+    // identity itself becomes the label.
+    assert.ok(
+      Array.from(participant.label).length <= 128,
+      `label for ${model} must stay inside the consumer's cap`
+    );
+    assert.equal(
+      participant.label,
+      Array.from(`${model} (high)`).length <= 128 ? `${model} (high)` : id
+    );
   }
+});
+
+test("one identity reached with conflicting metadata stops publication", () => {
+  // Labels are composed now, so two specs that fold to one identity must still
+  // agree on label and kind. `cpu-v6:level_3` is reachable both as a product
+  // CPU and — grammatically — as an LLM harness's model name, which yields the
+  // same identity with a different kind and label. Publication must refuse
+  // rather than pick one and publish a participant that is half of each.
+  // raw_ref carries the run directory name, so the two copies need distinct
+  // names or the duplicate-ref guard fires before the metadata check.
+  const named = (spec: string, name: string): string => {
+    const copy = copyRunWithAgent(spec);
+    const renamed = path.join(path.dirname(copy), name);
+    fs.renameSync(copy, renamed);
+    return renamed;
+  };
+  assert.throws(
+    () => buildArenaArtifacts(
+      [
+        named("claude-cli:cpu-v6:level_3", "run-as-llm"),
+        named("product-cpu:cpu-v6:level_3", "run-as-cpu"),
+      ],
+      SHA,
+      GENERATED
+    ),
+    /conflicting participant metadata/
+  );
 });
 
 test("a grammar-invalid headline stays verified without wedging publication", () => {

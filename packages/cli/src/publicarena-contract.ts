@@ -11,6 +11,21 @@ export const MAX_GAMES_PER_MATCHUP = 500;
 export const MAX_CONDITIONS_PER_MATCHUP = 64;
 export const MAX_PUBLIC_GAMES = 5_000;
 
+/**
+ * Scalar cap for a participant label. This is not a local preference: the
+ * product rejects the ENTIRE catalog when any label exceeds 128 scalars
+ * (`isText(value.label, 128)` in its arena parser), so emitting a longer label
+ * would not fail loudly here — it would publish successfully and leave the
+ * public arena silently empty. The producer must stay inside what the consumer
+ * accepts, and this constant is that contract, not a knob.
+ *
+ * Labels are composed from the headline's parts, so a composed label can be
+ * longer than the identity it describes. `headlineLabel` falls back to the
+ * identity when composition would cross this line, restoring
+ * label <= identity <= headline grammar by construction.
+ */
+export const MAX_PARTICIPANT_LABEL = 128;
+
 export type Team = "A" | "B";
 export type EndReason =
   | "center"

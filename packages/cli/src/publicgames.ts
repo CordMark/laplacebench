@@ -17,8 +17,13 @@ export const ordinal = (a: string, b: string): number =>
 
 /**
  * The single publication rule shared by legacy standings and arena v1.
- * Baseline-only and same-headline harness matches remain verified ledger data,
- * but are not default public matchups.
+ * Baseline-only matches, and matches whose two sides fold to one headline
+ * identity, remain verified ledger data but are not default public matchups.
+ *
+ * Because the headline identity carries the effort, "one identity" means the
+ * same model *at the same effort*: a learning-harness match against the same
+ * model and effort still folds away, while the same model at two different
+ * efforts is a match between two contenders and is published.
  */
 export function publicPair(specA: string, specB: string): PublicPair | null {
   const headlineA = headlineKey(specA);

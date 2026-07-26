@@ -8,9 +8,11 @@ import {
   PROVIDERS,
   PRODUCT_CPU_POLICY,
   headlineKey,
+  headlineLabel,
   isLlmSpec,
   parseAgentSpec,
 } from "../src/catalog";
+import { publicPair } from "../src/publicgames";
 import { positionals } from "../src/cli";
 import { playGame } from "../src/runner";
 import {
@@ -54,8 +56,8 @@ test("matchup golden bytes: property order, orientation, rounding, one trailing 
   "matchups": [
     {
       "headline": {
-        "left": "claude-fable-5",
-        "right": "gpt"
+        "left": "claude-fable-5@medium",
+        "right": "gpt@medium"
       },
       "games": 2,
       "left_wins": 1,
@@ -100,21 +102,29 @@ test("matchup golden bytes: property order, orientation, rounding, one trailing 
   assert.equal(matchupData([runDir]).matchups[0].breakdown.length, 1);
 });
 
-test("headline folds every harness onto the model; unknown specs stay whole", () => {
+test("headline folds harnesses at one effort; unknown specs stay whole", () => {
   // Menus emit full ids, so the same model folds across harnesses on the
   // recorded string alone — no alias table is consulted at publish time.
-  assert.equal(headlineKey("claude-cli:claude-opus-5@high"), "claude-opus-5");
-  assert.equal(headlineKey("anthropic:claude-opus-5"), "claude-opus-5");
+  assert.equal(headlineKey("claude-cli:claude-opus-5@high"), "claude-opus-5@high");
   // The learning harness folds in too — it is part of the harness axis, not a
   // separate contender (direction correction 363555d9).
-  assert.equal(headlineKey("claude-cli-learn:claude-opus-5@high"), "claude-opus-5");
+  assert.equal(headlineKey("claude-cli-learn:claude-opus-5@high"), "claude-opus-5@high");
+  // Effort is part of what played, so it is part of the identity. The API
+  // adapter records no effort at all, which is its own identity rather than a
+  // silent merge into whichever effort a CLI run happened to use.
+  assert.equal(headlineKey("claude-cli:claude-opus-5@low"), "claude-opus-5@low");
+  assert.equal(headlineKey("anthropic:claude-opus-5"), "claude-opus-5");
+  assert.notEqual(
+    headlineKey("anthropic:claude-opus-5"),
+    headlineKey("claude-cli:claude-opus-5@high")
+  );
   // A shorthand names whichever generation it points at today, so it groups
   // under itself rather than being resolved into a model it may not be.
-  assert.equal(headlineKey("claude-cli:opus@high"), "opus");
+  assert.equal(headlineKey("claude-cli:opus@high"), "opus@high");
   // A harness running its own unnamed model groups by harness: "default" is
-  // not a model identity, and its efforts should still fold together.
-  assert.equal(headlineKey("codex-cli:default@medium"), "codex-cli");
-  assert.equal(headlineKey("codex-cli:default@high"), "codex-cli");
+  // not a model identity. Its efforts still separate, like a named model's.
+  assert.equal(headlineKey("codex-cli:default@medium"), "codex-cli@medium");
+  assert.equal(headlineKey("codex-cli:default@high"), "codex-cli@high");
   assert.equal(headlineKey("codex-cli"), "codex-cli");
 
   // `anthropic-api` is a usage-accounting label, NOT a spec prefix: it must not
@@ -164,7 +174,7 @@ test("every published catalog spec round-trips through parseAgentSpec", () => {
   assert.deepEqual(parseAgentSpec("codex-cli:@medium"), {
     harness: "codex-cli", model: null, effort: "medium", raw: "codex-cli:@medium",
   });
-  assert.equal(headlineKey("codex-cli:@medium"), "codex-cli");
+  assert.equal(headlineKey("codex-cli:@medium"), "codex-cli@medium");
 });
 
 test("the strings actually recorded in final.json fold as intended", () => {
@@ -179,16 +189,77 @@ test("the strings actually recorded in final.json fold as intended", () => {
     codexNamed: "codex-cli:gpt-5.6-sol@medium",
     productCpu: "product-cpu:cpu-v4:level_5",
   };
-  // Same model through three different harnesses, one headline.
-  assert.equal(headlineKey(recorded.claudeCli), "claude-fable-5");
-  assert.equal(headlineKey(recorded.claudeCliLearn), "claude-fable-5");
+  // Harnesses fold — but only at one effort, and only these recorded forms
+  // actually carry one. The API adapter records none at all.
+  assert.equal(headlineKey(recorded.claudeCli), "claude-fable-5@medium");
+  assert.equal(headlineKey(recorded.claudeCliLearn), "claude-fable-5@low");
   assert.equal(headlineKey(recorded.anthropicApi), "claude-fable-5");
-  assert.equal(headlineKey(recorded.codexDefault), "codex-cli");
-  assert.equal(headlineKey(recorded.codexNamed), "gpt-5.6-sol");
+  assert.equal(
+    headlineKey("claude-cli-learn:claude-fable-5@medium"),
+    headlineKey(recorded.claudeCli),
+    "same model at the same effort folds across harnesses (correction 363555d9)"
+  );
+  assert.notEqual(
+    headlineKey(recorded.claudeCliLearn),
+    headlineKey(recorded.claudeCli),
+    "a different recorded effort is a different contender"
+  );
+  assert.notEqual(
+    headlineKey(recorded.anthropicApi),
+    headlineKey(recorded.claudeCli),
+    "an unrecorded effort is not silently merged into a recorded one"
+  );
+  assert.equal(headlineKey(recorded.codexDefault), "codex-cli@medium");
+  assert.equal(headlineKey(recorded.codexNamed), "gpt-5.6-sol@medium");
+  // product-cpu has no effort axis, so its identity is untouched.
   assert.equal(headlineKey(recorded.productCpu), "cpu-v4:level_5");
   for (const spec of Object.values(recorded)) {
     assert.notEqual(parseAgentSpec(spec).harness, null, spec);
   }
+});
+
+test("one model at two efforts is a real matchup; one identity is not", () => {
+  // The whole point of putting effort in the identity: this comparison is
+  // publishable, and it is one of the questions the arena exists to answer.
+  const across = publicPair("claude-cli:claude-opus-5@high", "claude-cli:claude-opus-5@low");
+  assert.ok(across);
+  assert.deepEqual(
+    [across.leftId, across.rightId],
+    ["claude-opus-5@high", "claude-opus-5@low"]
+  );
+  // Two harnesses at the same model and effort are still one identity, so the
+  // match stays out of the public list (direction correction 363555d9).
+  assert.equal(
+    publicPair("claude-cli-learn:claude-opus-5@high", "claude-cli:claude-opus-5@high"),
+    null
+  );
+  assert.equal(
+    publicPair("claude-cli:claude-opus-5@high", "claude-cli:claude-opus-5@high"),
+    null
+  );
+});
+
+test("headline labels compose from the model part and say what was not recorded", () => {
+  assert.equal(headlineLabel("claude-cli:claude-opus-5@high", true), "Opus 5 (high)");
+  assert.equal(headlineLabel("codex-cli:gpt-5.6-sol@medium", true), "GPT-5.6 Sol (medium)");
+  // Two specs that fold to one identity must produce one label, or the arena
+  // rejects the participant as having conflicting metadata.
+  assert.equal(
+    headlineLabel("claude-cli-learn:claude-opus-5@high", true),
+    headlineLabel("claude-cli:claude-opus-5@high", true)
+  );
+  // Unknown models stay verbatim, with the effort still attached.
+  assert.equal(headlineLabel("codex-cli:gpt-9-turbo@low", true), "gpt-9-turbo (low)");
+  // An LLM that recorded no effort says so rather than reading as a known one.
+  assert.equal(
+    headlineLabel("anthropic:claude-opus-5", true),
+    "Opus 5 (effort not recorded)"
+  );
+  // Harnesses and specs with no effort axis are untouched — they must not be
+  // labelled as though an effort went missing.
+  assert.equal(headlineLabel("product-cpu:cpu-v6:level_3", false), "LaPlace CPU Lv3");
+  assert.equal(headlineLabel("takeshi:d2", false), "takeshi:d2");
+  assert.equal(headlineLabel("random", false), "random");
 });
 
 test("publication conditions: baseline-only out, one-sided LLM in, self-matchup out", () => {
@@ -203,7 +274,8 @@ test("publication conditions: baseline-only out, one-sided LLM in, self-matchup 
     winner: "A", reason: "center",
     teams: { A: team("claude-cli:claude-opus-5@high"), B: team("product-cpu:cpu-v4:level_5") },
   });
-  // harness comparison: same model AND effort, so both sides fold to "opus"
+  // harness comparison: same model AND effort, so both sides fold to one
+  // identity and the match stays out of the public list (correction 363555d9)
   writeRun(runDir, "game-002", {
     winner: "A", reason: "center",
     teams: { A: team("claude-cli-learn:claude-opus-5@high"), B: team("claude-cli:claude-opus-5@high") },
@@ -211,7 +283,7 @@ test("publication conditions: baseline-only out, one-sided LLM in, self-matchup 
   const data = matchupData([runDir]);
   assert.equal(data.matchup_count, 1);
   assert.deepEqual(data.matchups[0].headline, {
-    left: "claude-opus-5", right: "cpu-v4:level_5",
+    left: "claude-opus-5@high", right: "cpu-v4:level_5",
   });
   // Excluded games are still counted in the ledger totals and participants.
   assert.equal(data.game_count, 3);
@@ -264,9 +336,11 @@ test("output is a total order: independent of runDirs order and of tied rows", (
     winner: "A", reason: "center",
     teams: { A: team("claude-cli:claude-opus-5@high"), B: team("codex-cli:gpt") },
   });
+  // The two left specs must record the SAME effort, or they no longer fold
+  // into one headline and there is no tie left to break.
   writeRun(r2, "game-000", {
     winner: "A", reason: "center",
-    teams: { A: team("anthropic:claude-opus-5"), B: team("codex-cli:gpt") },
+    teams: { A: team("anthropic:claude-opus-5@high"), B: team("codex-cli:gpt") },
   });
   const forward = matchupsJson([r1, r2]);
   const reversed = matchupsJson([r2, r1]);
@@ -277,7 +351,7 @@ test("output is a total order: independent of runDirs order and of tied rows", (
   assert.deepEqual(
     breakdown.map((b) => [b.left_agent, b.right_agent]),
     [
-      ["anthropic:claude-opus-5", "codex-cli:gpt"],
+      ["anthropic:claude-opus-5@high", "codex-cli:gpt"],
       ["claude-cli:claude-opus-5@high", "codex-cli:gpt"],
     ]
   );
