@@ -8,8 +8,8 @@ import { fileURLToPath } from 'node:url';
 
 const usage = `Usage: node .agents/scripts/run-claude-interrogation.mjs <impl|plan> <session-key> [--fresh]
 
-Reads the heavy implementation-checkpoint prompt from stdin and runs a fresh
-Claude session (default model, read-only) with persisted resume state.
+Reads the heavy implementation-checkpoint prompt from stdin and runs a Claude
+Fable session (medium effort, read-only) with persisted resume state.
 
 Checkpoint types: "impl" (implementation checkpoint, heavy slices), "plan"
 (legacy post-plan interrogation, kept for historical compatibility only).
@@ -60,11 +60,13 @@ function parsePositiveInt(value, fallback) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-const timeoutSeconds = parsePositiveInt(process.env.CLAUDE_INTERROGATION_TIMEOUT_SECONDS, 600);
+const stallSeconds = parsePositiveInt(process.env.CLAUDE_INTERROGATION_STALL_SECONDS, 120);
 const heartbeatSeconds = parseNonNegativeInt(
   process.env.CLAUDE_INTERROGATION_HEARTBEAT_SECONDS,
   0,
 );
+const CLAUDE_MODEL = 'fable';
+const CLAUDE_EFFORT = 'medium';
 
 function sanitizeSessionKey(value) {
   const sanitized = value.replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '');
@@ -121,8 +123,15 @@ async function runClaude(promptText, resumeSessionId) {
   const newSessionId = resumeSessionId ? null : randomUUID();
   const args = [
     '-p',
+    '--model',
+    CLAUDE_MODEL,
+    '--effort',
+    CLAUDE_EFFORT,
+    '--verbose',
     '--output-format',
-    'json',
+    'stream-json',
+    '--include-partial-messages',
+    '--include-hook-events',
     '--json-schema',
     schemaString,
     '--disallowedTools',
@@ -143,53 +152,82 @@ async function runClaude(promptText, resumeSessionId) {
 
   const stdoutChunks = [];
   const stderrChunks = [];
-  child.stdout.on('data', (chunk) => stdoutChunks.push(chunk.toString()));
-  child.stderr.on('data', (chunk) => stderrChunks.push(chunk.toString()));
-
   const startedAtMs = Date.now();
+  let lastActivityAtMs = startedAtMs;
+  let stalled = false;
+  const recordActivity = () => {
+    lastActivityAtMs = Date.now();
+  };
+  child.stdout.on('data', (chunk) => {
+    recordActivity();
+    stdoutChunks.push(chunk.toString());
+  });
+  child.stderr.on('data', (chunk) => {
+    recordActivity();
+    stderrChunks.push(chunk.toString());
+  });
+
   const heartbeat =
     heartbeatSeconds > 0
       ? setInterval(() => {
           const elapsedSeconds = Math.floor((Date.now() - startedAtMs) / 1000);
-          const remainingSeconds = Math.max(timeoutSeconds - elapsedSeconds, 0);
+          const idleSeconds = Math.floor((Date.now() - lastActivityAtMs) / 1000);
           process.stderr.write(
             `[run-claude-interrogation] still running; elapsed ${formatDuration(
               elapsedSeconds,
-            )}, timeout in ${formatDuration(remainingSeconds)}\n`,
+            )}, last activity ${formatDuration(idleSeconds)} ago\n`,
           );
         }, heartbeatSeconds * 1000)
       : null;
-  const timeout = setTimeout(() => {
+  const stallCheckIntervalMs = Math.min(1000, stallSeconds * 1000);
+  const stallMonitor = setInterval(() => {
+    const idleMs = Date.now() - lastActivityAtMs;
+    if (stalled || idleMs < stallSeconds * 1000) return;
+    stalled = true;
     process.stderr.write(
-      `[run-claude-interrogation] timed out after ${formatDuration(
-        timeoutSeconds,
-      )}; killing Claude process\n`,
+      `[run-claude-interrogation] no Claude activity for ${formatDuration(
+        stallSeconds,
+      )}; killing stalled process\n`,
     );
     child.kill('SIGKILL');
-  }, timeoutSeconds * 1000);
+  }, stallCheckIntervalMs);
 
   const exitCode = await new Promise((resolve, reject) => {
     child.on('error', reject);
     child.on('close', resolve);
   });
   if (heartbeat) clearInterval(heartbeat);
-  clearTimeout(timeout);
+  clearInterval(stallMonitor);
 
   return {
     exitCode: exitCode ?? 1,
     stdout: stdoutChunks.join(''),
     stderr: stderrChunks.join(''),
     sessionId: resumeSessionId ?? newSessionId,
+    stalled,
+    idleMs: Date.now() - lastActivityAtMs,
+    elapsedMs: Date.now() - startedAtMs,
   };
+}
+
+async function retainStalledFreshSession(result, wasResume) {
+  if (!result.stalled || wasResume || !result.sessionId) return;
+  await fs.writeFile(sessionFile, `${result.sessionId}\n`, 'utf8');
+  process.stderr.write(
+    `[run-claude-interrogation] retained stalled session ${result.sessionId}; retry with the same session-key to resume\n`,
+  );
 }
 
 function extractStructuredOutput(stdout) {
   let envelope = null;
-  try {
-    envelope = JSON.parse(stdout);
-  } catch {
-    return { envelope: null, parsed: null };
+  for (const line of stdout.trim().split(/\r?\n/)) {
+    if (!line) continue;
+    try {
+      const event = JSON.parse(line);
+      if (event?.type === 'result') envelope = event;
+    } catch {}
   }
+  if (!envelope) return { envelope: null, parsed: null };
   const candidates = [];
   if (envelope.structured_output !== undefined) candidates.push(envelope.structured_output);
   if (typeof envelope.result === 'string') {
@@ -231,18 +269,31 @@ if (!freshOnly) {
 }
 
 let result = await runClaude(promptText, resumeSessionId);
+await retainStalledFreshSession(result, Boolean(resumeSessionId));
 
 if (resumeSessionId && result.exitCode !== 0 && looksResettable(result.stdout + result.stderr)) {
   process.stderr.write('[run-claude-interrogation] resume failed; starting a fresh session\n');
   await fs.rm(sessionFile, { force: true });
   result = await runClaude(promptText, null);
+  await retainStalledFreshSession(result, false);
 }
 
 const { envelope, parsed } = extractStructuredOutput(result.stdout);
 await fs.writeFile(
   logFile,
   JSON.stringify(
-    { exitCode: result.exitCode, stderr: result.stderr.slice(-4000), envelope },
+    {
+      exitCode: result.exitCode,
+      stalled: result.stalled,
+      elapsedMs: result.elapsedMs,
+      idleMs: result.idleMs,
+      stallSeconds,
+      sessionId: result.sessionId,
+      model: CLAUDE_MODEL,
+      effort: CLAUDE_EFFORT,
+      stderr: result.stderr.slice(-4000),
+      envelope,
+    },
     null,
     2,
   ),
@@ -258,6 +309,13 @@ try {
       checkpointType,
       sessionKey,
       exitCode: result.exitCode,
+      stalled: result.stalled,
+      elapsedMs: result.elapsedMs,
+      idleMs: result.idleMs,
+      stallSeconds,
+      sessionId: result.sessionId,
+      model: CLAUDE_MODEL,
+      effort: CLAUDE_EFFORT,
       durationMs: envelope?.duration_ms ?? null,
       costUsd: envelope?.total_cost_usd ?? null,
       numTurns: envelope?.num_turns ?? null,

@@ -2,15 +2,20 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import {
   deriveNextApprovalPosition,
+  diffWorktreeManifests,
+  evaluateRecordOnlyClosure,
   extractLastTurnUsage,
+  globToRegExp,
+  normalizeRepoRelativePath,
   normalizeReviewUsageObservation,
   reconstructApprovalCycles,
   selectResumeInspection,
   validOrderedAdjudication,
+  validateClosurePolicy,
 } from './codex-review-metrics.mjs';
 
 const raw = (input, cached, output, reasoning = 0) => ({
@@ -72,9 +77,104 @@ assert.deepEqual(deriveNextApprovalPosition(history), {
   approvalCycle: 2, roundInCycle: 1, priorCompletedVerdict: 'APPROVED', historyGapCount: 0,
 });
 assert.deepEqual(reconstructApprovalCycles([...history, { status: 'completed', verdict: 'APPROVED' }]).cycles, [
-  { cycle: 1, rounds: 2, closed: true },
-  { cycle: 2, rounds: 1, closed: true },
+  { cycle: 1, rounds: 2, closureRounds: 0, closed: true },
+  { cycle: 2, rounds: 1, closureRounds: 0, closed: true },
 ]);
+
+// A record-only closure closes its cycle without counting as a reviewer round.
+const closureRecord = { status: 'completed', verdict: 'APPROVED', closureMode: 'record_only' };
+assert.deepEqual(reconstructApprovalCycles([
+  { status: 'completed', verdict: 'NEEDS_CHANGES' },
+  { status: 'completed', verdict: 'NEEDS_CHANGES' },
+  closureRecord,
+]).cycles, [{ cycle: 1, rounds: 2, closureRounds: 1, closed: true }]);
+assert.deepEqual(deriveNextApprovalPosition([
+  { status: 'completed', verdict: 'NEEDS_CHANGES' },
+  closureRecord,
+]), { approvalCycle: 2, roundInCycle: 1, priorCompletedVerdict: 'APPROVED', historyGapCount: 0 });
+// A closure with no open cycle claims to close something that never opened.
+assert.deepEqual(reconstructApprovalCycles([closureRecord]), { cycles: [], gapCount: 1, failedAttempts: 0 });
+assert.equal(reconstructApprovalCycles([
+  { status: 'completed', verdict: 'NEEDS_CHANGES' }, closureRecord, closureRecord,
+]).gapCount, 1);
+
+for (const [value, expected] of [
+  ['docs/norms/a.md', 'docs/norms/a.md'],
+  ['/abs/path.md', null],
+  ['C:/win/path.md', null],
+  ['docs\\norms\\a.md', null],
+  ['../outside.md', null],
+  ['docs/../escape.md', null],
+  ['docs//double.md', null],
+  ['./here.md', null],
+  ['', null],
+]) assert.equal(normalizeRepoRelativePath(value), expected, `normalize ${value}`);
+
+const matches = (glob, filePath) => globToRegExp(glob)?.test(filePath);
+assert.equal(matches('docs/norms/**', 'docs/norms/a.md'), true);
+assert.equal(matches('docs/norms/**', 'docs/norms/deep/nested/a.md'), true);
+assert.equal(matches('docs/norms/**', 'docs/normsx/a.md'), false);
+assert.equal(matches('docs/status/9[5-8]-*', 'docs/status/96-legacy-migration-program-map.md'), true);
+assert.equal(matches('docs/status/9[5-8]-*', 'docs/status/94-other.md'), false);
+assert.equal(matches('docs/status/9[5-8]-*', 'docs/status/96-a/deep.md'), false, '* must not cross a separator');
+assert.equal(matches('docs/regressions/ledger.md', 'docs/regressions/ledger.md'), true);
+assert.equal(matches('docs/regressions/ledger.md', 'docs/regressions/ledger.md.bak'), false);
+assert.equal(matches('CLAUDE.md', 'CLAUDE.md'), true);
+assert.equal(matches('CLAUDE.md', 'sub/CLAUDE.md'), false);
+assert.equal(matches('**/CLAUDE.md', 'sub/dir/CLAUDE.md'), true);
+assert.equal(matches('**/CLAUDE.md', 'CLAUDE.md'), true);
+for (const invalid of ['', ' docs/**', 'docs\\**', 'docs/[unterminated', 'docs/[a/b]', 42, null]) {
+  assert.equal(globToRegExp(invalid), null, `invalid glob ${String(invalid)}`);
+}
+
+assert.equal(validateClosurePolicy({ protectedGlobs: ['docs/norms/**'] }).valid, true);
+for (const [policy, reason] of [
+  [null, 'policy_not_an_object'],
+  [[], 'policy_not_an_object'],
+  [{}, 'policy_unexpected_keys:none'],
+  [{ protectedGlobs: ['a/**'], extra: 1 }, 'policy_unexpected_keys:protectedGlobs,extra'],
+  [{ protectedGlobs: [] }, 'policy_protected_globs_empty'],
+  [{ protectedGlobs: 'docs/**' }, 'policy_protected_globs_empty'],
+  [{ protectedGlobs: [''] }, 'policy_invalid_glob:'],
+  [{ protectedGlobs: [7] }, 'policy_invalid_glob:number'],
+]) assert.equal(validateClosurePolicy(policy).reason, reason, `policy ${JSON.stringify(policy)}`);
+
+const manifest = (headSha, entries) => ({ headSha, entries });
+assert.deepEqual(
+  diffWorktreeManifests(manifest('h1', { 'a.md': '1', 'b.md': '2' }), manifest('h1', { 'a.md': '9', 'c.md': '3' })),
+  { valid: true, changed: ['a.md'], added: ['c.md'], removed: ['b.md'] },
+);
+assert.equal(diffWorktreeManifests(manifest('h1', {}), manifest('h2', {})).reason, 'head_sha_changed_since_previous_round');
+assert.equal(diffWorktreeManifests(undefined, manifest('h1', {})).reason, 'previous_manifest_missing_or_invalid');
+assert.equal(diffWorktreeManifests(manifest('h1', { '../escape.md': '1' }), manifest('h1', {})).reason, 'previous_manifest_missing_or_invalid');
+assert.equal(diffWorktreeManifests(manifest('h1', {}), manifest('h1', { '/abs.md': '1' })).reason, 'current_manifest_invalid');
+
+const closurePolicy = { protectedGlobs: ['docs/norms/**', 'docs/status/9[5-8]-*', 'CLAUDE.md'] };
+const needsChanges = { status: 'completed', payload: { verdict: 'NEEDS_CHANGES' } };
+const closureCase = (overrides = {}) => evaluateRecordOnlyClosure({
+  reviewType: 'impl',
+  previousResult: needsChanges,
+  manifestDiff: { valid: true, changed: ['docs/plans/p.md'], added: [], removed: [] },
+  policy: closurePolicy,
+  ...overrides,
+});
+assert.deepEqual(closureCase(), { eligible: true, reason: null, touched: ['docs/plans/p.md'] });
+for (const [overrides, reason] of [
+  [{ reviewType: 'plan' }, 'closure_limited_to_impl_review'],
+  [{ previousResult: null }, 'previous_result_missing'],
+  [{ previousResult: { status: 'failed' } }, 'previous_round_not_completed'],
+  [{ previousResult: { status: 'completed', payload: { verdict: 'APPROVED' } } }, 'previous_verdict_not_needs_changes'],
+  [{ previousResult: { status: 'completed', payload: {} } }, 'previous_verdict_not_needs_changes'],
+  [{ policy: { protectedGlobs: [] } }, 'policy_protected_globs_empty'],
+  [{ manifestDiff: { valid: false, reason: 'head_sha_changed_since_previous_round' } }, 'head_sha_changed_since_previous_round'],
+  [{ manifestDiff: undefined }, 'manifest_diff_unavailable'],
+  [{ manifestDiff: { valid: true, changed: [], added: [], removed: [] } }, 'no_change_since_previous_round'],
+  [{ manifestDiff: { valid: true, changed: ['docs/plans/p.md'], added: ['src/app.ts'], removed: [] } }, 'non_markdown_change:src/app.ts'],
+  [{ manifestDiff: { valid: true, changed: [], added: [], removed: ['scripts/tool.mjs'] } }, 'non_markdown_change:scripts/tool.mjs'],
+  [{ manifestDiff: { valid: true, changed: ['docs/norms/product-normative-model.md'], added: [], removed: [] } }, 'governance_path_change:docs/norms/product-normative-model.md'],
+  [{ manifestDiff: { valid: true, changed: ['docs/status/96-map.md'], added: [], removed: [] } }, 'governance_path_change:docs/status/96-map.md'],
+  [{ manifestDiff: { valid: true, changed: ['CLAUDE.md'], added: [], removed: [] } }, 'governance_path_change:CLAUDE.md'],
+]) assert.deepEqual(closureCase(overrides), { eligible: false, reason, touched: [] }, `closure ${reason}`);
 assert.equal(reconstructApprovalCycles([{ status: 'malformed' }, {}, { status: 'completed', verdict: 'UNKNOWN' }]).gapCount, 3);
 assert.equal(deriveNextApprovalPosition([{ status: 'malformed' }, {}, { status: 'completed', verdict: 'UNKNOWN' }]).historyGapCount, 3);
 assert.equal(validOrderedAdjudication('1. ACCEPT fixed\n2. REJECT not applicable', 2), true);
@@ -334,6 +434,231 @@ process.stdin.on('end', () => {
     assert.equal(resume.status, 0, resume.stderr);
     const records = (await fs.readFile(metricsPath, 'utf8')).trim().split('\n').map(JSON.parse);
     assert.equal(records.at(-1).resumeInspectionMode, 'full_history_gap');
+  }
+
+  // Record-only closure: end-to-end, inside a real git repository, proving the
+  // Codex process is never started.
+  const closureRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'codex-review-closure-'));
+  try {
+    const closureScripts = path.join(closureRoot, '.agents', 'scripts');
+    await fs.mkdir(closureScripts, { recursive: true });
+    for (const name of ['run-codex-review.mjs', 'codex-review-metrics.mjs', 'review-schema.json']) {
+      await fs.copyFile(path.join(sourceDir, name), path.join(closureScripts, name));
+    }
+    const git = (...args) => {
+      const run = spawnSync('git', ['-C', closureRoot, ...args], { encoding: 'utf8' });
+      assert.equal(run.status, 0, run.stderr);
+    };
+    git('init', '-q');
+    git('config', 'user.email', 'fixture@example.com');
+    git('config', 'user.name', 'fixture');
+    // Runner state is regenerated every round; projects gitignore it, and a
+    // project that does not will see closure refuse with those paths named.
+    await fs.writeFile(path.join(closureRoot, '.gitignore'), '.agents/state/\n');
+    const planFile = path.join(closureRoot, 'docs', 'plans', 'p.md');
+    const normFile = path.join(closureRoot, 'docs', 'norms', 'n.md');
+    const codeFile = path.join(closureRoot, 'src', 'app.ts');
+    for (const file of [planFile, normFile, codeFile]) await fs.mkdir(path.dirname(file), { recursive: true });
+    await fs.writeFile(planFile, 'plan\n');
+    await fs.writeFile(normFile, 'norm\n');
+    await fs.writeFile(codeFile, 'export const a = 1;\n');
+    await fs.writeFile(
+      path.join(closureRoot, '.agents', 'review-closure-policy.json'),
+      `${JSON.stringify({ protectedGlobs: ['docs/norms/**', 'CLAUDE.md'] }, null, 2)}\n`,
+    );
+    git('add', '-A');
+    git('commit', '-qm', 'fixture');
+
+    const closureCounter = path.join(closureRoot, 'counter');
+    const closureEnv = { ...env, FAKE_CODEX_COUNTER: closureCounter };
+    const runner = path.join(closureScripts, 'run-codex-review.mjs');
+    const closureState = path.join(closureRoot, '.agents', 'state');
+    const runClosure = (session, extra = []) => spawnSync(
+      process.execPath,
+      [runner, 'impl', session, '--close-record-only', ...extra],
+      { cwd: closureRoot, env: closureEnv, input: 'Record-only findings applied.\n', encoding: 'utf8' },
+    );
+    const seedNeedsChanges = async (session) => {
+      await fs.writeFile(closureCounter, '0');
+      const seed = spawnSync(process.execPath, [runner, 'impl', session], {
+        cwd: closureRoot, env: closureEnv, input: 'Review fixture.', encoding: 'utf8',
+      });
+      assert.equal(seed.status, 0, seed.stderr);
+      return Number(await fs.readFile(closureCounter, 'utf8'));
+    };
+
+    const codexCallsBefore = await seedNeedsChanges('closure-ok');
+    await fs.writeFile(planFile, 'plan updated\n');
+    const closureRun = runClosure('closure-ok');
+    assert.equal(closureRun.status, 0, closureRun.stderr);
+    assert.equal(JSON.parse(closureRun.stdout).verdict, 'APPROVED');
+    assert.equal(
+      Number(await fs.readFile(closureCounter, 'utf8')),
+      codexCallsBefore,
+      'record-only closure must not start Codex',
+    );
+    const closureMetrics = (await fs.readFile(path.join(closureState, 'codex-impl-closure-ok.result.jsonl'), 'utf8'))
+      .trim().split('\n').map(JSON.parse);
+    assert.equal(closureMetrics.at(-1).closureMode, 'record_only');
+    assert.equal(closureMetrics.at(-1).verdict, 'APPROVED');
+    assert.deepEqual(reconstructApprovalCycles(closureMetrics).cycles, [
+      { cycle: 1, rounds: 1, closureRounds: 1, closed: true },
+    ]);
+    assert.deepEqual(closureMetrics.at(-1).reviewUsage, {
+      accountingMode: 'not_started', accountingGapReason: null, rawTotal: null, normalizedDelta: null,
+    });
+
+    // One cycle takes exactly one closure: the second attempt sees APPROVED.
+    const secondClosure = runClosure('closure-ok');
+    assert.equal(secondClosure.status, 3, secondClosure.stderr);
+    assert.match(secondClosure.stderr, /previous_verdict_not_needs_changes/);
+
+    // Two closures started at the same instant: exactly one may approve.
+    await seedNeedsChanges('closure-race');
+    await fs.writeFile(planFile, 'plan raced\n');
+    const raceRuns = await Promise.all([0, 1].map(() => new Promise((resolve) => {
+      const child = spawn(
+        process.execPath,
+        [runner, 'impl', 'closure-race', '--close-record-only'],
+        { cwd: closureRoot, env: closureEnv },
+      );
+      let stderr = '';
+      child.stderr.on('data', (chunk) => { stderr += chunk; });
+      child.stdin.end('Record-only findings applied.\n');
+      child.on('close', (status) => resolve({ status, stderr }));
+    })));
+    const raceRecords = (await fs.readFile(path.join(closureState, 'codex-impl-closure-race.result.jsonl'), 'utf8'))
+      .trim().split('\n').map(JSON.parse);
+    assert.equal(
+      raceRecords.filter((record) => record.closureMode).length,
+      1,
+      `exactly one closure record must exist: ${JSON.stringify(raceRuns)}`,
+    );
+    // A loser either refuses (the cycle is already closed) or exits 0 by
+    // reusing the completed result — never by writing a second closure.
+    assert.ok(raceRuns.some((run) => run.status === 0), JSON.stringify(raceRuns));
+    assert.ok(raceRuns.every((run) => [0, 3, 4].includes(run.status)), JSON.stringify(raceRuns));
+    assert.equal(
+      await fs.stat(path.join(closureState, 'codex-impl-closure-race.cycle-1.closed')).then(() => true, () => false),
+      true,
+      'the closed cycle must leave a permanent marker',
+    );
+    assert.deepEqual(reconstructApprovalCycles(raceRecords).cycles, [
+      { cycle: 1, rounds: 1, closureRounds: 1, closed: true },
+    ]);
+    assert.equal(reconstructApprovalCycles(raceRecords).gapCount, 0);
+
+    // Closure versus a normal review starting together. Closure arbitrates on
+    // the cycle marker and re-checks the history at commit; the normal review
+    // path is deliberately unchanged, so the accepted residual is that a review
+    // may open the next cycle. The history must stay coherent either way.
+    await seedNeedsChanges('closure-vs-review');
+    await fs.writeFile(planFile, 'plan mixed\n');
+    const spawnPath = (args, input) => new Promise((resolve) => {
+      const child = spawn(process.execPath, args, { cwd: closureRoot, env: closureEnv });
+      let stderr = '';
+      child.stderr.on('data', (chunk) => { stderr += chunk; });
+      child.stdin.end(input);
+      child.on('close', (status) => resolve({ status, stderr }));
+    });
+    const mixed = await Promise.all([
+      spawnPath([runner, 'impl', 'closure-vs-review', '--close-record-only'], 'Record-only findings applied.\n'),
+      spawnPath([runner, 'impl', 'closure-vs-review'], 'Review fixture.'),
+    ]);
+    const mixedRecords = (await fs.readFile(path.join(closureState, 'codex-impl-closure-vs-review.result.jsonl'), 'utf8'))
+      .trim().split('\n').map(JSON.parse);
+    const mixedCycles = reconstructApprovalCycles(mixedRecords);
+    // The guaranteed invariant is the marker's: at most one closure per cycle.
+    // Running both at once is documented as unsupported — a superseded closure
+    // may survive and reconstruction reports it as a gap rather than hiding it.
+    assert.ok(
+      mixedRecords.filter((record) => record.closureMode).length <= 1,
+      `at most one closure record: ${JSON.stringify(mixedRecords)}`,
+    );
+    assert.ok(
+      mixedCycles.cycles.every((cycle) => cycle.closureRounds <= 1),
+      `no cycle may take two closures: ${JSON.stringify(mixedCycles.cycles)}`,
+    );
+    assert.ok(mixed.some((run) => run.status === 0), JSON.stringify(mixed));
+
+    // A live active run blocks closure before it evaluates anything.
+    await seedNeedsChanges('closure-concurrent');
+    await fs.writeFile(planFile, 'plan concurrent\n');
+    const activeFile = path.join(closureState, 'codex-impl-closure-concurrent.active.json');
+    await fs.writeFile(activeFile, `${JSON.stringify({
+      pid: process.pid, reviewType: 'impl', sessionKey: 'closure-concurrent', runToken: 'other', startedAt: new Date().toISOString(),
+    })}\n`);
+    const blocked = runClosure('closure-concurrent');
+    assert.equal(blocked.status, 4, `concurrent closure must not proceed: ${blocked.stdout}${blocked.stderr}`);
+    const concurrentRecords = (await fs.readFile(path.join(closureState, 'codex-impl-closure-concurrent.result.jsonl'), 'utf8'))
+      .trim().split('\n').map(JSON.parse);
+    assert.equal(concurrentRecords.filter((record) => record.closureMode).length, 0, 'blocked closure must write no record');
+    await fs.rm(activeFile, { force: true });
+
+    // Codex absent from PATH: an eligible closure still succeeds. The closure
+    // path still needs git, so the minimal PATH carries git and nothing else.
+    const gitPath = spawnSync('git', ['--exec-path'], { encoding: 'utf8' }).stdout?.trim();
+    const minimalBin = path.join(closureRoot, 'minimal-bin');
+    await fs.mkdir(minimalBin, { recursive: true });
+    await fs.symlink(spawnSync('which', ['git'], { encoding: 'utf8' }).stdout.trim(), path.join(minimalBin, 'git'));
+    assert.ok(gitPath, 'git must be available for the closure fixture');
+    await seedNeedsChanges('closure-no-codex');
+    await fs.writeFile(planFile, 'plan updated again\n');
+    const withoutCodex = spawnSync(
+      process.execPath,
+      [runner, 'impl', 'closure-no-codex', '--close-record-only'],
+      {
+        cwd: closureRoot,
+        env: { ...closureEnv, PATH: minimalBin },
+        input: 'Record-only findings applied.\n',
+        encoding: 'utf8',
+      },
+    );
+    assert.equal(withoutCodex.status, 0, withoutCodex.stderr);
+    assert.equal(spawnSync('codex', ['--version'], { env: { ...process.env, PATH: minimalBin } }).error?.code, 'ENOENT');
+
+    // Refusals: every predicate that must send the author back to a real round.
+    await fs.writeFile(planFile, 'plan\n');
+    await seedNeedsChanges('closure-refuse');
+    const refusals = [];
+    refusals.push(['no_change_since_previous_round', runClosure('closure-refuse')]);
+    await fs.writeFile(codeFile, 'export const a = 2;\n');
+    await fs.writeFile(planFile, 'plan doc fix\n');
+    refusals.push(['non_markdown_change', runClosure('closure-refuse')]);
+    await fs.writeFile(codeFile, 'export const a = 1;\n');
+    await fs.writeFile(path.join(closureRoot, 'src', 'untracked.ts'), 'export const b = 1;\n');
+    refusals.push(['untracked code', runClosure('closure-refuse')]);
+    await fs.rm(path.join(closureRoot, 'src', 'untracked.ts'));
+    await fs.writeFile(normFile, 'norm edited\n');
+    refusals.push(['governance_path_change', runClosure('closure-refuse')]);
+    await fs.writeFile(normFile, 'norm\n');
+    refusals.push(['plan review', spawnSync(
+      process.execPath, [runner, 'plan', 'closure-refuse', '--close-record-only'],
+      { cwd: closureRoot, env: closureEnv, input: 'nope\n', encoding: 'utf8' },
+    )]);
+    refusals.push(['unknown session', runClosure('closure-never-reviewed')]);
+    for (const [label, run] of refusals) {
+      assert.equal(run.status, 3, `${label} must refuse closure: ${run.stdout}${run.stderr}`);
+      assert.match(run.stderr, /record-only closure refused/);
+    }
+
+    // A commit between the reviewed round and the closure invalidates the baseline.
+    await fs.writeFile(planFile, 'plan committed fix\n');
+    git('add', '-A');
+    git('commit', '-qm', 'fixture follow-up');
+    const afterCommit = runClosure('closure-refuse');
+    assert.equal(afterCommit.status, 3, afterCommit.stderr);
+    assert.match(afterCommit.stderr, /head_sha_changed_since_previous_round/);
+
+    // Missing policy is fail-closed.
+    await fs.rm(path.join(closureRoot, '.agents', 'review-closure-policy.json'));
+    await seedNeedsChanges('closure-no-policy');
+    await fs.writeFile(planFile, 'plan without policy\n');
+    const withoutPolicy = runClosure('closure-no-policy');
+    assert.equal(withoutPolicy.status, 3, withoutPolicy.stderr);
+    assert.match(withoutPolicy.stderr, /closure policy missing/);
+  } finally {
+    await fs.rm(closureRoot, { recursive: true, force: true });
   }
 
 } finally {
