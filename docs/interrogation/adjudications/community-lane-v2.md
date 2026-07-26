@@ -462,3 +462,23 @@ full id を使用。blast radius は catalog のメニュー値と headlineKey �
   - prediction: miss
 
 - ラウンド2・指摘計 1 件で APPROVED（confidence 0.99、tier-escalation なし）
+
+
+```json
+{
+  "direction_correction_v1": {
+    "correction_id": "d1ff0bf8-aeea-4033-b6b8-4e52163e7dee",
+    "related_direction_event_id": "358445d2-088a-4112-a0a5-8f53c088dbf0",
+    "occurred_at": "2026-07-26T16:35:07.851Z",
+    "source": "human",
+    "missed_families": [
+      "concept",
+      "non-entity",
+      "value-cost"
+    ],
+    "summary": "見出しを「全ハーネスを一律にモデル単位へ畳む」とした採用方向のうち、エフォートまで畳む部分を撤回する。エフォートはモデル同一性の一部であり、異なるエフォートの対局を同一モデル見出しへ集約しない。見出しの identity を model@effort とし、ハーネスの畳み込みは維持する。あわせて「内訳（エフォート・ハーネス別）は畳んだ状態でも常に見える」という同ブリーフの要件が製品側で満たされておらず、エフォートが展開時にしか見えない現状も是正対象とする。",
+    "effect": "complexity-exposed",
+    "high_risk": true
+  }
+}
+```

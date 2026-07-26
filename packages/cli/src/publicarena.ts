@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { PROVIDERS, PUBLIC_HEADLINE_LABELS } from "./catalog";
+import { headlineLabel } from "./catalog";
 import { verifyRun } from "./exportweb";
 import {
   ARENA_MAX_BYTES,
@@ -9,6 +9,7 @@ import {
   MAX_CONDITIONS_PER_MATCHUP,
   MAX_GAMES_PER_MATCHUP,
   MAX_MATCHUPS,
+  MAX_PARTICIPANT_LABEL,
   MAX_PUBLIC_GAMES,
   PUBLIC_REPLAY_SCHEMA,
   RULESET,
@@ -46,11 +47,10 @@ const sha256 = (value: string | Buffer): string =>
 
 function participant(id: string, agent: string): Participant {
   assertHeadline(id);
-  const baseline = PROVIDERS.find((provider) => provider.key === "baseline")
-    ?.models.find((model) => model.value === id);
-  const label = PUBLIC_HEADLINE_LABELS[id] ?? baseline?.label.split(" (")[0] ?? id;
-  assertText(label, `participant(${id}).label`, 128);
-  return { id, label, kind: headlineKind(agent) };
+  const kind = headlineKind(agent);
+  const label = headlineLabel(agent, kind === "llm");
+  assertText(label, `participant(${id}).label`, MAX_PARTICIPANT_LABEL);
+  return { id, label, kind };
 }
 
 function resultFor(game: PublicGame, leftSide: Team): "left" | "right" | "draw" {

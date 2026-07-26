@@ -60,7 +60,8 @@ direction trace: `docs/interrogation/adjudications/freeze-draw-rules.md`)。
   `output_token_budget` / `output_tokens_used`、ルールブック §8)。
   壁時計はハング対策バックストップに降格(LLM 対局デフォルト 1200 秒、
   没収規則自体は不変、レイテンシは記録)。プロンプト世代ラベル
-  `p2-token-budget` を run.json / game_start に記録し、正準ラン比較は
+  現行世代 `p3-move-note`（着手ノート必須化。`p2-token-budget` はその前の世代で、
+  過去ランはその条件で測られている）を run.json / game_start に記録し、正準ラン比較は
   同世代内に限定する。
 - **値(暫定確定)**: 250,000 output tokens/チーム/局。
   根拠実測(2026-07-24): パイロット v1 の消費は haiku ~105k/局・

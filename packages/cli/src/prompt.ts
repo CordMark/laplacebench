@@ -7,8 +7,10 @@ import type { Move, TeamId, TurnInput } from "./types";
  * Prompt generation label. Canonical-run comparisons are valid only within
  * one generation (same discipline as the regret oracle generation).
  * p2: token-budget disclosure added (docs/plans/2026-07-24-token-budget.md).
+ * p3: the move note became required rather than optional
+ * (docs/plans/2026-07-27-bench-thinking-channel.md).
  */
-export const PROMPT_REV = "p2-token-budget";
+export const PROMPT_REV = "p3-move-note";
 
 const RULEBOOK = fs.readFileSync(
   path.join(__dirname, "..", "rulebook", "laplace-8x8-v1.md"),
@@ -42,7 +44,9 @@ ${RULEBOOK}
 
   {"move": {"from": {"row": R, "col": C}, "to": {"row": R, "col": C}}}
 
-- You may think out loud and keep notes or plans in your reply before the JSON; this text stays in the conversation and is a good place to accumulate strategy across turns. The LAST valid JSON object in your reply is taken as your move.
+- **Every reply must begin with a move note**: in your own words, why you are playing this move — what you read in the position and what you are trying to achieve. Write it as normal prose before the JSON. It is not a transcript of your private reasoning; write what a spectator would need to follow your play. There is no minimum, and no need to be terse — only the first 2500 characters are kept in the spectator record. This text also stays in the conversation, so it is a good place to accumulate strategy across turns.
+- Your note is recorded for human spectators and is NEVER shown to your opponent. Do not address the opponent in it.
+- The LAST valid JSON object in your reply is taken as your move, so the note must come before it.
 - If your reply is malformed or the move is illegal, you get exactly one corrective chance with an error code; a second failure forfeits the turn, and two consecutive forfeits eliminate the acting color.${budgetLine}
 
 Play to win.`;
@@ -69,9 +73,44 @@ export function observationFromInput(input: TurnInput): object {
   return base;
 }
 
+/**
+ * The last valid move JSON in free-form model text, together with the exact
+ * character span it occupied. One scanner owns "which JSON is the move", so the
+ * move and the note can never disagree about where the move ended.
+ */
+export interface FoundMove {
+  move: Move;
+  start: number;
+  end: number;
+}
+
 /** Extract the last valid move JSON from free-form model text. */
 export function extractMove(text: string): Move | null {
-  let best: Move | null = null;
+  return findMove(text)?.move ?? null;
+}
+
+/**
+ * The note is everything the model wrote that was not the move itself: the text
+ * before the move JSON, plus anything after it. Prose that follows the JSON is
+ * unusual but is still the model's own words, so it is kept rather than
+ * silently dropped. An earlier JSON object that did not parse as a move is also
+ * kept — only the span actually adopted as the move is removed.
+ *
+ * Returns "" when the model wrote nothing but the move. That empty result is
+ * the compliance signal, not an error.
+ */
+export function extractNote(text: string): string {
+  const found = findMove(text);
+  if (!found) return text.trim();
+  const before = text.slice(0, found.start).trim();
+  const after = text.slice(found.end).trim();
+  // Removing the move leaves the surrounding prose adjacent; one newline joins
+  // it without inventing the blank lines the JSON used to occupy.
+  return before && after ? `${before}\n${after}` : before || after;
+}
+
+export function findMove(text: string): FoundMove | null {
+  let best: FoundMove | null = null;
   for (let i = 0; i < text.length; i++) {
     if (text[i] !== "{") continue;
     let depth = 0;
@@ -94,7 +133,15 @@ export function extractMove(text: string): Move | null {
         depth--;
         if (depth === 0) {
           const candidate = tryParseMove(text.slice(i, j + 1));
-          if (candidate) best = candidate;
+          if (candidate) {
+            best = { move: candidate, start: i, end: j + 1 };
+            // Skip the accepted object's interior. `{"move":{"from":…,"to":…}}`
+            // contains an inner object that also parses as a move, and letting
+            // the scan re-enter it would leave the outer braces behind in the
+            // note. Only an object that failed to parse is scanned into, so a
+            // move wrapped in something unrecognized is still found.
+            i = j;
+          }
           break;
         }
       }

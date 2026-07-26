@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { exportGame } from "./exportweb";
+import { exportGame, moveCommentary } from "./exportweb";
 import { playerTeam } from "./engine";
 import {
   PUBLIC_REPLAY_SCHEMA,
@@ -129,7 +129,9 @@ export function buildPublicReplay(runDir: string, gameId: string): PublicReplayA
     exported.payload.history as unknown[], [...advanceIndexes.keys()], startMs, endMs, plies
   );
   const commentary = events.flatMap((event, index) => {
-    if (event.t !== "move" || typeof event.raw !== "string" || !event.raw.trim()) return [];
+    if (event.t !== "move") return [];
+    const text = moveCommentary(event as { raw?: unknown; note?: unknown });
+    if (!text) return [];
     const ply = advanceIndexes.get(event);
     if (ply === undefined) throw new Error(`${gameId}.events[${index}] is not an indexed move`);
     const state = history[ply] as Record<string, unknown> | undefined;
@@ -137,12 +139,12 @@ export function buildPublicReplay(runDir: string, gameId: string): PublicReplayA
     if (!Number.isInteger(player) || Number(player) < 1 || Number(player) > 4) {
       throw new Error(`${gameId}.events[${index}] has no replayed acting player`);
     }
-    assertCommentaryText(event.raw, `${gameId}.events[${index}].raw`);
+    assertCommentaryText(text, `${gameId}.events[${index}].commentary`);
     return [{
       ply,
       team: playerTeam(Number(player)),
       color: COLOR_NAMES[Number(player) - 1],
-      text: event.raw,
+      text,
     }];
   });
   const meta: Record<string, unknown> = { ...exported.meta, commentary };

@@ -11,6 +11,21 @@ export const MAX_GAMES_PER_MATCHUP = 500;
 export const MAX_CONDITIONS_PER_MATCHUP = 64;
 export const MAX_PUBLIC_GAMES = 5_000;
 
+/**
+ * Scalar cap for a participant label. This is not a local preference: the
+ * product rejects the ENTIRE catalog when any label exceeds 128 scalars
+ * (`isText(value.label, 128)` in its arena parser), so emitting a longer label
+ * would not fail loudly here — it would publish successfully and leave the
+ * public arena silently empty. The producer must stay inside what the consumer
+ * accepts, and this constant is that contract, not a knob.
+ *
+ * Labels are composed from the headline's parts, so a composed label can be
+ * longer than the identity it describes. `headlineLabel` falls back to the
+ * identity when composition would cross this line, restoring
+ * label <= identity <= headline grammar by construction.
+ */
+export const MAX_PARTICIPANT_LABEL = 128;
+
 export type Team = "A" | "B";
 export type EndReason =
   | "center"
@@ -142,8 +157,15 @@ export function assertText(value: string, field: string, maxScalars: number): vo
   if (Array.from(value).length > maxScalars) throw new Error(`${field} exceeds ${maxScalars}`);
 }
 
+/**
+ * Scalar cap for one published commentary entry. The producer bounds notes to
+ * this at the event boundary, so "recorded" always implies "publishable": a
+ * model that writes a very long note must not make its own game unexportable.
+ */
+export const MAX_COMMENTARY_SCALARS = 2_500;
+
 export function assertCommentaryText(value: string, field: string): void {
-  if (Array.from(value).length > 2_500 || UNSAFE_COMMENTARY.test(value)) {
+  if (Array.from(value).length > MAX_COMMENTARY_SCALARS || UNSAFE_COMMENTARY.test(value)) {
     throw new Error(`${field} exceeds the commentary content boundary`);
   }
 }

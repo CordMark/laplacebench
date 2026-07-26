@@ -10,7 +10,8 @@ import {
   repetitionKey,
   winReason,
 } from "./engine";
-import { PROMPT_REV } from "./prompt";
+import { PROMPT_REV, extractNote } from "./prompt";
+import { MAX_COMMENTARY_SCALARS } from "./publicarena-contract";
 import type { Agent, RecentEvent, TeamId, UsageAggregate } from "./types";
 import { blankUsage, recordUsageCall } from "./usage";
 
@@ -25,6 +26,13 @@ export interface TeamStats {
   forcedPasses: number;
   timeoutSkips: number;
   tokenBudgetSkips: number;
+  /**
+   * Adopted moves whose reply carried no move note. Measured against `moves`,
+   * not `turns`: replies discarded by a format/legality failure, timeouts and
+   * skips are already owned by the failure metrics, and a missing note never
+   * costs the turn.
+   */
+  noteOmissions: number;
   inputTokens: number;
   outputTokens: number;
   cacheReadTokens: number;
@@ -120,6 +128,7 @@ function newTeamStats(agent: Agent): TeamStats {
     forcedPasses: 0,
     timeoutSkips: 0,
     tokenBudgetSkips: 0,
+    noteOmissions: 0,
     inputTokens: 0,
     outputTokens: 0,
     cacheReadTokens: 0,
@@ -366,6 +375,8 @@ async function playGameInner(cfg: GameConfig): Promise<GameResult> {
 
       moved = true;
       st.moves++;
+      const note = extractNote(reply.raw ?? "");
+      if (!note) st.noteOmissions++;
       const last = res.state.lastMove;
       const captures = (last?.capturedPiecesMeta ?? []).map((c) => ({
         at: c.position,
@@ -392,9 +403,19 @@ async function playGameInner(cfg: GameConfig): Promise<GameResult> {
         captures,
         eliminated,
         winner: res.state.winningTeam,
-        // The model's visible reply text — the "why" behind the move.
-        // Powers the spectator commentary view; bounded to keep logs sane.
+        // The model's visible reply text, kept verbatim for audit.
         raw: reply.raw?.slice(0, 4000),
+        // The same reply with the adopted move JSON removed — the "why" behind
+        // the move, and the only thing the spectator view publishes. Always
+        // present from p3 on, even when empty: an absent field means a log from
+        // before the note was required, and an empty one means the model was
+        // asked and wrote nothing.
+        //
+        // Bounded in Unicode scalars, not UTF-16 units, and to the SAME limit
+        // the public replay enforces. A model that writes a very long note must
+        // not thereby make its own game unpublishable, and `raw` still holds
+        // the untruncated reply for audit.
+        note: [...note].slice(0, MAX_COMMENTARY_SCALARS).join(""),
         // Agent-specific provenance (e.g. product CPU per-move seed).
         meta: reply.meta,
       });

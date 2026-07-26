@@ -7,6 +7,8 @@
  * docs/plans/2026-07-25-play-wizard.md.
  */
 
+import { MAX_PARTICIPANT_LABEL } from "./publicarena-contract";
+
 /**
  * Typing conveniences for the Anthropic API track only: `anthropic:opus`
  * resolves to a full id before the call, and the run records the resolved id.
@@ -243,10 +245,19 @@ export function parseAgentSpec(spec: string): ParsedAgentSpec {
 const UNNAMED_MODEL = "default";
 
 /**
- * The identity a matchup headline is grouped by: the model as it was recorded,
- * with every harness folded together (a given model at a given effort is
- * expected to play the same whether it is driven through a subscription CLI or
- * the API). Opaque specs group by themselves.
+ * The identity a matchup headline is grouped by: the model as it was recorded
+ * plus the recorded effort, with every harness folded together (the same model
+ * at the same effort is expected to play the same whether it is driven through
+ * a subscription CLI or the API). Opaque specs group by themselves.
+ *
+ * Effort belongs to the identity because it is part of what played. The same
+ * model at `high` and at `low` are different contenders, and folding them into
+ * one headline would claim a result the games do not support.
+ *
+ * Effort is appended only when the spec recorded one, so no "unknown" token
+ * ever enters an identity: a harness with no effort axis (`product-cpu`) keeps
+ * exactly the identity it had before, and an effort-less LLM spec separates
+ * from its effort-bearing siblings on its own.
  *
  * The recorded string is taken literally — no alias table is consulted. A
  * published record must keep meaning the same model forever, and resolving
@@ -258,11 +269,53 @@ const UNNAMED_MODEL = "default";
 export function headlineKey(spec: string): string {
   const parsed = parseAgentSpec(spec);
   if (parsed.harness === null) return parsed.raw;
-  if (parsed.model === null || parsed.model === UNNAMED_MODEL) {
-    // Group by harness so its efforts still fold together.
-    return parsed.harness;
-  }
-  return parsed.model;
+  // An unnamed model is not a model identity, so the harness carries the
+  // headline — but its efforts separate, exactly as a named model's do.
+  const base = parsed.model === null || parsed.model === UNNAMED_MODEL
+    ? parsed.harness
+    : parsed.model;
+  return parsed.effort ? `${base}@${parsed.effort}` : base;
+}
+
+/**
+ * The public label for the headline `spec` groups under. Composed rather than
+ * tabulated: with effort in the identity a table keyed by the exact identity
+ * would need one row per model *times* effort, and every new effort would
+ * silently fall back to a raw id. `PUBLIC_HEADLINE_LABELS` therefore stays
+ * keyed by the model part alone.
+ *
+ * Two specs that fold to one identity must produce one label — the arena
+ * rejects conflicting participant metadata — so this reads the same parsed
+ * fields `headlineKey` does and never re-splits the assembled id (an opaque
+ * spec may itself contain `@`, which is not an effort).
+ *
+ * An LLM headline with no recorded effort says so: the arena must not present
+ * an unrecorded condition as though it were a known one.
+ *
+ * A composed label can be longer than the identity it describes, and the
+ * product rejects the whole catalog over an oversized label
+ * (MAX_PARTICIPANT_LABEL). For the degenerate near-limit names where that
+ * would happen, the identity itself becomes the label: every grammar-valid
+ * identity stays publishable, and the failure mode is a plainer label rather
+ * than an arena that publishes and then renders as nothing.
+ */
+export function headlineLabel(spec: string, isLlm: boolean): string {
+  const parsed = parseAgentSpec(spec);
+  if (parsed.harness === null) return parsed.raw;
+  const base = parsed.model === null || parsed.model === UNNAMED_MODEL
+    ? parsed.harness
+    : parsed.model;
+  const baseline = PROVIDERS.find((provider) => provider.key === "baseline")
+    ?.models.find((model) => model.value === base);
+  const name = PUBLIC_HEADLINE_LABELS[base] ?? baseline?.label.split(" (")[0] ?? base;
+  const composed = parsed.effort
+    ? `${name} (${parsed.effort})`
+    : isLlm
+      ? `${name} (effort not recorded)`
+      : name;
+  return Array.from(composed).length > MAX_PARTICIPANT_LABEL
+    ? headlineKey(spec)
+    : composed;
 }
 
 /** Whether this spec drives a language model (see LLM_HARNESSES). */
