@@ -39,21 +39,26 @@ remain accepted beyond the published set — e.g. `takeshi:dN`,
 
 ## Product CPU baselines + per-move regret
 
-`product-cpu:cpu-v4:level_N` runs the product's current CPU (five visible
-tiers) through a stdlib-only Python bridge — no venv, no HTTP server. Both
-arena and regret need the product checkout and a commit pin (fail-closed:
+`product-cpu:cpu-v6:level_N` runs the product's current CPU (six visible
+tiers) through a stdlib-only Python bridge — no venv, no HTTP server. Arena
+play needs the product checkout and a commit pin (fail-closed:
 policy/commit/dirty-tree/tier mismatches all refuse to run):
 
 ```bash
-export LAPLACE_PRODUCT_REPO=/path/to/laplace-main-cpu-v4   # pinned snapshot
+export LAPLACE_PRODUCT_REPO=/path/to/laplace-main
 export LAPLACE_PRODUCT_COMMIT=$(git -C "$LAPLACE_PRODUCT_REPO" rev-parse HEAD)
 
-npx tsx src/cli.ts arena --team-a product-cpu:cpu-v4:level_5 --team-b takeshi:d2 \
+npx tsx src/cli.ts arena --team-a product-cpu:cpu-v6:level_6 --team-b takeshi:d2 \
   --games 2 --swap --seed 42
 
-# offline per-move regret for any finished run (oracle: strongest tier)
+# Offline regret deliberately stays on the frozen cpu-v4 Lv5 oracle so old
+# and new reports retain one comparison meaning.
 npx tsx src/cli.ts regret runs/<run-id> --oracle product-cpu:cpu-v4:level_5
 ```
+
+Lv1–Lv6 declared local p95 guidance is 0.25 / 0.25 / 0.50 / 1.20 / 1.80 /
+10.00 seconds per move. Hosted Lv6 can be materially slower; these local
+measurements are not a network SLO.
 
 Regret follows the oracle's lexicographic preference: the scalar
 `regret_value` is only computed when the chosen move shares the best move's
@@ -65,17 +70,21 @@ depth); values are comparable only within the same oracle generation.
 ## Spectating (product web app)
 
 ```bash
-# verify + export a run into the web app (writes web/public/bench/*.json)
-npx tsx src/cli.ts export-web runs/<run-id>
+# local/private replay: export JSON, then drop it on /bench
+npx tsx src/cli.ts export-web runs/<run-id> --out ./replays
 
-# then run the product web app and open /bench
+# CI publication: complete catalog + content-addressed replay directory
+npx tsx src/cli.ts public-arena community/runs/* --out ./arena \
+  --source-sha <40-lowercase-hex> --generated-at <source-commit-rfc3339>
 ```
 
 `export-web` re-plays the event log through the product engine and fails
 loudly on any divergence (deterministic replay verification), then emits the
-web app's native replay payload. The web app has two new routes:
-`/bench` (game list) and `/bench/replay?src=...` (playback with the
-existing GameReplayViewer — product board, animations, Void rendering).
+web app's native local replay payload. Community submitters do not copy that
+output into the product repository: after merge, CI runs `public-arena`, emits
+one deterministic replay per public game, and advances an explicit publication
+status only after the complete immutable generation exists. `/bench` lists the
+catalog; `/bench/replay?id=<sha256>` resolves only a catalog-listed replay.
 
 ## What gets recorded
 

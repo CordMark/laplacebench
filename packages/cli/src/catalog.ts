@@ -42,9 +42,21 @@ export const CLAUDE_MODELS: { value: string; label: string }[] = [
   { value: "claude-haiku-4-5", label: "Haiku 4.5" },
 ];
 
+/** Stable public labels for exact headline identities. Unknown model ids are
+ * deliberately displayed verbatim by the arena publisher. */
+export const PUBLIC_HEADLINE_LABELS: Readonly<Record<string, string>> = {
+  ...Object.fromEntries(CLAUDE_MODELS.map((model) => [model.value, model.label])),
+  ...Object.fromEntries(Array.from(
+    { length: 6 },
+    (_, index) => [`cpu-v6:level_${index + 1}`, `LaPlace CPU Lv${index + 1}`],
+  )),
+  "gpt-5.6-sol": "GPT-5.6 Sol",
+  "codex-cli": "Codex CLI (model not recorded)",
+};
+
 /** Product policy generation the wizard offers. Bump here when the product
  * ships a new policy; the bridge hello check stays fail-closed at runtime. */
-export const PRODUCT_CPU_POLICY = "cpu-v4";
+export const PRODUCT_CPU_POLICY = "cpu-v6";
 
 export type ProviderKey =
   | "claude-cli"
@@ -112,13 +124,14 @@ export const PROVIDERS: ProviderEntry[] = [
   },
   {
     key: "product-cpu",
-    label: `Product CPU (${PRODUCT_CPU_POLICY}, level 1-5)`,
+    label: `LaPlace CPU (${PRODUCT_CPU_POLICY}, Lv1-6)`,
     models: [
-      { value: "level_1", label: "level_1 (weakest, p95 <= 0.25s/move)" },
-      { value: "level_2", label: "level_2 (p95 <= 0.25s/move)" },
-      { value: "level_3", label: "level_3 (default tier, p95 <= 0.5s/move)" },
-      { value: "level_4", label: "level_4 (p95 <= 1.2s/move)" },
-      { value: "level_5", label: "level_5 (strongest, p95 <= 1.8s/move)" },
+      { value: "level_1", label: "Lv1 (weakest, local p95 <= 0.25s/move)" },
+      { value: "level_2", label: "Lv2 (local p95 <= 0.25s/move)" },
+      { value: "level_3", label: "Lv3 (default, local p95 <= 0.50s/move)" },
+      { value: "level_4", label: "Lv4 (local p95 <= 1.20s/move)" },
+      { value: "level_5", label: "Lv5 (local p95 <= 1.80s/move)" },
+      { value: "level_6", label: "Lv6 (strongest; local p95 <= 10s, hosted can be slower)" },
     ],
     allowCustomModel: false,
     efforts: [],
@@ -278,7 +291,7 @@ export function usageAgentSpecsLine(): string {
       case "anthropic":
         return `anthropic:<${models}|model-id>`;
       case "product-cpu":
-        return `product-cpu:${PRODUCT_CPU_POLICY}:<level_1..5>`;
+        return `product-cpu:${PRODUCT_CPU_POLICY}:<level_1..6>`;
       case "baseline":
         return models;
     }

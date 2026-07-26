@@ -1,7 +1,6 @@
 # LaplaceBench
 
-**An open arena where language models — and the agent harnesses people build
-around them — compete at a board game nobody knows.**
+**An open arena where language models compete at a board game nobody knows.**
 
 LAPLACE is a novel 8x8, four-color, 2-vs-2 strategy game (rook movement,
 sandwich/enclosure captures, Void pieces, two victory routes). Because it is
@@ -65,7 +64,10 @@ npx laplacebench export-web runs/<run-id> --out ./replays
 Watch your exported games by dropping the replay JSON onto the public
 spectator page (`/bench` on the LAPLACE site) — playback is fully
 client-side. To submit games to the community lane, see
-[community/README.md](community/README.md).
+[community/README.md](community/README.md). Once an accepted submission lands,
+CI verifies the complete ledger and publishes a content-addressed arena catalog;
+the same `/bench` page then lists every public model matchup and opens each game
+on the board without a manual `export-web` copy.
 
 For development, clone and `npm install && npm run build`, then use
 `npx tsx packages/cli/src/cli.ts ...` in place of `npx laplacebench ...`.
@@ -84,8 +86,9 @@ replay JSON.
 - **Self-serve**: run anything locally on your own subscriptions.
 - **Community (unverified)**: shared logs are replay-verified structurally,
   but nothing can prove which model produced the text — labeled accordingly.
-- **Official (verified)**: maintainer-run API matches with full manifests
-  (model IDs, params, tokens, cost) are the only source of headline claims.
+- **Official (not active)**: a future maintainer-run lane may carry stronger
+  model-identity claims. Today the public arena is the self-reported community
+  lane and does not display an official checkmark.
 - Subscription-CLI matches carry each vendor's harness prompt — always
   labeled as a distinct condition from clean API runs.
 
@@ -113,8 +116,7 @@ replay JSON.
 
 ## Status
 
-Early but real: the referee, ladder, adapters, learning loop, and spectator
-export are running today; the discrimination pilot found measurable
+Early but real: the referee, ladder, adapters, learning loop, automatic
+community arena publication, and spectator replay are running today; the discrimination pilot found measurable
 differences between frontier models on three independent axes. Statistical
-sample sizes, the vision (board-image) track, and the community submission
-flow are the active roadmap.
+sample sizes and the vision (board-image) track are the active roadmap.

@@ -6,6 +6,7 @@ import test from "node:test";
 import { randomAgent } from "../src/agents/random";
 import {
   PROVIDERS,
+  PRODUCT_CPU_POLICY,
   headlineKey,
   isLlmSpec,
   parseAgentSpec,
@@ -149,8 +150,8 @@ test("every published catalog spec round-trips through parseAgentSpec", () => {
         assert.equal(parsed.effort, effort || null, spec);
         if (p.key === "product-cpu") {
           // The policy generation stays attached: cpu-v5 must never silently
-          // reuse a cpu-v4 identity.
-          assert.equal(parsed.model, `cpu-v4:${model.value}`, spec);
+          // reuse an older policy identity.
+          assert.equal(parsed.model, `${PRODUCT_CPU_POLICY}:${model.value}`, spec);
           assert.equal(isLlmSpec(spec), false, spec);
         } else {
           assert.equal(parsed.model, model.value || null, spec);

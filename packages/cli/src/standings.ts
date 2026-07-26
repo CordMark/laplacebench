@@ -1,6 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { headlineKey, isLlmSpec } from "./catalog";
+import { publicPair } from "./publicgames";
 
 /**
  * Community matchup records — what two agents did against each other, never a
@@ -172,23 +172,15 @@ export function matchupData(runDirs: string[]): MatchupData {
         a.turns += t.turns;
       }
 
-      const hA = headlineKey(specA);
-      const hB = headlineKey(specB);
+      const pair = publicPair(specA, specB);
+      if (!pair) continue;
 
-      // Publication conditions: at least one real model, and not a self-matchup.
-      // A harness-comparison game (same model and effort, different harness)
-      // folds to one headline and is deliberately dropped here — its raw log
-      // stays in community/runs.
-      if (!isLlmSpec(specA) && !isLlmSpec(specB)) continue;
-      if (hA === hB) continue;
-
-      const aIsLeft = ord(hA, hB) < 0;
-      const left = aIsLeft ? hA : hB;
-      const right = aIsLeft ? hB : hA;
-      const leftTeam = aIsLeft ? "A" : "B";
-      const rightTeam = aIsLeft ? "B" : "A";
-      const leftSpec = aIsLeft ? specA : specB;
-      const rightSpec = aIsLeft ? specB : specA;
+      const left = pair.leftId;
+      const right = pair.rightId;
+      const leftTeam = pair.leftSide;
+      const rightTeam = pair.leftSide === "A" ? "B" : "A";
+      const leftSpec = pair.leftAgent;
+      const rightSpec = pair.rightAgent;
 
       const mKey = `${left}\u0000${right}`;
       let m = matchups.get(mKey);
