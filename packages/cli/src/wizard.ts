@@ -1,6 +1,6 @@
 import * as readline from "node:readline";
 import * as path from "node:path";
-import { PROVIDERS, type ProviderEntry } from "./catalog";
+import { PRODUCT_CPU_POLICY, PROVIDERS, type ProviderEntry } from "./catalog";
 
 /** Injectable I/O so the whole flow is testable with scripted answers. */
 export interface WizardIO {
@@ -266,7 +266,7 @@ export async function runPlay(
   if (!deps.isTTY) {
     console.error(
       "laplacebench play は対話型です (TTY が必要)。スクリプトからは arena をフラグで使ってください:\n" +
-        "  laplacebench arena --team-a claude-cli:claude-sonnet-5 --team-b product-cpu:cpu-v4:level_3 --games 2 --swap"
+        `  laplacebench arena --team-a claude-cli:claude-sonnet-5 --team-b product-cpu:${PRODUCT_CPU_POLICY}:level_3 --games 2 --swap`
     );
     return 1;
   }

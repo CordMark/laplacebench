@@ -47,6 +47,12 @@ test("catalog specs agree with the resolvers", () => {
     baseline.models.map((m) => m.value),
     ["random", "greedy"]
   );
+  const product = PROVIDERS.find((p) => p.key === "product-cpu")!;
+  assert.equal(PRODUCT_CPU_POLICY, "cpu-v6");
+  assert.deepEqual(product.models.map((model) => model.value), [
+    "level_1", "level_2", "level_3", "level_4", "level_5", "level_6",
+  ]);
+  assert.match(product.models[5].label, /hosted can be slower/);
 });
 
 test("usage agent-specs line covers published providers and keeps free-form notice", () => {

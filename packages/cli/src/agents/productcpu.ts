@@ -23,7 +23,7 @@ export interface ProductCpuOptions {
   productRepo: string;
   /** Required commit pin; a hello reporting any other commit is rejected. */
   expectedCommit: string;
-  /** Policy segment of the agent spec (e.g. "cpu-v4"). */
+  /** Policy segment of the agent spec (e.g. the current "cpu-v6"). */
   expectedPolicy: string;
   /** Test hook: overrides the spawned command (default: python3 bridge). */
   bridgeCommand?: { command: string; args: string[] };

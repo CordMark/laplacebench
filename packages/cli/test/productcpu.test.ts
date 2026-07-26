@@ -83,14 +83,14 @@ if (!PRODUCT_REPO || !PRODUCT_COMMIT) {
   );
 }
 
-gated("real bridge: hello reports cpu-v4 with five visible tiers", async () => {
+gated("real bridge: hello reports current cpu-v6 with six visible tiers", async () => {
   const { preflightProductCpu } = await import("../src/agents/productcpu");
   const hello = await preflightProductCpu(
-    { productRepo: PRODUCT_REPO!, expectedCommit: PRODUCT_COMMIT!, expectedPolicy: "cpu-v4" },
+    { productRepo: PRODUCT_REPO!, expectedCommit: PRODUCT_COMMIT!, expectedPolicy: "cpu-v6" },
     "level_3"
   );
-  assert.equal(hello.policy_version, "cpu-v4");
-  assert.equal(hello.visible_tiers.length, 5);
+  assert.equal(hello.policy_version, "cpu-v6");
+  assert.equal(hello.visible_tiers.length, 6);
   assert.equal(hello.product_dirty, false);
 });
 
@@ -100,7 +100,7 @@ gated("real bridge: same seed + position => same move (stochastic tier)", async 
   const bridge = new ProductCpuBridge({
     productRepo: PRODUCT_REPO!,
     expectedCommit: PRODUCT_COMMIT!,
-    expectedPolicy: "cpu-v4",
+    expectedPolicy: "cpu-v6",
   });
   try {
     await bridge.hello;
@@ -124,7 +124,7 @@ gated("real arena game: names and provenance are consistent end to end", async (
   try {
     process.chdir(workDir);
     await arena({
-      "team-a": "product-cpu:cpu-v4:level_1",
+      "team-a": "product-cpu:cpu-v6:level_1",
       "team-b": "random",
       games: "1",
       seed: "11",
@@ -138,10 +138,10 @@ gated("real arena game: names and provenance are consistent end to end", async (
   }
   const runDir = path.join(workDir, "runs", "product-integration");
   const runJson = JSON.parse(fs.readFileSync(path.join(runDir, "run.json"), "utf8"));
-  assert.equal(runJson.product_cpu.policy_version, "cpu-v4");
+  assert.equal(runJson.product_cpu.policy_version, "cpu-v6");
   assert.equal(runJson.product_cpu.product_commit.startsWith(PRODUCT_COMMIT!.slice(0, 7)), true);
   assert.deepEqual(runJson.product_cpu.teams.A, {
-    spec: "product-cpu:cpu-v4:level_1",
+    spec: "product-cpu:cpu-v6:level_1",
     level_id: "level_1",
   });
 
@@ -151,16 +151,16 @@ gated("real arena game: names and provenance are consistent end to end", async (
     .filter(Boolean)
     .map((l) => JSON.parse(l));
   const start = events.find((e) => e.t === "game_start");
-  assert.equal(start.team_a, "product-cpu:cpu-v4:level_1");
+  assert.equal(start.team_a, "product-cpu:cpu-v6:level_1");
   const moveWithSeed = events.find((e) => e.t === "move" && e.meta?.product_seed !== undefined);
   assert.ok(moveWithSeed, "product moves record their effective seed");
 
   const finalJson = JSON.parse(
     fs.readFileSync(path.join(runDir, "games/game-000/final.json"), "utf8")
   );
-  assert.equal(finalJson.teams.A.agent, "product-cpu:cpu-v4:level_1");
+  assert.equal(finalJson.teams.A.agent, "product-cpu:cpu-v6:level_1");
   const summary = JSON.parse(fs.readFileSync(path.join(runDir, "summary.json"), "utf8"));
-  assert.ok(summary.agents["product-cpu:cpu-v4:level_1"]);
+  assert.ok(summary.agents["product-cpu:cpu-v6:level_1"]);
   const md = matchupsMarkdown([runDir]);
-  assert.match(md, /`product-cpu:cpu-v4:level_1`/);
+  assert.match(md, /`product-cpu:cpu-v6:level_1`/);
 });

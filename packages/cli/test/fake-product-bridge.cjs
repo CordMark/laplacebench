@@ -16,14 +16,16 @@ const readline = require("node:readline");
 const mode = process.env.FAKE_BRIDGE_MODE || "normal";
 const commit = mode === "wrong_commit" ? "deadbeef" : process.env.FAKE_BRIDGE_COMMIT || "d316b30";
 
+const policy = process.env.FAKE_BRIDGE_POLICY || "cpu-v4";
+const visibleCount = Number(process.env.FAKE_BRIDGE_VISIBLE_COUNT || (policy === "cpu-v6" ? 6 : 5));
 const hello = {
   t: "hello",
   protocol: "product-cpu-bridge-v1",
-  policy_version: mode === "bad_policy" ? "cpu-v9" : "cpu-v4",
+  policy_version: mode === "bad_policy" ? "cpu-v9" : policy,
   product_commit: commit,
   product_dirty: mode === "dirty",
   python: "fake 3.99",
-  visible_tiers: [1, 2, 3, 4, 5].map((n) => ({
+  visible_tiers: Array.from({ length: visibleCount }, (_, index) => index + 1).map((n) => ({
     level_id: `level_${n}`,
     profile_name: `fake_tier_${n}`,
     p95_limit_seconds: 1,
