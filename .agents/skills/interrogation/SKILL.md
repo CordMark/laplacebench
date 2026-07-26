@@ -47,12 +47,13 @@ Use the shared runner and one stable session key for every round:
 bash .agents/scripts/run-claude-interrogation.sh impl interrogate-<slug> < interrogation-prompt.txt
 ```
 
-Do not call raw `claude -p`, manage session IDs, or invoke another interrogation recursively. The runner provides a fresh read-only Claude session, validates structured output, persists resume state, and appends per-round metrics.
+Do not call raw `claude -p`, manage session IDs, or invoke another interrogation recursively. The runner provides a read-only Claude Fable session at medium effort, validates structured output, persists resume state, and appends per-round metrics. This explicit model/effort binding isolates checkpoint latency from the operator's interactive Claude settings. It consumes Claude's partial-message and hook event stream so liveness is observed independently of total runtime.
 
 ### Wait discipline
 
-- Let the runner exit by itself. Its timeout defaults to 600 seconds.
-- Heartbeats or silence are progress, not failure. Do not cancel, retry, or count a failure while it runs.
+- Let the runner exit by itself. There is no total-runtime deadline: healthy activity may continue for as long as the checkpoint needs.
+- The runner checks Claude's stream continuously and kills the child only after 120 seconds with no stdout/stderr activity (`CLAUDE_INTERROGATION_STALL_SECONDS`). A stalled fresh session is retained. Retry with the same session key to resume it; if Claude reports that the retained session is invalid or missing, the runner performs its existing fresh-session recovery.
+- Stream activity is progress. Do not cancel, retry, or count a failure while it continues.
 - In harnesses that require polling, poll at the maximum interval and emit no “still waiting” narration between polls.
 - Count only nonzero exit, runner timeout/error, or explicit user cancellation as failure.
 - After two consecutive infrastructure failures, report the skipped checkpoint to the user and give implementation review the full premise-monitoring scope. Do not silently waive it.

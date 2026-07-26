@@ -6,7 +6,10 @@ import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import {
+  RECORD_ONLY_CLOSURE_MODE,
   deriveNextApprovalPosition,
+  diffWorktreeManifests,
+  evaluateRecordOnlyClosure,
   extractLastTurnUsage,
   normalizeReviewUsageObservation,
   selectResumeInspection,
@@ -44,6 +47,7 @@ if (process.env.CODEX_REVIEW_RUNNER_ACTIVE === '1') {
 
 const extraArgs = process.argv.slice(3);
 const freshOnly = extraArgs.includes('--fresh');
+const closeRecordOnly = extraArgs.includes('--close-record-only');
 const rawSessionKey = extraArgs.find((arg) => !arg.startsWith('-')) ?? '';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -456,6 +460,44 @@ function diffScopedSnapshots(previousSnapshots = {}, currentSnapshots = {}) {
   return { changed, unchanged, added, removed };
 }
 
+function gitOutput(args) {
+  const result = spawnSync('git', ['-C', repoRoot, ...args], {
+    encoding: 'utf8',
+    maxBuffer: 64 * 1024 * 1024,
+  });
+  if (result.error || result.status !== 0) return null;
+  return result.stdout;
+}
+
+// Snapshot of everything that differs from HEAD (tracked modifications plus
+// untracked files). Unlike the prompt-derived scoped file list, this cannot
+// miss a change the prompt never mentioned.
+async function captureWorktreeManifest() {
+  const headSha = gitOutput(['rev-parse', 'HEAD'])?.trim();
+  if (!headSha) return null;
+  const status = gitOutput(['status', '--porcelain=v1', '-z', '--untracked-files=all']);
+  if (status === null) return null;
+
+  const records = status.split('\0');
+  const entries = {};
+  for (let index = 0; index < records.length; index += 1) {
+    const record = records[index];
+    if (!record) continue;
+    const code = record.slice(0, 2);
+    const filePath = record.slice(3);
+    if (/[RC]/.test(code)) index += 1; // rename/copy emits the origin path as the next record
+    if (!filePath) continue;
+    const absolute = path.join(repoRoot, filePath);
+    let hash = 'deleted';
+    try {
+      const stat = await fs.stat(absolute);
+      hash = stat.isFile() ? await hashFile(absolute) : 'non-file';
+    } catch {}
+    entries[filePath] = hash;
+  }
+  return { headSha, entries };
+}
+
 const sessionKey = requireSessionKey(rawSessionKey);
 const sessionFile = path.join(stateDir, `codex-${reviewType}-${sessionKey}.session`);
 const activeFile = path.join(stateDir, `codex-${reviewType}-${sessionKey}.active.json`);
@@ -692,13 +734,163 @@ if (!promptText.trim()) {
   process.exit(2);
 }
 
-const schemaPath = resolveSchemaPath();
-await fs.access(schemaPath);
 await fs.mkdir(stateDir, { recursive: true });
 
-const canonicalPromptText = buildCanonicalPrompt(promptText, sessionKey);
 const resultFile = path.join(stateDir, `codex-${reviewType}-${sessionKey}.result.json`);
 const resultMetricsFile = path.join(stateDir, `codex-${reviewType}-${sessionKey}.result.jsonl`);
+const closurePolicyFile = path.join(repoRoot, '.agents', 'review-closure-policy.json');
+
+
+// Record-only closure never starts Codex, so it must be decided before the
+// Codex command and review schema are resolved.
+async function runRecordOnlyClosure() {
+  const refuse = async (reason, code = 3) => {
+    await releaseIfOwned(activeFile);
+    console.error(`[run-codex-review] record-only closure refused: ${reason}`);
+    if (code === 3) console.error('[run-codex-review] run a normal review round instead.');
+    process.exit(code);
+  };
+
+  await claimActiveRun();
+
+  const readPreviousResult = async () => {
+    try {
+      return JSON.parse(await fs.readFile(resultFile, 'utf8'));
+    } catch {
+      return null;
+    }
+  };
+  const previousResult = await readPreviousResult();
+  if (!previousResult) await refuse('no previous review result for this session-key');
+
+  let policy = null;
+  try {
+    policy = JSON.parse(await fs.readFile(closurePolicyFile, 'utf8'));
+  } catch {
+    await refuse(`closure policy missing or unreadable: ${closurePolicyFile}`);
+  }
+
+  const currentManifest = await captureWorktreeManifest();
+  if (!currentManifest) await refuse('working-tree manifest unavailable (is this a git repository?)');
+  const manifestDiff = diffWorktreeManifests(previousResult?.worktreeManifest, currentManifest);
+
+  const decision = evaluateRecordOnlyClosure({
+    reviewType,
+    previousResult,
+    manifestDiff,
+    policy,
+  });
+  if (!decision.eligible) await refuse(decision.reason);
+
+  // The reviewed result must still be the one this closure validated.
+  const resultBeforeWrite = await readPreviousResult();
+  if (resultBeforeWrite?.runToken !== previousResult.runToken
+    || resultBeforeWrite?.payload?.verdict !== 'NEEDS_CHANGES') {
+    await refuse('reviewed result changed while the closure was being evaluated');
+  }
+
+  const approvalPosition = deriveNextApprovalPosition((await readResultMetrics()).records);
+  // The cycle this closure claims to close must still be open. If a review
+  // completed underneath us, there is nothing here to close.
+  if (approvalPosition.priorCompletedVerdict !== 'NEEDS_CHANGES') {
+    await refuse('the approval cycle was closed by a review while this closure was being evaluated');
+  }
+
+  // Commit point. Exclusive creation of the cycle's close marker is the only
+  // thing that decides who closes it: whoever creates the marker writes the
+  // record. The marker is a permanent audit record, never a lock — nothing
+  // reclaims or deletes it, so there is no stale state and no race to reclaim.
+  const cycleClosedMarker = path.join(
+    stateDir,
+    `codex-${reviewType}-${sessionKey}.cycle-${approvalPosition.approvalCycle}.closed`,
+  );
+  const completedAt = new Date().toISOString();
+  try {
+    await fs.writeFile(
+      cycleClosedMarker,
+      `${JSON.stringify({ runToken, closedAt: completedAt, touched: decision.touched })}\n`,
+      { flag: 'wx' },
+    );
+  } catch (error) {
+    if (error?.code === 'EEXIST') {
+      await refuse(`approval cycle ${approvalPosition.approvalCycle} was already closed by another run`);
+    }
+    throw error;
+  }
+
+  // Last look before appending: a review that completed between the position
+  // check and the marker leaves the marker unused, which fail-closes any later
+  // closure of this cycle onto a real review round.
+  const historyAtCommit = deriveNextApprovalPosition((await readResultMetrics()).records);
+  if (historyAtCommit.priorCompletedVerdict !== 'NEEDS_CHANGES'
+    || historyAtCommit.approvalCycle !== approvalPosition.approvalCycle) {
+    await refuse('a review completed while this closure was committing');
+  }
+  const payload = {
+    verdict: 'APPROVED',
+    confidence: 1,
+    summary: compact(promptText.trim(), 600),
+    issues: [],
+  };
+  const reviewMetrics = {
+    approvalCycle: approvalPosition.approvalCycle,
+    roundInCycle: approvalPosition.roundInCycle,
+    approvalRoundCompleted: true,
+    priorCompletedVerdict: approvalPosition.priorCompletedVerdict,
+    historyGapCount: approvalPosition.historyGapCount,
+    reviewUsage: { accountingMode: 'not_started', accountingGapReason: null, rawTotal: null, normalizedDelta: null },
+    resumeInspectionMode: 'none',
+  };
+  let threadId = null;
+  try {
+    threadId = (await fs.readFile(sessionFile, 'utf8')).trim() || null;
+  } catch {}
+
+  await writeJsonFile(resultFile, {
+    status: 'completed',
+    completedAt,
+    threadId,
+    runToken,
+    closureMode: RECORD_ONLY_CLOSURE_MODE,
+    closureTouchedFiles: decision.touched,
+    prompt: null,
+    scopedFiles: previousResult.scopedFiles ?? [],
+    scopedSnapshots: previousResult.scopedSnapshots ?? {},
+    parentAdjudication: null,
+    worktreeManifest: currentManifest,
+    reviewMetrics,
+    payload,
+  });
+  await fs.appendFile(
+    resultMetricsFile,
+    `${JSON.stringify({
+      ts: completedAt,
+      reviewType,
+      sessionKey,
+      status: 'completed',
+      runToken,
+      startedAt: completedAt,
+      threadId,
+      verdict: payload.verdict,
+      issueCount: 0,
+      closureMode: RECORD_ONLY_CLOSURE_MODE,
+      ...reviewMetrics,
+    })}\n`,
+    'utf8',
+  );
+  await releaseIfOwned(activeFile);
+  process.stdout.write(`${JSON.stringify(payload)}\n`);
+  process.exit(0);
+}
+
+if (closeRecordOnly) {
+  await runRecordOnlyClosure();
+}
+
+const schemaPath = resolveSchemaPath();
+await fs.access(schemaPath);
+
+const canonicalPromptText = buildCanonicalPrompt(promptText, sessionKey);
 const schema = JSON.parse(await fs.readFile(schemaPath, 'utf8'));
 const codexCommand = resolveCodexCommand();
 const scopedFiles = extractScopedFilePaths(promptText);
@@ -805,25 +997,38 @@ async function waitForExistingResult() {
   return false;
 }
 
+async function releaseIfOwned(filePath) {
+  try {
+    const holder = JSON.parse(await fs.readFile(filePath, 'utf8'));
+    if (holder?.runToken !== runToken) return;
+  } catch {
+    return;
+  }
+  await fs.rm(filePath, { force: true });
+}
+
+async function yieldToActiveRun() {
+  let current = null;
+  try { current = await readJsonFile(activeFile); } catch {}
+  process.stderr.write(
+    `[run-codex-review] review already running for ${reviewType}/${sessionKey}${current?.pid ? ` (pid ${current.pid})` : ''}\n`,
+  );
+  if (current?.threadId) {
+    await fs.writeFile(sessionFile, `${current.threadId}\n`, 'utf8');
+    process.stderr.write(`[run-codex-review] active thread: ${current.threadId}\n`);
+  }
+  if (await waitForExistingResult()) process.exit(0);
+  process.stderr.write(
+    '[run-codex-review] wait for the active run to finish, then re-run with the same session-key\n',
+  );
+  process.exit(4);
+}
+
 async function claimActiveRun() {
   try {
     const current = await readJsonFile(activeFile);
-    if (isPidRunning(current.pid)) {
-      process.stderr.write(
-        `[run-codex-review] review already running for ${reviewType}/${sessionKey} (pid ${current.pid})\n`,
-      );
-      if (current.threadId) {
-        await fs.writeFile(sessionFile, `${current.threadId}\n`, 'utf8');
-        process.stderr.write(`[run-codex-review] active thread: ${current.threadId}\n`);
-      }
-      const reused = await waitForExistingResult();
-      if (reused) {
-        process.exit(0);
-      }
-      process.stderr.write(
-        '[run-codex-review] wait for the active run to finish, then re-run with the same session-key\n',
-      );
-      process.exit(4);
+    if (isPidRunning(current.pid) && current.runToken !== runToken) {
+      await yieldToActiveRun();
     }
     await fs.rm(activeFile, { force: true });
   } catch {}
@@ -879,6 +1084,8 @@ async function recordResult(status, payload = {}, reviewUsage = null, resumeInsp
     scopedFiles,
     scopedSnapshots,
     parentAdjudication,
+    // Baseline for a later record-only closure: without it, closure refuses.
+    worktreeManifest: await captureWorktreeManifest(),
     reviewMetrics,
     ...payload,
   });

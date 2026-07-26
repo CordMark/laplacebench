@@ -74,7 +74,7 @@ Distilled from repeated review findings the earlier checkpoints kept missing (20
 1. **Enforcement boundary**: every UI-level guard (sold guard, feature flag, preview boundary, inactive-row lock) must hold at the backend boundary too — direct API call, service/core path, CLI. A frontend-only invariant is a finding.
 2. **Fail-closed counterexamples**: NULL / empty set / zero / zero-date / one-sided absence must not resolve to success, ignore, or safe. Ask for the negative test.
 3. **Composite identity**: legacy/current linkage, migration sources, grouping, archive reads must key on the full tuple (tenant/world/sourceSystem/source id), not a single id or display name.
-4. **Stale-wording sweep**: after any decision change, grep plan text, validation messages, status docs, test names, and external-answer drafts for leftovers of the overturned decision.
+4. **Overturned-wording registration**: when the diff overturns a decision, the sweep for leftovers belongs to the project's regression gate, not to this review. Check that the overturned wording (or retired canonical path) is registered as a machine-checked entry in the project's regression ledger; an unregistered overturn is a finding. Leftovers the gate cannot see — text in lines nobody touched — remain fair game when you notice them.
 5. **Immutable issued artifacts**: issued receipts/orders/tickets and confirmed outputs must not change when live settings, assets, route policies, or product names change later — values are snapshotted at issue time.
 6. **Pinned invariants**: implemented blockers, replay no-ops, idempotency, and fail-closed branches must be pinned by tests, or a refactor regresses them silently.
 7. **Leakage**: checksums, reports, smoke artifacts, raw snapshots must not leak PII or stable oracles.
@@ -115,9 +115,16 @@ Flag any code that makes the final system harder to explain even if it appears l
 2. If verdict is `NEEDS_CHANGES`, judge each issue before editing: `accept`, `reject`, or `defer`.
 3. Add the exact ordered `Parent-Adjudication:` dispositions to the next review prompt so the reviewer sees your judgment.
 4. Fix only accepted material findings.
-5. Re-run the same runner command with the same `session-key`.
-6. Repeat until `APPROVED`.
-7. If the review is not converging after a few rounds, stop looping: report the unresolved issues to the user and let them decide, instead of claiming completion.
+5. If every accepted finding was record/document work, close the cycle without another reviewer round:
+
+```bash
+bash .agents/scripts/run-codex-review.sh impl <session-key> --close-record-only < closure-note.txt
+```
+
+   The runner decides, not the author's description of the findings. It compares the whole working tree against the manifest recorded at the reviewed round and refuses unless the change is non-empty, entirely `.md`, and touches no path in the project's `.agents/review-closure-policy.json` protected list. It never starts Codex. A refusal (exit 3) names the failing predicate — run a normal round instead of arguing with it. Closure records land as `closureMode: record_only`, counted apart from reviewer rounds, and an exclusive per-cycle marker guarantees one cycle takes at most one closure. Do not run a closure and a review for the same session-key at the same time: the normal review path does not arbitrate on that marker, so a simultaneous pair can leave a superseded closure that history reconstruction reports as a gap. Without a policy file the closure path is unavailable, and projects that track the runner's own state directory will see it refuse on those paths.
+6. Otherwise re-run the same runner command with the same `session-key`.
+7. Repeat until `APPROVED`.
+8. If the review is not converging after a few rounds, stop looping: report the unresolved issues to the user and let them decide, instead of claiming completion.
 
 After the review, close the loop into the adjudication log (`docs/interrogation/adjudications/` — one file per work item, `YYYY-MM-DD-<slug>.md`; canonical format: interrogation skill, Record section):
 - Record each accepted finding that touched a decision — a missed invariant, a wrong lifecycle or scope, not a mere code defect — as a `Q(review/...)` entry under the work item (finding restated as a question, defense, ruling; revise rulings carry `class: A|B|C`), so review findings feed distillation like interrogation exchanges do.
