@@ -1,5 +1,5 @@
 ---
-status: approved
+status: implemented
 direction: direction-bench-one-command
 owner: bench
 risk_tier: standard

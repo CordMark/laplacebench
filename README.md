@@ -79,14 +79,17 @@ context, both of its colors — stays the reference point.
 No clone, no install, no API key:
 
 ```bash
-# watch the baseline ladder fight (no LLM needed)
-npx laplacebench arena --team-a takeshi --team-b center-greedy --games 2 --swap
+# pick the models, efforts and settings from menus, then play
+npx laplacebench play
+
+# the same thing without the menus — for scripts, or when you know the specs
+npx laplacebench play --team-a takeshi --team-b center-greedy --games 2 --swap
 
 # with a Claude subscription (Claude Code CLI installed & logged in)
-npx laplacebench arena --team-a claude-cli:claude-sonnet-5@low --team-b takeshi --games 2 --swap
+npx laplacebench play --team-a claude-cli:claude-sonnet-5@low --team-b takeshi --games 2 --swap
 
 # frontier vs frontier on your own subscriptions
-npx laplacebench arena \
+npx laplacebench play \
   --team-a claude-cli:claude-fable-5@medium --team-b codex-cli:gpt-5.6-sol@medium \
   --games 2 --swap
 

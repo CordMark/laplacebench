@@ -89,6 +89,12 @@ to check before investing in anything larger.
 
 ## Reproduce
 
+> **コマンド名について (2026-07-27)**: 以下は当時 `arena` で実行した記録であり、
+> 書き換えていない。現在の入口は `play` に統合されたが、`arena` は非推奨 alias
+> として残っているので**記載のコマンドはそのまま再現できる**。このラダーを
+> `play` で実測し直して本文を更新したとき、alias を撤去する
+> (`packages/cli/src/cli.ts` の該当コメント参照)。
+
 ```bash
 cd packages/cli
 npx tsx src/cli.ts arena --team-a random        --team-b greedy       --games 4 --swap --seed 1001 --run-id anchor-v1-random-vs-greedy

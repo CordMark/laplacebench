@@ -187,12 +187,30 @@ function commandVersion(command: string): string | null {
   }
 }
 
+/**
+ * The defaults the deprecated `arena` alias must keep applying. `play` is
+ * deliberately stricter — it refuses to guess an opponent — so these live here,
+ * separately, as the thing that makes "existing arena invocations behave
+ * exactly as before" true and testable without playing a match.
+ */
+export function arenaDefaults(args: Record<string, string | boolean>): {
+  specA: string;
+  specB: string;
+  games: number;
+  swap: boolean;
+  seed: number;
+} {
+  return {
+    specA: String(args["team-a"] ?? "random"),
+    specB: String(args["team-b"] ?? "takeshi"),
+    games: parseInt(String(args["games"] ?? "2"), 10),
+    swap: Boolean(args["swap"]),
+    seed: parseInt(String(args["seed"] ?? "42"), 10),
+  };
+}
+
 export async function arena(args: Record<string, string | boolean>): Promise<void> {
-  const specA = String(args["team-a"] ?? "random");
-  const specB = String(args["team-b"] ?? "takeshi");
-  const games = parseInt(String(args["games"] ?? "2"), 10);
-  const swap = Boolean(args["swap"]);
-  const seed = parseInt(String(args["seed"] ?? "42"), 10);
+  const { specA, specB, games, swap, seed } = arenaDefaults(args);
   const maxPlies = resolveMaxPlies(args["max-plies"]);
   const { turnTimeoutMs, outputTokenBudget } = resolveMatchResources(
     args,
@@ -331,24 +349,45 @@ async function main(): Promise<void> {
   const [cmd, ...rest] = process.argv.slice(2);
   const args = parseArgs(rest);
   if (cmd === "arena") {
+    // Deprecated alias. It keeps its own historical defaults (see `arena()`),
+    // so every existing invocation — including the bare one — behaves exactly
+    // as it always has. The stricter argument contract lives on `play` alone;
+    // tightening it here would break the published command this alias exists
+    // to preserve.
+    //
+    // REMOVAL CONDITION: drop this branch once BOTH docs/anchor-ladder-v1.md
+    // and docs/anchor-ladder-v2.md record commands newly executed with `play`
+    // and carry the measurements from that execution. Those files document how
+    // the published baseline ordering was produced; while either still names
+    // `arena`, this alias is what keeps that record reproducible.
+    console.error(
+      "warning: `arena` は非推奨です。`laplacebench play --team-a <spec> --team-b <spec>` を使ってください。"
+    );
     await arena(args);
   } else if (cmd === "play") {
     const { runPlay } = require("./wizard") as typeof import("./wizard");
-    process.exitCode = await runPlay({
-      env: process.env,
-      checkCommand: (c) => {
-        const v = commandVersion(c);
-        return v ? { ok: true, version: v } : { ok: false };
+    process.exitCode = await runPlay(
+      {
+        env: process.env,
+        checkCommand: (c) => {
+          const v = commandVersion(c);
+          return v ? { ok: true, version: v } : { ok: false };
+        },
+        randomSeed: () => Math.floor(Math.random() * 90000) + 10000,
+        runArena: (a) => arena(a),
+        submitRun: (runDir) => {
+          const { submitRun, defaultSubmitDeps } = require("./submit") as typeof import("./submit");
+          // Returned, not discarded: `submitRun` reports refusal by returning
+          // `blocked`, so swallowing it would let `play` claim a publication
+          // that never happened.
+          return submitRun(runDir, defaultSubmitDeps());
+        },
+        isTTY: Boolean(process.stdin.isTTY),
+        now: () => new Date(),
       },
-      randomSeed: () => Math.floor(Math.random() * 90000) + 10000,
-      runArena: (a) => arena(a),
-      submitRun: (runDir) => {
-        const { submitRun, defaultSubmitDeps } = require("./submit") as typeof import("./submit");
-        submitRun(runDir, defaultSubmitDeps());
-      },
-      isTTY: Boolean(process.stdin.isTTY),
-      now: () => new Date(),
-    });
+      undefined,
+      args
+    );
   } else if (cmd === "summarize") {
     const runDir = String(args["run"] ?? rest[0]);
     console.log(JSON.stringify(summarize(runDir), null, 2));
@@ -442,7 +481,7 @@ async function main(): Promise<void> {
     );
   } else {
     console.log(
-      "usage:\n  laplacebench play                                 (interactive match wizard — pick providers, models, effort)\n  laplacebench arena --team-a <spec> --team-b <spec> [--games N] [--swap] [--seed N] [--max-plies N] [--output-token-budget N] [--turn-timeout-ms N]\n  laplacebench summarize <runDir>\n  laplacebench regret <runDir> [--oracle product-cpu:cpu-v4:level_5]  (offline per-move regret vs frozen product oracle)\n  laplacebench export-web <runDir> [--out <dir>]   (verify + local replay JSON)\n  laplacebench verify <runDir...>                  (deterministic replay verification)\n  laplacebench submit <runDir>                     (verify + publish to the community ledger; needs gh auth)\n  laplacebench standings <runDir...> [--out <md>] [--json-out <json>]  (temporary v2 compatibility output)\n  laplacebench public-arena <runDir...> --out <dir> --source-sha <sha> --generated-at <time>  (CI artifact generator)\n\nmatch resources:\n  --output-token-budget N  per team/game, in-game output tokens; default 250000 for LLM matches (canonical envelope), none for baseline-only\n  --turn-timeout-ms N      shared across both attempts in a turn; default 1200000 for LLM matches (backstop), 300000 otherwise\n  --max-plies N            default 100 (canonical cap for laplace-8x8-v1 matches)\n\nproduct CPU (arena + regret):\n  --product-repo <path>    product checkout (or env LAPLACE_PRODUCT_REPO)\n  --product-commit <sha>   required commit pin (or env LAPLACE_PRODUCT_COMMIT)\n\n" +
+      "usage:\n  laplacebench play                                 (interactive: pick providers, models, effort)\n  laplacebench play --team-a <spec> --team-b <spec> [--games N] [--swap] [--seed N] [--run-id <id>] [--submit] [--max-plies N] [--output-token-budget N] [--turn-timeout-ms N]\n                                                    (non-interactive: --team-a and --team-b are required; anything else supplied is not asked for)\n  laplacebench summarize <runDir>\n  laplacebench regret <runDir> [--oracle product-cpu:cpu-v4:level_5]  (offline per-move regret vs frozen product oracle)\n  laplacebench export-web <runDir> [--out <dir>]   (verify + local replay JSON)\n  laplacebench verify <runDir...>                  (deterministic replay verification)\n  laplacebench submit <runDir>                     (verify + publish to the community ledger; needs gh auth)\n  laplacebench standings <runDir...> [--out <md>] [--json-out <json>]  (temporary v2 compatibility output)\n  laplacebench public-arena <runDir...> --out <dir> --source-sha <sha> --generated-at <time>  (CI artifact generator)\n\nmatch resources:\n  --output-token-budget N  per team/game, in-game output tokens; default 250000 for LLM matches (canonical envelope), none for baseline-only\n  --turn-timeout-ms N      shared across both attempts in a turn; default 1200000 for LLM matches (backstop), 300000 otherwise\n  --max-plies N            default 100 (canonical cap for laplace-8x8-v1 matches)\n\nproduct CPU (play + regret):\n  --product-repo <path>    product checkout (or env LAPLACE_PRODUCT_REPO)\n  --product-commit <sha>   required commit pin (or env LAPLACE_PRODUCT_COMMIT)\n\n" +
         usageAgentSpecsLine() +
         "\n  (claude-cli/codex-cli run under your Claude/ChatGPT subscription — no API key)"
     );

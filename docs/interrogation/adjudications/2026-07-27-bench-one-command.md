@@ -147,3 +147,30 @@ Requirement source: ユーザー対話 2026-07-27。「基本的にはplayが使
   `--seed` だけ乱数としており自己矛盾 → 受理、alias は 42 維持・`play` は乱数を選び
   採用値を出力、という意図的な差として明記(revise, class: B)。
 - ラウンド 3・指摘計 8 件で APPROVED（confidence 0.98）
+
+## Impl review (codex-impl-review, session impl-bench-one-command)
+
+- Q(review/blocked-submission-reported-as-success): `submitRun` は検証失敗・gh 未認証・
+  提出済みを**例外ではなく `blocked` の戻り値**で伝えるのに、実アダプタが戻り値を
+  捨て `runPlay` は非例外を成功扱いしていた。**何も公開していないのに
+  「公開台帳へ提出しました」と出る** → 受理、注入関数が outcome を返す形にし、
+  明示的な非 "submitted" ステータスのみを未公開として扱う（void 返しは従来契約の
+  まま成功）。blocked 2種の回帰テストを追加(revise, class: A)。修正中に既存テストの
+  スタブが `(dir) => submitted.push(dir)`（push は数値を返す）で区別を隠していたのを
+  発見し、実アダプタと同じ void 返しへ是正。
+- Q(review/aux-harness-skips-auth): `providerFor` が `claude-cli-learn:*` を
+  資格情報不要の baseline へ落としており、**Claude CLI 無しで headless 対局が
+  始まりうる** → 受理、`AUTH_OWNER` で補助ハーネスを実際の資格情報所有者へ写像
+  （`claude-cli-learn` → `claude-cli`）。CLI 不在で `runArena` に到達しないことを
+  テストで固定(revise, class: A)。
+- Q(review/range-check-too-late): `--max-plies 0` 等が事前検証を通過し、認証チェックを
+  走らせ「対局開始」を表示してから runner で落ちていた。「認証・対局開始より前に
+  検証する」という自分の契約に反する → 受理、`POSITIVE_FLAGS` を `flagErrors` 内で
+  強制。4つの境界値で「認証チェックが走らない・runArena が呼ばれない・対局開始が
+  出ない」を固定(revise, class: B)。
+- Q(review/partial-flags-decide-silently): games/swap を1つの分岐で束ねていたため、
+  対話中に `--games 4` だけ渡すと **swap が黙って off に決まる**（`--swap` だけなら
+  games が黙って2に決まる） → 受理、独立に解決する形へ。両方未指定なら従来の
+  正準プリセット質問のまま、片方だけ指定なら**もう片方だけ聞く**。両組み合わせの
+  回帰テストを追加(revise, class: A)。
+- ラウンド 3・指摘計 4 件で APPROVED（confidence 0.99）

@@ -12,14 +12,28 @@ eliminations, and results must match the log exactly.
    npx laplacebench play
    ```
 
-2. Copy the run directory into this folder, named `<your-github-name>--<run-id>`:
+   The wizard offers to publish when the match ends. If you decline, or if you
+   ran it with flags, submit whenever you like with one command:
+
+   ```bash
+   npx laplacebench submit runs/<run-id>
+   ```
+
+   It verifies the replay first and refuses to publish a run that does not
+   reproduce. That is the whole submission — **do not regenerate any
+   aggregate**; CI rebuilds the matchup records after merge.
+
+### Doing it by hand
+
+If you would rather not use `submit`:
+
+1. Copy the run directory into this folder, named `<your-github-name>--<run-id>`:
 
    ```bash
    cp -R runs/<run-id> community/runs/<you>--<run-id>
    ```
 
-3. Open a pull request. That is the whole submission — **do not regenerate any
-   aggregate**; CI rebuilds the matchup records after merge.
+2. Open a pull request.
 
 CI checks the pull request without running any code from it:
 
