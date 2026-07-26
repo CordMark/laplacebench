@@ -5,6 +5,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import test from "node:test";
 import { buildArenaArtifacts, writeArenaArtifacts } from "../src/publicarena";
+import { publicPair } from "../src/publicgames";
 
 const ROOT = path.resolve(__dirname, "../../..");
 const RUNS = fs.readdirSync(path.join(ROOT, "community/runs"))
@@ -51,27 +52,66 @@ test("current ledger publishes deterministic content-addressed public games", ()
   const first = buildArenaArtifacts(RUNS, SHA, GENERATED);
   const second = buildArenaArtifacts([...RUNS].reverse(), SHA, GENERATED);
   assert.deepEqual(first.catalogBytes, second.catalogBytes);
-  assert.equal(first.catalog.verified_run_count, 2);
-  assert.equal(first.catalog.verified_game_count, 6);
-  assert.equal(first.catalog.public_game_count, 2);
-  assert.equal(first.catalog.matchups.length, 1);
+
+  // Which ledger games SHOULD be public is derived independently here, from the
+  // recorded agent specs, so that omitting a game the ledger contains fails the
+  // test — a count-only check would pass while publishing nothing.
+  const ledgerGames: string[] = [];
+  const expectedPublic: string[] = [];
+  const expectedIds = new Set<string>();
+  for (const run of RUNS) {
+    for (const gameId of fs.readdirSync(path.join(run, "games")).sort()) {
+      ledgerGames.push(gameId);
+      const final = JSON.parse(
+        fs.readFileSync(path.join(run, "games", gameId, "final.json"), "utf8")
+      );
+      const pair = publicPair(final.teams.A.agent, final.teams.B.agent);
+      if (!pair) continue;
+      expectedPublic.push(`${path.basename(run)}/${gameId}`);
+      expectedIds.add(pair.leftId).add(pair.rightId);
+    }
+  }
+  assert.equal(first.catalog.verified_run_count, RUNS.length);
+  assert.equal(first.catalog.verified_game_count, ledgerGames.length);
+
+  const published = first.catalog.matchups.flatMap((m) => m.games.map((g) => g.raw_ref));
   assert.deepEqual(
-    [first.catalog.matchups[0].left.id, first.catalog.matchups[0].right.id],
-    ["claude-opus-5@high", "gpt-5.6-sol@high"]
+    [...published].sort(),
+    [...expectedPublic].sort(),
+    "every publishable ledger game must appear exactly once in the catalog"
   );
+  assert.equal(first.catalog.public_game_count, published.length);
+  assert.equal(first.replays.size, published.length);
   assert.deepEqual(
-    [first.catalog.matchups[0].left.label, first.catalog.matchups[0].right.label],
+    new Set(first.catalog.matchups.flatMap((m) => [m.left.id, m.right.id])),
+    expectedIds,
+    "published participant identities must match what the ledger implies"
+  );
+  assert.equal(first.catalog.public_agent_count, expectedIds.size);
+
+  // The flagship matchup is found by identity, not by position: ordering is by
+  // recency, so a newer submission legitimately takes index 0.
+  const flagship = first.catalog.matchups.find(
+    (m) => m.left.id === "claude-opus-5@high" && m.right.id === "gpt-5.6-sol@high"
+  );
+  assert.ok(flagship, "the published Opus-vs-Sol matchup is missing from the ledger");
+  assert.deepEqual(
+    [flagship.left.label, flagship.right.label],
     ["Opus 5 (high)", "GPT-5.6 Sol (high)"]
   );
-  for (const game of first.catalog.matchups[0].games) {
-    const bytes = first.replays.get(game.replay.id);
-    assert.ok(bytes);
-    assert.equal(bytes.length, game.replay.bytes);
-    assert.equal(createHash("sha256").update(bytes).digest("hex"), game.replay.id);
-    const replay = JSON.parse(bytes.toString("utf8"));
-    assert.equal(replay.schema, "laplace-bench-replay-v1");
-    assert.equal(replay.history.length, game.plies + 1);
-    assert.equal(replay.bench.exported_at, game.played_at);
+
+  // Content addressing holds for every published game, not just one matchup's.
+  for (const matchup of first.catalog.matchups) {
+    for (const game of matchup.games) {
+      const bytes = first.replays.get(game.replay.id);
+      assert.ok(bytes);
+      assert.equal(bytes.length, game.replay.bytes);
+      assert.equal(createHash("sha256").update(bytes).digest("hex"), game.replay.id);
+      const replay = JSON.parse(bytes.toString("utf8"));
+      assert.equal(replay.schema, "laplace-bench-replay-v1");
+      assert.equal(replay.history.length, game.plies + 1);
+      assert.equal(replay.bench.exported_at, game.played_at);
+    }
   }
 });
 

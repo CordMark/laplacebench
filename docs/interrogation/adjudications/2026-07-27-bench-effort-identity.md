@@ -226,3 +226,33 @@ Requirement source: ユーザー対話 2026-07-27。「effort も含めて一つ
   発火して別のエラーを掴んでいたため、コピーをリネームして意図した失敗を捉える
   ように修正した。
 - ラウンド 2・指摘計 3 件で APPROVED（confidence 0.97）
+
+# work item: ledger-count-coupling — tier: light（bounded corrective）
+
+Slice: `publicarena.test.ts` の「現行台帳」テストが `verified_run_count === 2` 等の
+件数をハードコードしており、**community 提出が1件増えるたびに CI が赤くなる**構造
+だった。提出フロー（`laplacebench submit` / 自動マージ）は台帳を append-only で
+増やす設計なので、リテラルは提出契約と矛盾する。
+
+Requirement source: main の CI 赤（run a8f3df1）
+`not ok 57 - current ledger publishes deterministic content-addressed public
+games` / `expected: 2, actual: 3`。`keisuke70--20260727-sol-high-vs-medium` の
+提出で顕在化した。
+
+Tier defense: テストのみ。schema/migration・認可・identity trust・金銭・legacy
+data semantics・外部契約・cutover・不可逆操作・新概念のいずれも変えない。blast
+radius は1ファイル1テスト。失敗再現は上記 CI run とローカル再現。
+
+## Impl review (codex-impl-review, session impl-ledger-count-coupling)
+
+- Q(review/assertions-weakened-to-tautology): 件数を台帳から導出した結果
+  `public_game_count <= gamesInLedger` になり、**公開漏れ（極端には0件公開）でも
+  通ってしまう**。内容アドレス検証は「出力されたゲーム」しか見ないので未出力を
+  検出できない → 受理、各 final.json の agent spec から `publicPair` で
+  **公開されるべき集合を独立に算出**し、カタログの raw_ref 集合と deepEqual、
+  `public_game_count` と `replays.size` を突合、参加者 id 集合も同様に厳密一致へ
+  (revise, class: B)。
+- ラウンド 2・指摘計 2 件で APPROVED（confidence 0.99）
+  - 副次的な強化: 内容アドレス検証を先頭 matchup だけでなく**全 matchup の全ゲーム**
+    へ拡張。flagship は index ではなく identity で引く（新しい提出が recency 順で
+    index 0 を取るため、旧コードは別の matchup を検証していた）。
