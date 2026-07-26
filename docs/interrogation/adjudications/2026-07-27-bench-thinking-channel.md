@@ -114,3 +114,45 @@ Requirement source: ユーザー対話 2026-07-27。「gpt側のモデルだけ�
   }
 }
 ```
+
+## Plan review (codex-plan-review, session plan-bench-thinking-channel)
+
+- Q(review/tier-overstated): heavy 判定が実 delta と釣り合っていない。ルール・
+  レフェリー・凍結ルールセット・公開 payload の形・消費者契約はいずれも不変で、
+  条件分離は既存 `prompt_rev`、変更する schema は実行時に誰も参照しない →
+  受理、**standard へ下げ**尋問ゲートを外した(revise, class: A)。
+- Q(review/schema-v2-not-a-contract): 「schema を v2 にすれば契約が変わる」は
+  誤り。当該ファイルは実行時 validator ではなく、しかも既に現行 CLI とずれて
+  いる（`request_id` 必須・座標が配列） → 受理、実行時契約の正本は
+  `prompt.ts`（`buildInstructions` + `PROMPT_REV`）であると訂正し、schema は
+  非強制の設計記述として drift ごと明記。drift 解消は範囲外と宣言
+  (revise, class: A)。`TeamStats` の所有者も types.ts → runner.ts へ訂正。
+- Q(review/cot-ambiguity): 「思考の過程」という語のままでは design-v0.1 §5 の
+  「private chain-of-thought を要求も採点もしない」と衝突して読める → 受理、
+  要求物を**観測可能な着手理由**と定義し直した。ただし**短さの要求ではない**
+  ことを明記（現在 Claude が書いている数百字の局面読み＋狙いは望ましい形で
+  切り詰めない）(revise, class: A)。
+- Q(review/compliance-undefined): 遵守率の分子分母と生対局の合否が未定義で、
+  「遵守率が記録されたから成功」は反証不能 → 受理、分母＝採用された着手
+  (`moves`)・分子＝空ノート(`noteOmissions`)と定義し、repair/timeout/skip/pass は
+  どちらにも入れない。生対局の閾値を codex 側 ≤ 0.2 と定め、未達なら
+  プロンプト文面の是正1回、それでも駄目なら direction へ差し戻すと明記
+  (revise, class: A)。
+- Q(review/doc-inventory-gap): `match-conduct-laplace-8x8-v1.md:63` と
+  `usage-semantics.md:114` が p2 を正準世代として名指ししている → 受理、
+  インベントリへ追加し p3 更新と p2 履歴保持の方針を記載(revise, class: C)。
+- Q(review/parser-cannot-reuse-extractMove): `extractMove` は `Move` しか返さず
+  文字範囲を持たないため、ノート抽出に再利用できない → 受理、最後に成立した
+  着手 JSON とその範囲を返す共有パーサを計画し、JSON 複数・末尾散文・空白のみ・
+  コードフェンスの期待を明記(revise, class: B)。
+- Q(review/fallback-generation-blind): `note ?? raw` は p3 でノート未記載のとき
+  着手 JSON を commentary として公開してしまい、自らの不変条件と矛盾する →
+  受理、`note` フィールドの**有無**で分岐する3行規則へ（無し=raw／在って非空=note／
+  在って空=commentary を出さない）。世代文字列をエクスポータが読まずに済む
+  (revise, class: A)。
+- Q(review/brief-contradicts-body): Direction Brief の Concept owner が schema を
+  正本として残していた → 受理、`prompt.ts` 単独へ訂正(revise, class: C)。
+- Q(review/denominator-mixed): metrics インベントリが turn 分母と書いており
+  遵守定義（moves 分母）と食い違う → 受理、`note_omission_rate` として
+  `noteOmissions / moves` を明示(revise, class: B)。
+- ラウンド 3・指摘計 9 件で APPROVED（confidence 0.98）
