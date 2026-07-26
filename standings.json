@@ -1,9 +1,9 @@
 {
   "schema": "laplace-bench-standings-v2",
   "lane": "community",
-  "game_count": 6,
-  "run_count": 2,
-  "matchup_count": 1,
+  "game_count": 7,
+  "run_count": 3,
+  "matchup_count": 2,
   "matchups": [
     {
       "headline": {
@@ -32,6 +32,34 @@
           "right_err_per_turn": 0
         }
       ]
+    },
+    {
+      "headline": {
+        "left": "gpt-5.6-sol@high",
+        "right": "gpt-5.6-sol@medium"
+      },
+      "games": 1,
+      "left_wins": 1,
+      "right_wins": 0,
+      "draws": 0,
+      "last_played": "2026-07-26T18:24:29.808Z",
+      "last_game": "keisuke70--20260727-sol-high-vs-medium/game-000",
+      "breakdown": [
+        {
+          "left_agent": "codex-cli:gpt-5.6-sol@high",
+          "right_agent": "codex-cli:gpt-5.6-sol@medium",
+          "games": 1,
+          "left_wins": 1,
+          "right_wins": 0,
+          "draws": 0,
+          "center_wins": 1,
+          "elim_wins": 0,
+          "horizon_draws": 0,
+          "repetition_draws": 0,
+          "left_err_per_turn": 0,
+          "right_err_per_turn": 0
+        }
+      ]
     }
   ],
   "agents": [
@@ -47,7 +75,12 @@
     },
     {
       "agent": "codex-cli:gpt-5.6-sol@high",
-      "games": 2,
+      "games": 3,
+      "err_per_turn": 0
+    },
+    {
+      "agent": "codex-cli:gpt-5.6-sol@medium",
+      "games": 1,
       "err_per_turn": 0
     },
     {

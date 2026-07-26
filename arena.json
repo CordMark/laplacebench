@@ -2,13 +2,78 @@
   "schema": "laplace-bench-arena-v1",
   "ruleset": "laplace-8x8-v1",
   "lane": "community",
-  "source_sha": "fcb40639501b09b0cd2ca6b9009110bd931a2ab5",
-  "generated_at": "2026-07-26T18:50:33.000Z",
-  "verified_run_count": 2,
-  "verified_game_count": 6,
-  "public_agent_count": 2,
-  "public_game_count": 2,
+  "source_sha": "a8f3df165555ccc010da8e4c0c7fb6fe096e5631",
+  "generated_at": "2026-07-26T19:29:29.000Z",
+  "verified_run_count": 3,
+  "verified_game_count": 7,
+  "public_agent_count": 3,
+  "public_game_count": 3,
   "matchups": [
+    {
+      "id": "83df6507f168d4c28df27679bd064238d1eb0619a74c088588b73b820c46a0a1",
+      "left": {
+        "id": "gpt-5.6-sol@high",
+        "label": "GPT-5.6 Sol (high)",
+        "kind": "llm"
+      },
+      "right": {
+        "id": "gpt-5.6-sol@medium",
+        "label": "GPT-5.6 Sol (medium)",
+        "kind": "llm"
+      },
+      "game_count": 1,
+      "left_wins": 1,
+      "right_wins": 0,
+      "draws": 0,
+      "last_played_at": "2026-07-26T18:28:38.065Z",
+      "conditions": [
+        {
+          "left_agent": "codex-cli:gpt-5.6-sol@high",
+          "right_agent": "codex-cli:gpt-5.6-sol@medium",
+          "game_count": 1,
+          "left_wins": 1,
+          "right_wins": 0,
+          "draws": 0
+        }
+      ],
+      "games": [
+        {
+          "raw_ref": "keisuke70--20260727-sol-high-vs-medium/game-000",
+          "played_at": "2026-07-26T18:28:38.065Z",
+          "team_a": {
+            "agent": "codex-cli:gpt-5.6-sol@high",
+            "headline_id": "gpt-5.6-sol@high"
+          },
+          "team_b": {
+            "agent": "codex-cli:gpt-5.6-sol@medium",
+            "headline_id": "gpt-5.6-sol@medium"
+          },
+          "left_side": "A",
+          "winner": "A",
+          "reason": "center",
+          "plies": 11,
+          "failures": {
+            "A": {
+              "format": 0,
+              "legality": 0,
+              "timeout": 0,
+              "token_budget": 0
+            },
+            "B": {
+              "format": 0,
+              "legality": 0,
+              "timeout": 0,
+              "token_budget": 0
+            }
+          },
+          "replay": {
+            "id": "39c16546b208b58b0b1e837bc75249384ca451a8eec9c0dea5511b23aac96b8d",
+            "bytes": 47117,
+            "schema": "laplace-bench-replay-v1"
+          }
+        }
+      ]
+    },
     {
       "id": "8de39e8fd5cc39161a53a0747ba5b1f1bd9aa95e89482712c3fb1d6244f9e6f7",
       "left": {
