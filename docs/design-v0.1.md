@@ -140,6 +140,15 @@ context that is resumed for both of its colors. Use these conditions:
 In all three, each team has one private context lasting the whole game. Red and
 Yellow use Team A's context, while Blue and Green use Team B's.
 
+A candidate future condition, `split-ally`, instead gives each color its own
+context and its own request thread inside one team. The two allies then share
+no private state, so team play depends on what each can infer from the board
+and on whatever the referee is permitted to carry between them. This isolates
+intent-sharing with a partner that cannot read your thoughts from the
+single-mind coordination the base condition measures. It is a candidate event
+rather than part of v0.1 scoring, and its results must never be merged with
+base-condition results.
+
 The benchmark standardizes the resource envelope and observable move protocol,
 not the contents of thought. It records declared context/token limits, provider
 reasoning settings, compaction events, and observable responses. It does not
@@ -354,6 +363,13 @@ the naming/interface spec prepared for that future import.
 
 ## 12. Decisions intentionally deferred
 
+- **harness engineering as a scored division** — fixing the model and scoring
+  author-supplied agent designs (memo formats, self-check passes,
+  candidate-move debate, prompt packs). The `persistent-agent` condition in
+  §3.4 and the adapter lifecycle in §11 already give it a submission surface,
+  and the learning-series probe confirmed a harness moves results, but the
+  scored comparison stays model-versus-model until this is reopened. Any
+  harness-varying run is a labeled side experiment, never a benchmark record;
 - the public leaderboard's exact rating algorithm;
 - whether public dialogue uses natural language or a small intent vocabulary;
 - the provider list and model-specific tool-call integration;

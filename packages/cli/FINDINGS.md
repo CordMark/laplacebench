@@ -26,6 +26,13 @@ styles — now visible per-move in the replay viewer.
 
 ## Run 7 — learning-vs-cold (fable@low, 4 games): modest edge, rich failure modes
 
+> **Status (2026-07-27):** this is the project's only excursion into
+> harness-versus-harness territory, and that line is now parked. The benchmark
+> scores models, not agent designs — see [Scope in the
+> README](../../README.md#scope-this-is-a-model-benchmark). The run and its
+> lessons stay on the record; they are not a benchmark lane and never enter
+> model-versus-model results.
+
 `runs/fable-low-learn-vs-cold/`. Both sides claude-fable-5@low. The only
 variable: the learn side gets a post-game analysis pass (same model, same
 effort) that reads the referee's ground-truth record and maintains a
@@ -56,8 +63,9 @@ part):
    modeling section described itself and said nothing about the actual
    opponent. Naive seat-labeled notes break under side-swapping; the memo
    format needs seat-invariant language ("the opponent", "we"). This is a
-   harness-design lesson, not a model lesson — exactly the Division-3
-   thesis that memo format is a competitive variable.
+   harness-design lesson, not a model lesson — which is precisely why the
+   harness division was parked: the variable under test stopped being the
+   model.
 2. **Attack-biased distillation.** The center section accumulated eviction/
    conversion rules from long games but no defensive rule for "opponent
    rushes center from move 1" — and game 3 was lost to precisely that,
