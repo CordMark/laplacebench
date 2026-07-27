@@ -1,10 +1,38 @@
 {
   "schema": "laplace-bench-standings-v2",
   "lane": "community",
-  "game_count": 7,
-  "run_count": 3,
-  "matchup_count": 2,
+  "game_count": 9,
+  "run_count": 4,
+  "matchup_count": 3,
   "matchups": [
+    {
+      "headline": {
+        "left": "claude-fable-5@medium",
+        "right": "claude-opus-5@medium"
+      },
+      "games": 2,
+      "left_wins": 2,
+      "right_wins": 0,
+      "draws": 0,
+      "last_played": "2026-07-27T10:32:25.138Z",
+      "last_game": "keisuke70--2026-07-27T1032-claude-cli_claude-opus-5_medium-vs-claude-cli_claude-fable-5_medium/game-001",
+      "breakdown": [
+        {
+          "left_agent": "claude-cli:claude-fable-5@medium",
+          "right_agent": "claude-cli:claude-opus-5@medium",
+          "games": 2,
+          "left_wins": 2,
+          "right_wins": 0,
+          "draws": 0,
+          "center_wins": 2,
+          "elim_wins": 0,
+          "horizon_draws": 0,
+          "repetition_draws": 0,
+          "left_err_per_turn": 0.103,
+          "right_err_per_turn": 0
+        }
+      ]
+    },
     {
       "headline": {
         "left": "claude-opus-5@high",
@@ -69,7 +97,17 @@
       "err_per_turn": 0
     },
     {
+      "agent": "claude-cli:claude-fable-5@medium",
+      "games": 2,
+      "err_per_turn": 0.103
+    },
+    {
       "agent": "claude-cli:claude-opus-5@high",
+      "games": 2,
+      "err_per_turn": 0
+    },
+    {
+      "agent": "claude-cli:claude-opus-5@medium",
       "games": 2,
       "err_per_turn": 0
     },
