@@ -108,7 +108,11 @@ const HEX64 = /^[0-9a-f]{64}$/;
 const RFC3339_MS = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 const HEADLINE = /^[A-Za-z0-9][A-Za-z0-9._:@/+\-]{0,127}$/;
 const RAW_REF = /^[A-Za-z0-9][A-Za-z0-9._-]{0,95}\/[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
-const UNSAFE_COMMENTARY = /[<>]|\b(?:https?|ftp|file|data|javascript|mailto):/iu;
+// Keep real file URIs out, but do not mistake ordinary prose such as
+// "back file: if I sit still" for one. A file URI needs a path separator;
+// the other blocked schemes are unambiguous immediately after the colon.
+const UNSAFE_COMMENTARY =
+  /[<>]|\b(?:https?|ftp|data|javascript|mailto):|\bfile:(?=\S*[/\\])/iu;
 
 export function assertHex40(value: string, field = "source_sha"): void {
   if (!HEX40.test(value)) throw new Error(`${field} must be 40 lowercase hex`);

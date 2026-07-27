@@ -37,6 +37,18 @@ test("public replay metadata is emitted with only exact bounded v1 fields", () =
   assert.deepEqual(clean.summary.A, { format: 0, legality: 0, timeout: 0, token_budget: 0 });
 });
 
+test("commentary distinguishes a natural file label from an actual file URI", () => {
+  const prose: any = valid();
+  prose.commentary[0].text = "Yellow set a trap on my back file: if I sit still, the piece falls.";
+  assert.equal(cleanReplayMeta(prose, expected).commentary[0].text, prose.commentary[0].text);
+
+  for (const text of ["file:///etc/passwd", "file:relative/path", String.raw`file:C:\secret`]) {
+    const commentary: any = valid();
+    commentary.commentary[0].text = text;
+    assert.throws(() => cleanReplayMeta(commentary, expected), /commentary content boundary/);
+  }
+});
+
 test("public replay metadata rejects unknown fields, coercible counts, and impossible entries", () => {
   const unknown: any = valid();
   unknown.stats.A.rate = 0;
