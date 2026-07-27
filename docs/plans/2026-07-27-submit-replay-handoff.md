@@ -1,5 +1,5 @@
 ---
-status: approved
+status: implemented
 direction: direction-submit-replay-handoff
 owner: bench
 risk_tier: heavy
@@ -133,3 +133,22 @@ publisher catalogに現れない場合、productはreadyと主張せず、GitHub
 - productはbounded polling中に正直な待機UIを出し、catalog ready後にcanonical digest URLで再生する
 - trust boundary、ordinary id failure、ineligible publication semantics、opt-in submissionが不変
 - product-first deploy後にpublic npm `latest=0.2.2`がreviewed artifactと一致する
+
+## Release result
+
+- product feature `70e4ee5`はdev `16fbce3`、production `5217f9e`へ昇格。quality/deploy
+  runs `30260937165` / `30260937199`（dev）、`30261144121` / `30261144049`
+  （production）はsuccess。本番でknown raw refのcanonical digest replayとabsent ref待機を確認。
+- CLI source commit `378867e6ed6c643eabc3182ca988114c914d0e59`を`origin/main`へpushし、
+  CI `30261397760`とarena publication `30261397478`がsuccess。
+- Node `v26.5.0` / npm `11.17.0`、clean pushed treeから2回packして67 files / 29 source maps、
+  tar bytes/inventory一致。全67 text payloadのsecret/host-state scan、map path/sourcesContent、
+  tar member type、LICENSE/manifestを確認し、production auditは0 vulnerabilities。
+- packed artifactをisolated directory/cacheへinstallし、help、random-v-greedy headless game、
+  replay verifyを通過。pre-publication digestはintegrity
+  `sha512-JmqnIajcn+ERy7WQqniP9kOlEtGY6BsL0aEvbjLzUXsBYeQV4onboRF/JasQMzoO/ve8PVHVd8m+VLWa1UonaQ==`、
+  shasum `c8516592ef2b73106424ec0e0b09073af5964b24`。
+- ユーザーがpublish commandを一度実行し、`laplacebench@0.2.2`は
+  2026-07-27T11:50:38.456Z公開。registry `latest=0.2.2`、`gitHead`は上記source commit、
+  integrity/shasumはpre-publication artifactと一致。isolated fresh `npx laplacebench@latest play`
+  はTeam A provider menuへ到達し、モデル未選択のままEscapeで正常中止した。

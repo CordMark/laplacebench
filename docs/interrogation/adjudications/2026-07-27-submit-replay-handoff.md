@@ -128,3 +128,12 @@ Requirement source: user dialogue 2026-07-27. 「自動提出までできたら�
   publisher-only digest authorityには追加修正なし。
 - 全Q/Aと裁定の正本:
   `/Users/kei/projects/laplace-main/docs/interrogation/adjudications/2026-07-27-bench-replay-handoff.md`。
+
+## Immutable release completion
+
+- CLI commit `378867e`のCI `30261397760` / arena publication `30261397478`はsuccess。
+  clean sourceの2 packは67 files / 29 safe source mapsでbyte-identical、全text payload scanと
+  isolated install/game/verifyを通過。
+- npm `laplacebench@0.2.2`は一度だけ公開。registry `latest` / `gitHead` / integrity / shasumは
+  reviewed sourceとpre-publication tarballに一致し、fresh isolated `npx`はTeam A menuへ到達後、
+  モデルを選ばず正常中止した。
