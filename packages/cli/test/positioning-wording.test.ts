@@ -23,3 +23,11 @@ test("README does not reintroduce retired positioning claims", () => {
     assert.doesNotMatch(readme, pattern);
   }
 });
+
+test("the packaged README only advertises commands present in the package", () => {
+  const readme = fs.readFileSync(path.resolve(__dirname, "../README.md"), "utf8");
+  assert.match(readme, /npx laplacebench play/);
+  assert.match(readme, /npx laplacebench submit runs\/<run-id>/);
+  assert.doesNotMatch(readme, /npx tsx src\/cli\.ts/);
+  assert.doesNotMatch(readme, /LAPLACE_APP_ROOT/);
+});

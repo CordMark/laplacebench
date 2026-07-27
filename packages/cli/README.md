@@ -1,34 +1,33 @@
-# LaplaceBench Pilot
+# LaplaceBench CLI
 
-Cheap discrimination pilot: does Laplace separate frontier models at all?
-JSON observations only, persistent per-team contexts, baseline ladder from
-the product engine. The referee IS the product engine (`@laplace/game-shared`
-via `LAPLACE_APP_ROOT` checkout) — no rule reimplementation.
+Run replay-verifiable LAPLACE matches between language models, product CPU
+tiers, and fixed baselines. The deterministic `laplace-engine` referee is the
+frozen `laplace-8x8-v1` ruleset used by every match.
 
-## Setup
+## Quickstart
 
 ```bash
-# one-time: build the product engine, then install here
-(cd "$LAPLACE_APP_ROOT/packages/game-shared" && npm run build)
-npm install
+# no clone, install, or API key required to open the wizard
+npx laplacebench play
 ```
 
-## Run
+The wizard lets you choose providers, models, effort, match count, side swap,
+seed, and whether to submit the completed run. Claude Code and Codex adapters
+use their subscription CLIs; the baseline agents cost nothing.
+
+For scripts or CI, supply both teams explicitly:
 
 ```bash
-# interactive wizard — pick providers/models/effort, auth checked last
-npx tsx src/cli.ts play
+# baseline example (no model or API cost)
+npx laplacebench play --team-a takeshi --team-b greedy --games 2 --swap
 
-# scripted / CI: flags (baselines need no API key)
-npx tsx src/cli.ts arena --team-a takeshi --team-b greedy --games 2 --swap
-
-# LLM vs baseline (needs ANTHROPIC_API_KEY)
+# Anthropic API example (needs ANTHROPIC_API_KEY)
 export ANTHROPIC_API_KEY=sk-ant-...
-npx tsx src/cli.ts arena --team-a anthropic:claude-opus-5 --team-b takeshi \
+npx laplacebench play --team-a anthropic:claude-opus-5 --team-b takeshi \
   --games 2 --swap
 
 # re-summarize a finished run
-npx tsx src/cli.ts summarize runs/<run-id>
+npx laplacebench summarize runs/<run-id>
 ```
 
 Agent specs: the published choices are what `laplacebench play` offers in
@@ -48,12 +47,12 @@ policy/commit/dirty-tree/tier mismatches all refuse to run):
 export LAPLACE_PRODUCT_REPO=/path/to/laplace-main
 export LAPLACE_PRODUCT_COMMIT=$(git -C "$LAPLACE_PRODUCT_REPO" rev-parse HEAD)
 
-npx tsx src/cli.ts arena --team-a product-cpu:cpu-v6:level_6 --team-b takeshi:d2 \
+npx laplacebench play --team-a product-cpu:cpu-v6:level_6 --team-b takeshi:d2 \
   --games 2 --swap --seed 42
 
 # Offline regret deliberately stays on the frozen cpu-v4 Lv5 oracle so old
 # and new reports retain one comparison meaning.
-npx tsx src/cli.ts regret runs/<run-id> --oracle product-cpu:cpu-v4:level_5
+npx laplacebench regret runs/<run-id> --oracle product-cpu:cpu-v4:level_5
 ```
 
 Lv1–Lv6 declared local p95 guidance is 0.25 / 0.25 / 0.50 / 1.20 / 1.80 /
@@ -67,14 +66,20 @@ separately as categorical blunders (`missed_immediate_win`, `chose_unsafe`).
 Every output embeds the oracle identity (spec + product commit + per-position
 depth); values are comparable only within the same oracle generation.
 
-## Spectating (product web app)
+## Verify, submit, and spectate
 
 ```bash
+# deterministically replay a finished run before sharing it
+npx laplacebench verify runs/<run-id>
+
+# verify and submit it to the community ledger (needs gh auth)
+npx laplacebench submit runs/<run-id>
+
 # local/private replay: export JSON, then drop it on /bench
-npx tsx src/cli.ts export-web runs/<run-id> --out ./replays
+npx laplacebench export-web runs/<run-id> --out ./replays
 
 # CI publication: complete catalog + content-addressed replay directory
-npx tsx src/cli.ts public-arena community/runs/* --out ./arena \
+npx laplacebench public-arena community/runs/* --out ./arena \
   --source-sha <40-lowercase-hex> --generated-at <source-commit-rfc3339>
 ```
 
@@ -95,7 +100,7 @@ and format-failure rates per turn, forced passes, normalized provider usage,
 telemetry coverage, tokenizer-neutral application I/O bytes, and latency).
 Input totals include cached input exactly once. Claude/OpenAI raw token totals
 remain descriptive across providers; the formulas and limits are documented
-in [usage semantics](../../docs/usage-semantics.md).
+in [usage semantics](https://github.com/keisuke70/laplacebench/blob/main/docs/usage-semantics.md).
 
 Match resource controls:
 
@@ -122,7 +127,7 @@ the match wallet and match usage summary.
   sampling params (rejected by current models); deliberately no refusal
   fallbacks — failures must score against the model under test.
 - Draws: horizon cap (`--max-plies`, default 100 — the canonical
-  laplace-8x8-v1 cap, see `docs/match-conduct-laplace-8x8-v1.md`) as
+  laplace-8x8-v1 cap, see [match conduct](https://github.com/keisuke70/laplacebench/blob/main/docs/match-conduct-laplace-8x8-v1.md)) as
   `horizon_draw`, and threefold repetition of the same game-relevant
   state as `repetition_draw`. Draw rates are reported separately by
   cause in summaries and in each matchup breakdown. No adjudication of
