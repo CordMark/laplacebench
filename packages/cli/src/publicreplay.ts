@@ -7,6 +7,7 @@ import {
   PUBLIC_REPLAY_SCHEMA,
   REPLAY_MAX_BYTES,
   assertCommentaryText,
+  assertRawRef,
   assertSafeCount,
   assertText,
   assertTimestamp,
@@ -100,7 +101,11 @@ function indexAdvancingEvents(
   return indexed;
 }
 
-export function buildPublicReplay(runDir: string, gameId: string): PublicReplayArtifact {
+export function buildPublicReplay(
+  runDir: string,
+  gameId: string,
+  effectiveRunId?: string
+): PublicReplayArtifact {
   const events = readEvents(runDir, gameId);
   const start = events.find((event) => event.t === "game_start");
   const end = events.find((event) => event.t === "game_end");
@@ -148,7 +153,8 @@ export function buildPublicReplay(runDir: string, gameId: string): PublicReplayA
     }];
   });
   const meta: Record<string, unknown> = { ...exported.meta, commentary };
-  const runId = path.basename(path.resolve(runDir));
+  const runId = effectiveRunId ?? path.basename(path.resolve(runDir));
+  assertRawRef(`${runId}/${gameId}`);
   const file = `${runId}--${gameId}.json`;
   if (file.length > 167) throw new Error(`${gameId}: deterministic filename exceeds 167 chars`);
   const teamA = String(meta.team_a ?? "");

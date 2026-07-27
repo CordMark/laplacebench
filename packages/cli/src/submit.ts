@@ -3,6 +3,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { assertRawRef } from "./publicarena-contract";
 import { publicPair } from "./publicgames";
+import { buildPublicReplay } from "./publicreplay";
 
 /**
  * Submit a finished run to the public ledger without the submitter touching git
@@ -26,6 +27,8 @@ export interface SubmitDeps {
   tryRun(cmd: string, args: string[], opts?: { cwd?: string }): string | null;
   /** Replay-verify a run directory; throws with the reason when it fails. */
   verify(runDir: string): void;
+  /** Validate every arena-eligible game under the effective submitted run ID. */
+  verifyPublic(runDir: string, effectiveRunId: string): void;
   mkdtemp(): string;
   print(line: string): void;
 }
@@ -91,6 +94,28 @@ export function replayHandoffs(runDir: string, dirName: string): ReplayHandoff[]
     });
 }
 
+/**
+ * Run the same public replay builder as CI with the identity the run will have
+ * after submission. Non-public matchups cannot wedge the arena and stay out of
+ * this check, exactly as they do in `buildArenaArtifacts`.
+ */
+export function validatePublicSubmission(runDir: string, effectiveRunId: string): void {
+  const gamesDir = path.join(runDir, "games");
+  for (const gameId of fs.readdirSync(gamesDir).sort()) {
+    const finalPath = path.join(gamesDir, gameId, "final.json");
+    if (!fs.existsSync(finalPath)) continue;
+    const final = JSON.parse(fs.readFileSync(finalPath, "utf8"));
+    const specA = final?.teams?.A?.agent;
+    const specB = final?.teams?.B?.agent;
+    if (typeof specA !== "string" || typeof specB !== "string") {
+      throw new Error(`${gameId}: final.json has no recorded team agents`);
+    }
+    if (!publicPair(specA, specB)) continue;
+    assertRawRef(`${effectiveRunId}/${gameId}`);
+    buildPublicReplay(runDir, gameId, effectiveRunId);
+  }
+}
+
 function printReplayHandoffs(deps: SubmitDeps, replays: ReplayHandoff[]): void {
   if (replays.length === 0) {
     deps.print("▸ この対局セットは公開アリーナの対象外です。リプレイURLはありません。");
@@ -129,6 +154,16 @@ export function submitRun(
   }
   deps.print("✓ リプレイ検証を通過");
 
+  // Catch content failures without even a read-only network lookup. The final
+  // identity is checked again once the login is known.
+  try {
+    deps.verifyPublic(resolved, "preflight");
+  } catch (e) {
+    const detail = e instanceof Error ? e.message : String(e);
+    deps.print(`✗ 公開リプレイ検証に失敗しました。提出しません:\n  ${detail}`);
+    return { status: "blocked", reason: "verify-failed", detail };
+  }
+
   const login = deps.tryRun("gh", ["api", "user", "--jq", ".login"])?.trim();
   if (!login) {
     deps.print(
@@ -142,12 +177,21 @@ export function submitRun(
     return { status: "blocked", reason: "not-authenticated" };
   }
 
+  const dirName = submissionDirName(login, runId);
+  try {
+    deps.verifyPublic(resolved, dirName);
+  } catch (e) {
+    const detail = e instanceof Error ? e.message : String(e);
+    deps.print(`✗ 公開リプレイ検証に失敗しました。提出しません:\n  ${detail}`);
+    return { status: "blocked", reason: "verify-failed", detail };
+  }
+  deps.print("✓ 公開リプレイ検証を通過");
+
   const canPush =
     deps
       .tryRun("gh", ["api", `repos/${UPSTREAM_REPO}`, "--jq", ".permissions.push"])
       ?.trim() === "true";
 
-  const dirName = submissionDirName(login, runId);
   const work = deps.mkdtemp();
   const repoDir = path.join(work, "laplacebench");
 
@@ -236,6 +280,7 @@ export function defaultSubmitDeps(): SubmitDeps {
         );
       }
     },
+    verifyPublic: validatePublicSubmission,
     mkdtemp: () => fs.mkdtempSync(path.join(os.tmpdir(), "laplacebench-submit-")),
     print: (line) => console.log(line),
   };
