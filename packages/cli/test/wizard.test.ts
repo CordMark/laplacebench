@@ -452,6 +452,72 @@ test("opting into auto-submit publishes the run instead of printing instructions
   assert.ok(!io.printed.join("\n").includes("cp -R runs/"));
 });
 
+test("canonical two-game play waits for the whole set and submits exactly once", async () => {
+  let resolveArena!: () => void;
+  const arenaPending = new Promise<void>((resolve) => { resolveArena = resolve; });
+  let seenArgs: Record<string, string | boolean> | null = null;
+  let submitCount = 0;
+  const io = scriptedIO([
+    providerIndex("baseline"), 0,
+    providerIndex("baseline"), 1,
+    0, // canonical two-game preset
+    1, // auto-submit
+  ]);
+  const play = runPlay(
+    {
+      ...okDeps,
+      runArena: async (args) => {
+        seenArgs = args;
+        await arenaPending;
+      },
+      submitRun: () => { submitCount++; },
+      isTTY: true,
+      now: () => new Date("2026-07-25T12:00:00Z"),
+    },
+    io
+  );
+
+  // Let the wizard reach the intentionally deferred arena promise.
+  await new Promise<void>((resolve) => setImmediate(resolve));
+  assert.equal(seenArgs?.games, "2");
+  assert.equal(seenArgs?.swap, true);
+  assert.equal(submitCount, 0);
+
+  resolveArena();
+  assert.equal(await play, 0);
+  io.assertDone();
+  assert.equal(submitCount, 1);
+});
+
+test("a failed canonical set is never submitted", async () => {
+  let submitCount = 0;
+  const io = scriptedIO([
+    providerIndex("baseline"), 0,
+    providerIndex("baseline"), 1,
+    0, // canonical two-game preset
+    1, // auto-submit
+  ]);
+  await assert.rejects(
+    runPlay(
+      {
+        ...okDeps,
+        runArena: async (args) => {
+          assert.equal(args.games, "2");
+          assert.equal(args.swap, true);
+          throw new Error("game-001 failed");
+        },
+        submitRun: () => { submitCount++; },
+        isTTY: true,
+        now: () => new Date("2026-07-25T12:00:00Z"),
+      },
+      io
+    ),
+    /game-001 failed/
+  );
+  io.assertDone();
+  assert.equal(submitCount, 0);
+});
+
 test("a failed auto-submit falls back to the manual route instead of throwing", async () => {
   const io = scriptedIO([
     providerIndex("baseline"), 0,

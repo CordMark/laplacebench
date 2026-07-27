@@ -6,6 +6,8 @@ import test from "node:test";
 import {
   UPSTREAM_REPO,
   rawRunUrl,
+  replayHandoffUrl,
+  replayHandoffs,
   submissionDirName,
   submitRun,
   type SubmitDeps,
@@ -23,6 +25,8 @@ function harness(
     canPush?: boolean;
     verifyThrows?: string;
     prUrl?: string;
+    pushThrows?: string;
+    prThrows?: string;
   } = {}
 ) {
   const calls: Call[] = [];
@@ -44,7 +48,11 @@ function harness(
       return "";
     }
     if (cmd === "gh" && args[0] === "pr") {
+      if (opts.prThrows) throw new Error(opts.prThrows);
       return `${opts.prUrl ?? "https://github.com/x/y/pull/9"}\n`;
+    }
+    if (cmd === "git" && args[0] === "push" && opts.pushThrows) {
+      throw new Error(opts.pushThrows);
     }
     if (cmd === "git" && args[0] === "rev-parse") return "cafe1234\n";
     return "";
@@ -72,12 +80,35 @@ function harness(
   return { deps, calls, printed, work };
 }
 
-function makeRun(): string {
+interface GameAgents {
+  id: string;
+  teamA: string;
+  teamB: string;
+}
+
+const PUBLIC_A = "claude-cli:claude-opus-5@high";
+const PUBLIC_B = "codex-cli:gpt-5.6-sol@high";
+
+function makeRun(games: GameAgents[] = [
+  { id: "game-000", teamA: PUBLIC_A, teamB: PUBLIC_B },
+]): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "laplace-run-"));
   const runDir = path.join(dir, "20260725-a-vs-b");
-  fs.mkdirSync(path.join(runDir, "games", "game-000"), { recursive: true });
+  fs.mkdirSync(runDir, { recursive: true });
   fs.writeFileSync(path.join(runDir, "run.json"), "{}");
-  fs.writeFileSync(path.join(runDir, "games", "game-000", "final.json"), "{}");
+  for (const game of games) {
+    const gameDir = path.join(runDir, "games", game.id);
+    fs.mkdirSync(gameDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(gameDir, "final.json"),
+      JSON.stringify({
+        teams: {
+          A: { agent: game.teamA },
+          B: { agent: game.teamB },
+        },
+      })
+    );
+  }
   return runDir;
 }
 
@@ -118,6 +149,8 @@ test("an account with push access publishes straight to main, no pull request", 
   const push = calls.find((c) => c.cmd === "git" && c.args[0] === "push");
   assert.deepEqual(push?.args, ["push", "origin", "HEAD:main"]);
   assert.ok(printed.join("\n").includes("commit/cafe1234"));
+  assert.equal((out as { replays: unknown[] }).replays.length, 1);
+  assert.ok(printed.join("\n").includes("laplace.zone/bench/replay?ref="));
 });
 
 test("an account without push access forks and opens a pull request", () => {
@@ -137,6 +170,90 @@ test("an account without push access forks and opens a pull request", () => {
   const [dirName] = fs.readdirSync(dest);
   assert.match(dirName, /^alice--/);
   assert.ok(fs.existsSync(path.join(dest, dirName, "games", "game-000", "final.json")));
+  assert.equal((out as { replays: unknown[] }).replays.length, 1);
+  assert.ok(printed.join("\n").includes("laplace.zone/bench/replay?ref="));
+});
+
+test("a canonical pair returns two strict replay handoffs after one successful submission", () => {
+  const runDir = makeRun([
+    { id: "game-001", teamA: PUBLIC_B, teamB: PUBLIC_A },
+    { id: "game-000", teamA: PUBLIC_A, teamB: PUBLIC_B },
+  ]);
+  const { deps, printed } = harness({ canPush: true, login: "alice" });
+  const out = submitRun(runDir, deps);
+  assert.equal(out.status, "submitted");
+  if (out.status !== "submitted") return;
+
+  assert.deepEqual(out.replays.map(({ gameId }) => gameId), ["game-000", "game-001"]);
+  assert.deepEqual(out.replays.map(({ rawRef }) => rawRef), [
+    "alice--20260725-a-vs-b/game-000",
+    "alice--20260725-a-vs-b/game-001",
+  ]);
+  for (const replay of out.replays) {
+    const url = new URL(replay.url);
+    assert.equal(url.origin, "https://laplace.zone");
+    assert.equal(url.pathname, "/bench/replay");
+    assert.equal(url.searchParams.get("ref"), replay.rawRef);
+    assert.equal(url.searchParams.get("lang"), "ja");
+    assert.equal(url.searchParams.has("id"), false);
+    assert.equal(url.searchParams.has("pending"), false);
+    assert.equal(url.searchParams.has("src"), false);
+  }
+  assert.equal(
+    printed.filter((line) => line.includes("laplace.zone/bench/replay?ref=")).length,
+    2
+  );
+});
+
+test("direct and pull-request lanes return the same product handoff contract", () => {
+  const direct = submitRun(makeRun(), harness({ canPush: true, login: "alice" }).deps);
+  const pullRequest = submitRun(makeRun(), harness({ canPush: false, login: "alice" }).deps);
+  assert.equal(direct.status, "submitted");
+  assert.equal(pullRequest.status, "submitted");
+  if (direct.status !== "submitted" || pullRequest.status !== "submitted") return;
+  assert.deepEqual(direct.replays, pullRequest.replays);
+});
+
+test("courtesy filtering mirrors public arena eligibility without predicting publication", () => {
+  const cases: Array<{ name: string; teamA: string; teamB: string; count: number }> = [
+    { name: "baseline-only", teamA: "random", teamB: "greedy", count: 0 },
+    {
+      name: "same headline through another harness",
+      teamA: "claude-cli-learn:claude-opus-5@high",
+      teamB: "claude-cli:claude-opus-5@high",
+      count: 0,
+    },
+    {
+      name: "LLM versus product CPU",
+      teamA: PUBLIC_A,
+      teamB: "product-cpu:cpu-v6:level_3",
+      count: 1,
+    },
+  ];
+  for (const example of cases) {
+    const runDir = makeRun([{ id: "game-000", teamA: example.teamA, teamB: example.teamB }]);
+    assert.equal(replayHandoffs(runDir, "alice--20260725-a-vs-b").length, example.count, example.name);
+  }
+});
+
+test("verification, authentication, and publication failures never print success handoffs", () => {
+  const cases = [
+    harness({ verifyThrows: "bad replay" }),
+    harness({ login: null }),
+    harness({ canPush: true, pushThrows: "push failed" }),
+    harness({ canPush: false, prThrows: "PR failed" }),
+  ];
+  for (const example of cases) {
+    try {
+      submitRun(makeRun(), example.deps);
+    } catch {
+      // Publication process errors are intentionally surfaced to runPlay.
+    }
+    assert.equal(
+      example.printed.some((line) => line.includes("laplace.zone/bench/replay?ref=")),
+      false
+    );
+  }
 });
 
 test("submitting the same run twice is refused rather than duplicated", () => {
@@ -156,5 +273,9 @@ test("the submission directory name is what the CI prefix check expects", () => 
     rawRunUrl("main", "alice--run-1").endsWith(
       `${UPSTREAM_REPO}/main/community/runs/alice--run-1`
     )
+  );
+  assert.equal(
+    replayHandoffUrl("alice--run-1/game-000"),
+    "https://laplace.zone/bench/replay?ref=alice--run-1%2Fgame-000&lang=ja"
   );
 });

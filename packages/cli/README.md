@@ -85,6 +85,16 @@ npx laplacebench public-arena community/runs/* --out ./arena \
   --source-sha <40-lowercase-hex> --generated-at <source-commit-rfc3339>
 ```
 
+When `play` auto-submit or `submit` succeeds, the CLI keeps the GitHub commit
+or pull-request URL and also prints one LaPlace Bench replay URL for each game
+that is eligible for the public arena. A canonical two-game, side-swapped set
+is verified and submitted once after both games finish, then prints two replay
+links. You can open a link immediately: it waits for GitHub validation, merge,
+and catalog publication for up to five minutes, then starts the replay
+automatically. A match that is outside the public arena or fails validation or
+publication will not become playable; use the retained GitHub URL to inspect
+its submission status.
+
 `export-web` re-plays the event log through the product engine and fails
 loudly on any divergence (deterministic replay verification), then emits the
 web app's native local replay payload. Community submitters do not copy that

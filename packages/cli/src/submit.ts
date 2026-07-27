@@ -1,6 +1,8 @@
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
+import { assertRawRef } from "./publicarena-contract";
+import { publicPair } from "./publicgames";
 
 /**
  * Submit a finished run to the public ledger without the submitter touching git
@@ -29,8 +31,20 @@ export interface SubmitDeps {
 }
 
 export type SubmitOutcome =
-  | { status: "submitted"; lane: "direct" | "pull-request"; url: string; dir: string }
+  | {
+      status: "submitted";
+      lane: "direct" | "pull-request";
+      url: string;
+      dir: string;
+      replays: ReplayHandoff[];
+    }
   | { status: "blocked"; reason: "not-authenticated" | "verify-failed"; detail?: string };
+
+export interface ReplayHandoff {
+  gameId: string;
+  rawRef: string;
+  url: string;
+}
 
 /** `<login>--<run-id>` — the prefix CI checks against the pull request author. */
 export function submissionDirName(login: string, runId: string): string {
@@ -38,12 +52,52 @@ export function submissionDirName(login: string, runId: string): string {
 }
 
 /**
- * Where the raw log lands once published. The replay viewer that turns this
- * into a watchable game is a product-side change that has not shipped yet, so
- * this is the honest thing to hand someone today.
+ * Where the immutable source record lands once published. The product replay
+ * handoff is separate: it resolves a strict catalog raw_ref, never this URL.
  */
 export function rawRunUrl(ref: string, dirName: string): string {
   return `https://raw.githubusercontent.com/${UPSTREAM_REPO}/${ref}/community/runs/${dirName}`;
+}
+
+export function replayHandoffUrl(rawRef: string): string {
+  assertRawRef(rawRef);
+  return `https://laplace.zone/bench/replay?ref=${encodeURIComponent(rawRef)}&lang=ja`;
+}
+
+/**
+ * Build temporary product locators from the final submitted basename. The CLI
+ * deliberately does not predict replay digests: the verified publisher-issued
+ * catalog remains the only digest and readiness authority.
+ */
+export function replayHandoffs(runDir: string, dirName: string): ReplayHandoff[] {
+  const gamesDir = path.join(runDir, "games");
+  return fs.readdirSync(gamesDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort()
+    .flatMap((gameId) => {
+      const finalPath = path.join(gamesDir, gameId, "final.json");
+      if (!fs.existsSync(finalPath)) return [];
+      const final = JSON.parse(fs.readFileSync(finalPath, "utf8"));
+      const specA = final?.teams?.A?.agent;
+      const specB = final?.teams?.B?.agent;
+      if (typeof specA !== "string" || typeof specB !== "string") {
+        throw new Error(`${gameId}: final.json has no recorded team agents`);
+      }
+      if (!publicPair(specA, specB)) return [];
+      const rawRef = `${dirName}/${gameId}`;
+      assertRawRef(rawRef);
+      return [{ gameId, rawRef, url: replayHandoffUrl(rawRef) }];
+    });
+}
+
+function printReplayHandoffs(deps: SubmitDeps, replays: ReplayHandoff[]): void {
+  if (replays.length === 0) {
+    deps.print("▸ この対局セットは公開アリーナの対象外です。リプレイURLはありません。");
+    return;
+  }
+  deps.print("▸ 公開リプレイ（反映後に自動表示）:");
+  for (const replay of replays) deps.print(`  ${replay.gameId}: ${replay.url}`);
 }
 
 function copyDir(src: string, dest: string): void {
@@ -111,6 +165,7 @@ export function submitRun(
     return { status: "blocked", reason: "verify-failed", detail: "already-submitted" };
   }
   copyDir(resolved, dest);
+  const replays = replayHandoffs(dest, dirName);
 
   const message = [
     `Add community run ${dirName}`,
@@ -128,7 +183,8 @@ export function submitRun(
     const url = `https://github.com/${UPSTREAM_REPO}/commit/${sha}`;
     deps.print(`▸ 反映済み: ${url}`);
     deps.print(`▸ 生ログ:   ${rawRunUrl("main", dirName)}`);
-    return { status: "submitted", lane: "direct", url, dir: dirName };
+    printReplayHandoffs(deps, replays);
+    return { status: "submitted", lane: "direct", url, dir: dirName, replays };
   }
 
   const branch = `submit/${dirName}`;
@@ -153,7 +209,8 @@ export function submitRun(
 
   deps.print(`▸ 提出PR: ${url}`);
   deps.print("  CI の検証を通ると自動マージされ、対戦記録に反映されます。");
-  return { status: "submitted", lane: "pull-request", url, dir: dirName };
+  printReplayHandoffs(deps, replays);
+  return { status: "submitted", lane: "pull-request", url, dir: dirName, replays };
 }
 
 /** Real-process dependencies. */
