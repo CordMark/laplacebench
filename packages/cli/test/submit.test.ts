@@ -10,8 +10,10 @@ import {
   replayHandoffs,
   submissionDirName,
   submitRun,
+  validatePublicSubmission,
   type SubmitDeps,
 } from "../src/submit";
+import { buildPublicReplay } from "../src/publicreplay";
 
 interface Call {
   cmd: string;
@@ -24,6 +26,8 @@ function harness(
     login?: string | null;
     canPush?: boolean;
     verifyThrows?: string;
+    publicVerifyThrows?: string;
+    publicVerifyFinalThrows?: string;
     prUrl?: string;
     pushThrows?: string;
     prThrows?: string;
@@ -31,6 +35,7 @@ function harness(
 ) {
   const calls: Call[] = [];
   const printed: string[] = [];
+  const publicChecks: string[] = [];
   const work = fs.mkdtempSync(path.join(os.tmpdir(), "laplace-submit-test-"));
 
   const respond = (cmd: string, args: string[]): string => {
@@ -74,10 +79,17 @@ function harness(
     verify() {
       if (opts.verifyThrows) throw new Error(opts.verifyThrows);
     },
+    verifyPublic(_runDir, effectiveRunId) {
+      publicChecks.push(effectiveRunId);
+      if (opts.publicVerifyThrows) throw new Error(opts.publicVerifyThrows);
+      if (effectiveRunId !== "preflight" && opts.publicVerifyFinalThrows) {
+        throw new Error(opts.publicVerifyFinalThrows);
+      }
+    },
     mkdtemp: () => work,
     print: (l) => printed.push(l),
   };
-  return { deps, calls, printed, work };
+  return { deps, calls, printed, publicChecks, work };
 }
 
 interface GameAgents {
@@ -125,6 +137,75 @@ test("a run that fails replay verification is never published", () => {
   // Nothing left the machine.
   assert.equal(calls.length, 0);
   assert.ok(printed.join("\n").includes("winner mismatch"));
+});
+
+test("unsafe public commentary is rejected before any external lookup", () => {
+  const { deps, calls, printed, publicChecks } = harness({
+    publicVerifyThrows: "game-000.events[7].commentary exceeds the commentary content boundary",
+  });
+  const out = submitRun(makeRun(), deps);
+  assert.equal(out.status, "blocked");
+  assert.deepEqual(publicChecks, ["preflight"]);
+  assert.equal(calls.length, 0);
+  assert.match(printed.join("\n"), /公開リプレイ検証に失敗/);
+  assert.match(printed.join("\n"), /game-000\.events\[7\]/);
+});
+
+test("final submission identity is rejected after login but before repository actions", () => {
+  const { deps, calls, printed, publicChecks } = harness({
+    login: "alice",
+    publicVerifyFinalThrows: "invalid raw_ref segment",
+  });
+  const out = submitRun(makeRun(), deps);
+  assert.equal(out.status, "blocked");
+  assert.deepEqual(publicChecks, ["preflight", "alice--20260725-a-vs-b"]);
+  assert.deepEqual(calls.map(({ cmd, args }) => [cmd, ...args]), [
+    ["gh", "api", "user", "--jq", ".login"],
+  ]);
+  assert.ok(!printed.join("\n").includes("laplace.zone/bench/replay"));
+});
+
+test("default public preflight uses final identity and matches publisher bytes", () => {
+  const root = path.resolve(__dirname, "../../..");
+  const runDir = fs.readdirSync(path.join(root, "community/runs"))
+    .find((name) => name.includes("2026-07-27T1032"));
+  assert.ok(runDir);
+  const source = path.join(root, "community/runs", runDir);
+  const effectiveRunId = "alice--public-preflight-equivalence";
+  assert.doesNotThrow(() => validatePublicSubmission(source, effectiveRunId));
+
+  const parent = fs.mkdtempSync(path.join(os.tmpdir(), "laplace-submit-identity-"));
+  const copied = path.join(parent, effectiveRunId);
+  fs.cpSync(source, copied, { recursive: true });
+  const preflight = buildPublicReplay(source, "game-000", effectiveRunId);
+  const publisher = buildPublicReplay(copied, "game-000");
+  assert.equal(preflight.digest, publisher.digest);
+  assert.deepEqual(preflight.bytes, publisher.bytes);
+
+  const tooLong = "a".repeat(97);
+  assert.throws(() => validatePublicSubmission(source, tooLong), /invalid raw_ref/);
+});
+
+test("default public preflight rejects unsafe eligible notes and skips non-public games", () => {
+  const root = path.resolve(__dirname, "../../..");
+  const sourceName = fs.readdirSync(path.join(root, "community/runs"))
+    .find((name) => name.includes("2026-07-27T1032"));
+  assert.ok(sourceName);
+  const copy = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "laplace-submit-note-")), "run");
+  fs.cpSync(path.join(root, "community/runs", sourceName), copy, { recursive: true });
+  const eventsPath = path.join(copy, "games/game-000/events.jsonl");
+  const events = fs.readFileSync(eventsPath, "utf8").split("\n").filter(Boolean)
+    .map((line) => JSON.parse(line));
+  const move = events.find((event) => event.t === "move");
+  move.note = "file:secret";
+  fs.writeFileSync(eventsPath, `${events.map((event) => JSON.stringify(event)).join("\n")}\n`);
+  assert.throws(
+    () => validatePublicSubmission(copy, "alice--unsafe-note"),
+    /commentary content boundary/
+  );
+
+  const baseline = makeRun([{ id: "game-000", teamA: "random", teamB: "greedy" }]);
+  assert.doesNotThrow(() => validatePublicSubmission(baseline, "alice--baseline"));
 });
 
 test("no GitHub auth prints instructions and stops — it is not a crash", () => {

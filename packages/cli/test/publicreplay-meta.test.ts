@@ -42,7 +42,14 @@ test("commentary distinguishes a natural file label from an actual file URI", ()
   prose.commentary[0].text = "Yellow set a trap on my back file: if I sit still, the piece falls.";
   assert.equal(cleanReplayMeta(prose, expected).commentary[0].text, prose.commentary[0].text);
 
-  for (const text of ["file:///etc/passwd", "file:relative/path", String.raw`file:C:\secret`]) {
+  const terminal: any = valid();
+  terminal.commentary[0].text = "I am guarding the back file:";
+  assert.equal(cleanReplayMeta(terminal, expected).commentary[0].text, terminal.commentary[0].text);
+
+  for (const text of [
+    "file:secret", "file:C:secret", "file:?q", "file:#fragment", "file:%2Fetc",
+    "file:///etc/passwd", "file:relative/path", String.raw`file:C:\secret`,
+  ]) {
     const commentary: any = valid();
     commentary.commentary[0].text = text;
     assert.throws(() => cleanReplayMeta(commentary, expected), /commentary content boundary/);
