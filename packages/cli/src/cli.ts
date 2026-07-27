@@ -13,6 +13,7 @@ import {
   LLM_TURN_TIMEOUT_MS,
   playGame,
   resolveMaxPlies,
+  type GameProgress,
 } from "./runner";
 import { PROMPT_REV } from "./prompt";
 import { usageAgentSpecsLine } from "./catalog";
@@ -209,7 +210,121 @@ export function arenaDefaults(args: Record<string, string | boolean>): {
   };
 }
 
-export async function arena(args: Record<string, string | boolean>): Promise<void> {
+/**
+ * Learning agents accumulate strategy notes across games in runDir/learn/,
+ * so their whole premise is that game N+1 starts after game N's post-game
+ * analysis. Detection shares its source of truth with the spec parser above
+ * (the `claudeLearn` match): same head, optional `:model@effort` tail.
+ */
+export function isLearningSpec(spec: string): boolean {
+  return /^claude-cli-learn(?::|$)/.test(spec);
+}
+
+/**
+ * Multi-game runs execute in parallel by default; `--serial` opts out, and a
+ * learning spec on either side forces serial because its strategy notes are
+ * a cross-game sequential lifecycle.
+ */
+export function resolveExecution(
+  games: number,
+  serialRequested: boolean,
+  specA: string,
+  specB: string
+): "parallel" | "serial" {
+  return games > 1 &&
+    !serialRequested &&
+    !isLearningSpec(specA) &&
+    !isLearningSpec(specB)
+    ? "parallel"
+    : "serial";
+}
+
+/** One-thousand shorthand for progress lines: 82134 -> "82k". */
+function kTokens(n: number): string {
+  return n >= 1000 ? `${Math.round(n / 1000)}k` : String(n);
+}
+
+/**
+ * Display-only live progress line. Token usage is shown per team against the
+ * per-team budget — never summed across teams against a single budget. When
+ * the run has no output-token budget, or neither side reports usage
+ * telemetry, the token segment is omitted entirely: only facts we actually
+ * meter are shown.
+ */
+export function formatProgressLine(p: GameProgress): string {
+  const sides =
+    p.outputTokenBudget === undefined
+      ? []
+      : (["A", "B"] as const)
+          .filter((t) => p.outputTokensUsed[t] !== null)
+          .map(
+            (t) =>
+              `${t} ${kTokens(p.outputTokensUsed[t]!)}/${kTokens(p.outputTokenBudget!)}`
+          );
+  const tokens = sides.length > 0 ? ` | out ${sides.join(" · ")}` : "";
+  const mins = Math.floor(p.elapsedMs / 60_000);
+  const secs = Math.floor((p.elapsedMs % 60_000) / 1000);
+  return `[${p.gameId}] ply ${p.ply + 1}/${p.maxPlies} ${p.team} ${p.summary}${tokens} | ${mins}m${String(secs).padStart(2, "0")}s`;
+}
+
+interface ArenaGamePair {
+  gameId: string;
+  gameSeed: number;
+  first: Agent;
+  second: Agent;
+}
+
+/**
+ * Runs a set of games serially or in parallel and returns how many failed.
+ * One game's failure never aborts the others; the caller decides what a
+ * partial run means (non-zero exit, submit suppression). In parallel mode
+ * every pair is created before any game starts, so a mid-preparation failure
+ * can dispose all agents that already exist instead of leaking their
+ * subprocess state — in that case the error is rethrown, because no game has
+ * run yet and there is nothing partial to keep.
+ */
+export async function runGameSet<P extends { gameId: string }>(opts: {
+  games: number;
+  execution: "parallel" | "serial";
+  makePair: (g: number) => Promise<P>;
+  runOne: (pair: P) => Promise<void>;
+  disposePair: (pair: P) => Promise<void>;
+  reportFailure: (gameId: string, err: unknown) => void;
+}): Promise<number> {
+  let failedGames = 0;
+  const report = (gameId: string, err: unknown) => {
+    failedGames++;
+    opts.reportFailure(gameId, err);
+  };
+
+  if (opts.execution === "parallel") {
+    const pairs: P[] = [];
+    try {
+      for (let g = 0; g < opts.games; g++) pairs.push(await opts.makePair(g));
+    } catch (err) {
+      for (const pair of pairs) await opts.disposePair(pair);
+      throw err;
+    }
+    const settled = await Promise.allSettled(pairs.map((pair) => opts.runOne(pair)));
+    settled.forEach((s, g) => {
+      if (s.status === "rejected") report(pairs[g].gameId, s.reason);
+    });
+  } else {
+    for (let g = 0; g < opts.games; g++) {
+      const pair = await opts.makePair(g);
+      try {
+        await opts.runOne(pair);
+      } catch (err) {
+        report(pair.gameId, err);
+      }
+    }
+  }
+  return failedGames;
+}
+
+export async function arena(
+  args: Record<string, string | boolean>
+): Promise<{ failedGames: number }> {
   const { specA, specB, games, swap, seed } = arenaDefaults(args);
   const maxPlies = resolveMaxPlies(args["max-plies"]);
   const { turnTimeoutMs, outputTokenBudget } = resolveMatchResources(
@@ -226,6 +341,10 @@ export async function arena(args: Record<string, string | boolean>): Promise<voi
   ) {
     throw new Error("--output-token-budget must be a positive integer");
   }
+
+  const serialRequested = Boolean(args["serial"]);
+  const learning = isLearningSpec(specA) || isLearningSpec(specB);
+  const execution = resolveExecution(games, serialRequested, specA, specB);
 
   const runId =
     (args["run-id"] as string) ||
@@ -303,6 +422,7 @@ export async function arena(args: Record<string, string | boolean>): Promise<voi
               : null,
         },
         product_cpu: productProvenance,
+        execution,
         started_at: new Date().toISOString(),
       },
       null,
@@ -310,7 +430,13 @@ export async function arena(args: Record<string, string | boolean>): Promise<voi
     )
   );
 
-  for (let g = 0; g < games; g++) {
+  if (execution === "parallel") {
+    console.log(`${games} 局を並列実行します(--serial で直列)`);
+  } else if (games > 1 && !serialRequested && learning) {
+    console.log("learning agent のため直列実行します");
+  }
+
+  const makePair = async (g: number): Promise<ArenaGamePair> => {
     const swapped = swap && g % 2 === 1;
     const gameSeed = seed + g * 1000;
     const ctx = { runDir, productCpu: productCpuCtx };
@@ -322,27 +448,54 @@ export async function arena(args: Record<string, string | boolean>): Promise<voi
       await first.dispose?.();
       throw err;
     }
-    const gameId = `game-${String(g).padStart(3, "0")}`;
-    const label = `${gameId}: A=${first.name} vs B=${second.name}`;
-    process.stdout.write(label + " ... ");
+    return { gameId: `game-${String(g).padStart(3, "0")}`, gameSeed, first, second };
+  };
+
+  const runOne = async (pair: ArenaGamePair): Promise<void> => {
+    console.log(`[${pair.gameId}] A=${pair.first.name} vs B=${pair.second.name}`);
     const result = await playGame({
-      gameId,
+      gameId: pair.gameId,
       runDir,
-      seed: gameSeed,
+      seed: pair.gameSeed,
       maxPlies,
       turnTimeoutMs,
       outputTokenBudget,
-      agents: { A: first, B: second },
+      agents: { A: pair.first, B: pair.second },
+      onProgress: (p) => console.log(formatProgressLine(p)),
     });
     console.log(
-      `${result.winner ? `winner=${result.winner} (${result.reason})` : `draw (${result.reason})`} plies=${result.plies}`
+      `[${pair.gameId}] ${result.winner ? `winner=${result.winner} (${result.reason})` : `draw (${result.reason})`} plies=${result.plies}`
     );
-  }
+  };
+
+  const failedGames = await runGameSet({
+    games,
+    execution,
+    makePair,
+    runOne,
+    disposePair: async (pair) => {
+      try {
+        await pair.first.dispose?.();
+      } catch {}
+      try {
+        await pair.second.dispose?.();
+      } catch {}
+    },
+    reportFailure: (gameId, err) => {
+      console.error(
+        `[${gameId}] failed: ${err instanceof Error ? err.message : String(err)}`
+      );
+    },
+  });
 
   const summary = summarize(runDir);
   console.log("\n=== summary ===");
   console.log(JSON.stringify(summary, null, 2));
   console.log(`\nrun dir: ${runDir}`);
+  if (failedGames > 0) {
+    console.error(`${failedGames}/${games} 局が失敗しました`);
+  }
+  return { failedGames };
 }
 
 async function main(): Promise<void> {
@@ -363,7 +516,8 @@ async function main(): Promise<void> {
     console.error(
       "warning: `arena` は非推奨です。`laplacebench play --team-a <spec> --team-b <spec>` を使ってください。"
     );
-    await arena(args);
+    const { failedGames } = await arena(args);
+    if (failedGames > 0) process.exitCode = 1;
   } else if (cmd === "play") {
     const { runPlay } = require("./wizard") as typeof import("./wizard");
     process.exitCode = await runPlay(
@@ -481,7 +635,7 @@ async function main(): Promise<void> {
     );
   } else {
     console.log(
-      "usage:\n  laplacebench play                                 (interactive: pick providers, models, effort)\n  laplacebench play --team-a <spec> --team-b <spec> [--games N] [--swap] [--seed N] [--run-id <id>] [--submit] [--max-plies N] [--output-token-budget N] [--turn-timeout-ms N]\n                                                    (non-interactive: --team-a and --team-b are required; anything else supplied is not asked for)\n  laplacebench summarize <runDir>\n  laplacebench regret <runDir> [--oracle product-cpu:cpu-v4:level_5]  (offline per-move regret vs frozen product oracle)\n  laplacebench export-web <runDir> [--out <dir>]   (verify + local replay JSON)\n  laplacebench verify <runDir...>                  (deterministic replay verification)\n  laplacebench submit <runDir>                     (verify + publish to the community ledger; needs gh auth)\n  laplacebench standings <runDir...> [--out <md>] [--json-out <json>]  (temporary v2 compatibility output)\n  laplacebench public-arena <runDir...> --out <dir> --source-sha <sha> --generated-at <time>  (CI artifact generator)\n\nmatch resources:\n  --output-token-budget N  per team/game, in-game output tokens; default 250000 for LLM matches (canonical envelope), none for baseline-only\n  --turn-timeout-ms N      shared across both attempts in a turn; default 1200000 for LLM matches (backstop), 300000 otherwise\n  --max-plies N            default 100 (canonical cap for laplace-8x8-v1 matches)\n\nproduct CPU (play + regret):\n  --product-repo <path>    product checkout (or env LAPLACE_PRODUCT_REPO)\n  --product-commit <sha>   required commit pin (or env LAPLACE_PRODUCT_COMMIT)\n\n" +
+      "usage:\n  laplacebench play                                 (interactive: pick providers, models, effort)\n  laplacebench play --team-a <spec> --team-b <spec> [--games N] [--swap] [--serial] [--seed N] [--run-id <id>] [--submit] [--max-plies N] [--output-token-budget N] [--turn-timeout-ms N]\n                                                    (non-interactive: --team-a and --team-b are required; anything else supplied is not asked for)\n  laplacebench summarize <runDir>\n  laplacebench regret <runDir> [--oracle product-cpu:cpu-v4:level_5]  (offline per-move regret vs frozen product oracle)\n  laplacebench export-web <runDir> [--out <dir>]   (verify + local replay JSON)\n  laplacebench verify <runDir...>                  (deterministic replay verification)\n  laplacebench submit <runDir>                     (verify + publish to the community ledger; needs gh auth)\n  laplacebench standings <runDir...> [--out <md>] [--json-out <json>]  (temporary v2 compatibility output)\n  laplacebench public-arena <runDir...> --out <dir> --source-sha <sha> --generated-at <time>  (CI artifact generator)\n\nmatch resources:\n  --serial                 run multiple games sequentially (default: parallel when --games > 1; learning agents always run sequentially)\n  --output-token-budget N  per team/game, in-game output tokens; default 250000 for LLM matches (canonical envelope), none for baseline-only\n  --turn-timeout-ms N      shared across both attempts in a turn; default 1200000 for LLM matches (backstop), 300000 otherwise\n  --max-plies N            default 100 (canonical cap for laplace-8x8-v1 matches)\n\nproduct CPU (play + regret):\n  --product-repo <path>    product checkout (or env LAPLACE_PRODUCT_REPO)\n  --product-commit <sha>   required commit pin (or env LAPLACE_PRODUCT_COMMIT)\n\n" +
         usageAgentSpecsLine() +
         "\n  (claude-cli/codex-cli run under your Claude/ChatGPT subscription — no API key)"
     );

@@ -51,9 +51,25 @@ export interface SideFailures {
   token_budget: number;
 }
 
+/**
+ * In-game token totals for one side. `output` is the reasoning-inclusive
+ * in-game output total; `total` is inputTotalTokens + outputTotalTokens
+ * (UsageAggregate has no total field of its own, so the sum IS the contract).
+ */
+export interface SideTokens {
+  output: number;
+  total: number;
+}
+
 export interface PublicGame {
   raw_ref: string;
   played_at: string;
+  /**
+   * Wall-clock game duration from the replay-validated game_start/game_end
+   * timestamps. Always present: runs whose timestamps are missing, malformed
+   * or reversed are rejected at replay build, so no published game lacks it.
+   */
+  duration_ms: number;
   team_a: TeamRef;
   team_b: TeamRef;
   left_side: Team;
@@ -61,6 +77,8 @@ export interface PublicGame {
   reason: EndReason;
   plies: number;
   failures: { A: SideFailures; B: SideFailures };
+  /** Null side = no usage telemetry reported (e.g. baseline agents). */
+  team_tokens: { A: SideTokens | null; B: SideTokens | null };
   replay: {
     id: string;
     bytes: number;

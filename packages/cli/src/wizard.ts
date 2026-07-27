@@ -66,7 +66,7 @@ const VALUE_FLAGS = [
  * interpreting values here would publish a run for someone who explicitly
  * wrote that they did not want it published.
  */
-const BOOLEAN_FLAGS = ["swap", "submit"] as const;
+const BOOLEAN_FLAGS = ["swap", "submit", "serial"] as const;
 
 const INTEGER_FLAGS = [
   "games", "seed", "max-plies", "output-token-budget", "turn-timeout-ms",
@@ -465,7 +465,7 @@ export function makePromptIO(
 }
 
 export interface RunPlayDeps extends WizardDeps {
-  runArena(args: Record<string, string | boolean>): Promise<void>;
+  runArena(args: Record<string, string | boolean>): Promise<{ failedGames: number }>;
   /**
    * Publish a finished run; injected so the wizard stays testable offline.
    * Returns the outcome because `submitRun` reports refusal (failed replay
@@ -482,6 +482,9 @@ export interface RunPlayDeps extends WizardDeps {
 const PASSTHROUGH_FLAGS = [
   "max-plies", "output-token-budget", "turn-timeout-ms",
 ] as const;
+
+/** Presence-only flags that pass straight through to the runner. */
+const PASSTHROUGH_BOOLEAN_FLAGS = ["serial"] as const;
 
 /**
  * The single entry point for running a match. Flags decide how much of it is
@@ -530,11 +533,14 @@ export async function runPlay(
     const runId = typeof args["run-id"] === "string"
       ? args["run-id"]
       : wizardRunId(result.specA, result.specB, deps.now());
-    const passthrough: Record<string, string> = {};
+    const passthrough: Record<string, string | boolean> = {};
     for (const key of PASSTHROUGH_FLAGS) {
       if (typeof args[key] === "string") passthrough[key] = args[key] as string;
     }
-    await deps.runArena({
+    for (const key of PASSTHROUGH_BOOLEAN_FLAGS) {
+      if (args[key] === true) passthrough[key] = true;
+    }
+    const { failedGames } = await deps.runArena({
       "team-a": result.specA,
       "team-b": result.specB,
       games: String(result.games),
@@ -544,6 +550,16 @@ export async function runPlay(
       ...passthrough,
       ...result.extraArgs,
     });
+    if (failedGames > 0) {
+      // A partial run must never reach the public ledger, even when the
+      // caller asked for --submit: the completed games are on disk for
+      // inspection, but publication requires a run whose games all finished.
+      rlio.print(
+        `${failedGames} 局が失敗しました。部分的な run は提出しません。`
+      );
+      submissionState(runId, "not-submitted").forEach((l) => rlio.print(l));
+      return 1;
+    }
     if (result.autoSubmit) {
       rlio.print("── 公開台帳へ提出 ──");
       try {

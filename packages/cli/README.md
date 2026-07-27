@@ -32,6 +32,14 @@ npx laplacebench play --team-a anthropic:claude-opus-5 --team-b takeshi \
 npx laplacebench summarize runs/<run-id>
 ```
 
+With `--games` above 1, games run in parallel by default and the CLI says so
+at start; pass `--serial` to run them one at a time. Learning agents
+(`claude-cli-learn`) always run serially because their strategy notes build
+across games. Each turn prints a live progress line
+(`[game-000] ply 17/100 B (0,3)→(3,3) | out A 82k/250k · B 61k/250k | 12m03s`)
+so long LLM matches stay observable; the token segment appears only for
+budget-metered runs.
+
 Agent specs: the published choices are what `laplacebench play` offers in
 its menus and what the CLI help prints (both generated from
 `src/catalog.ts`, the single canonical catalog). Free-form spec strings

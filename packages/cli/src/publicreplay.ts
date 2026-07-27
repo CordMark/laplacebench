@@ -35,6 +35,8 @@ export interface PublicReplayArtifact {
   bytes: Buffer;
   digest: string;
   playedAt: string;
+  /** end − start of the assertTimestamp-validated game_start/game_end pair. */
+  durationMs: number;
   winner: Team | null;
   reason: EndReason;
   plies: number;
@@ -205,6 +207,7 @@ export function buildPublicReplay(
     bytes,
     digest: createHash("sha256").update(bytes).digest("hex"),
     playedAt: end.ts,
+    durationMs: endMs - startMs,
     winner,
     reason: end.reason,
     plies,

@@ -16,6 +16,7 @@ import {
   assertHeadline,
   assertHex40,
   assertRawRef,
+  assertSafeCount,
   assertText,
   assertTimestamp,
   canonicalJson,
@@ -24,6 +25,7 @@ import {
   type Condition,
   type Participant,
   type PublicGame,
+  type SideTokens,
   type Team,
 } from "./publicarena-contract";
 import { headlineKind, ordinal, publicPair } from "./publicgames";
@@ -69,6 +71,41 @@ function addResult(
 
 function readFinal(runDir: string, gameId: string): Record<string, unknown> {
   return JSON.parse(fs.readFileSync(path.join(runDir, "games", gameId, "final.json"), "utf8"));
+}
+
+/**
+ * In-game token totals for one side of a finished game, or null when the
+ * side reported no usage telemetry (baseline agents: zero reported calls and
+ * zero totals). `total` is defined as input + output because UsageAggregate
+ * carries no total field of its own.
+ */
+export function sideTokens(team: unknown, rawRef: string): SideTokens | null {
+  const usage = (team as { usage?: unknown } | undefined)?.usage;
+  // Only a truly absent property means "no telemetry"; an explicit null (or
+  // any other non-object) is malformed data and fails closed like the rest.
+  if (usage === undefined) return null;
+  if (usage === null || typeof usage !== "object") {
+    throw new Error(`${rawRef}: usage must be an object when present`);
+  }
+  // Fail closed: a present usage block must carry well-formed counters. A
+  // missing or malformed field is corrupt input to reject, never a zero —
+  // defaulting would publish a false "0 tokens" claim for a metered side.
+  const counter = (field: string): number => {
+    const value = (usage as Record<string, unknown>)[field];
+    if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0) {
+      throw new Error(
+        `${rawRef}: usage.${field} must be a nonnegative safe integer`
+      );
+    }
+    return value;
+  };
+  const reported = counter("reportedCalls") + counter("legacyUnversionedCalls");
+  const input = counter("inputTotalTokens");
+  const output = counter("outputTotalTokens");
+  if (reported === 0 && input === 0 && output === 0) return null;
+  const tokens = { output, total: input + output };
+  assertSafeCount(tokens.total, `${rawRef}.team_tokens.total`);
+  return tokens;
 }
 
 function validateParticipant(existing: Participant, next: Participant): void {
@@ -137,9 +174,11 @@ export function buildArenaArtifacts(
         matchups.set(matchupId, matchup);
       }
 
+      assertSafeCount(artifact.durationMs, `${rawRef}.duration_ms`);
       const game: PublicGame = {
         raw_ref: rawRef,
         played_at: artifact.playedAt,
+        duration_ms: artifact.durationMs,
         team_a: { agent: artifact.teamA, headline_id: pair.leftSide === "A" ? left.id : right.id },
         team_b: { agent: artifact.teamB, headline_id: pair.leftSide === "B" ? left.id : right.id },
         left_side: pair.leftSide,
@@ -147,6 +186,10 @@ export function buildArenaArtifacts(
         reason: artifact.reason,
         plies: artifact.plies,
         failures: artifact.failures,
+        team_tokens: {
+          A: sideTokens(teams?.A, rawRef),
+          B: sideTokens(teams?.B, rawRef),
+        },
         replay: { id: artifact.digest, bytes: artifact.bytes.length, schema: PUBLIC_REPLAY_SCHEMA },
       };
       matchup.games.push(game);

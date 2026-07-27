@@ -61,6 +61,31 @@ export interface GameConfig {
   /** Per-team in-game output-token admission cap. Omit for no cap. */
   outputTokenBudget?: number;
   agents: Record<TeamId, Agent>;
+  /**
+   * Display-only per-turn progress hook. Never touches recorded artifacts;
+   * callback failures are swallowed so a display bug cannot damage a match.
+   */
+  onProgress?: (update: GameProgress) => void;
+}
+
+/** One resolved game turn, for live display. */
+export interface GameProgress {
+  gameId: string;
+  /** The ply that was just resolved. */
+  ply: number;
+  maxPlies: number;
+  team: TeamId;
+  agent: string;
+  action: "move" | "forced_pass" | "token_budget_skip" | "timeout" | "failed_turn";
+  /** Short human line fragment, e.g. "(0,3)→(3,3)" or "pass". */
+  summary: string;
+  /**
+   * Per-team in-game output tokens so far; null for a side without usage
+   * telemetry (baseline agents). Budget semantics are per team.
+   */
+  outputTokensUsed: Record<TeamId, number | null>;
+  outputTokenBudget?: number;
+  elapsedMs: number;
 }
 
 const RULESET = "laplace-8x8-v1";
@@ -203,6 +228,34 @@ async function playGameInner(cfg: GameConfig): Promise<GameResult> {
     recent.B.push(e);
   };
 
+  const gameStartMs = Date.now();
+  const progress = (
+    team: TeamId,
+    action: GameProgress["action"],
+    summary: string,
+    plyResolved: number
+  ) => {
+    if (!cfg.onProgress) return;
+    const tokensFor = (t: TeamId): number | null =>
+      cfg.agents[t].usageProfile ? stats[t].usage.outputTotalTokens : null;
+    try {
+      cfg.onProgress({
+        gameId: cfg.gameId,
+        ply: plyResolved,
+        maxPlies: cfg.maxPlies,
+        team,
+        agent: cfg.agents[team].name,
+        action,
+        summary,
+        outputTokensUsed: { A: tokensFor("A"), B: tokensFor("B") },
+        outputTokenBudget: cfg.outputTokenBudget,
+        elapsedMs: Date.now() - gameStartMs,
+      });
+    } catch {
+      // display-only: never let a progress consumer break the match
+    }
+  };
+
   // Termination precedence per docs/plans/2026-07-24-freeze-draw-rules.md:
   // normal end (center/elimination) > repetition draw > horizon draw. The
   // repetition count applies to every reached nonterminal state — including
@@ -254,6 +307,7 @@ async function playGameInner(cfg: GameConfig): Promise<GameResult> {
       };
       pushEvent(ev);
       emit({ t: "pass", ply, player: actingPlayer, reason: "no_legal_moves", eliminated: ev.eliminated });
+      progress(team, "forced_pass", "pass (no legal moves)", ply);
       ply++;
       continue;
     }
@@ -288,6 +342,7 @@ async function playGameInner(cfg: GameConfig): Promise<GameResult> {
         output_token_budget: cfg.outputTokenBudget,
         eliminated: ev.eliminated,
       });
+      progress(team, "token_budget_skip", "pass (token budget)", ply);
       ply++;
       continue;
     }
@@ -419,6 +474,12 @@ async function playGameInner(cfg: GameConfig): Promise<GameResult> {
         // Agent-specific provenance (e.g. product CPU per-move seed).
         meta: reply.meta,
       });
+      progress(
+        team,
+        "move",
+        `(${from.row},${from.col})→(${to.row},${to.col})${captures.length ? ` x${captures.length}` : ""}`,
+        ply
+      );
     }
 
     if (!moved) {
@@ -443,6 +504,12 @@ async function playGameInner(cfg: GameConfig): Promise<GameResult> {
         reason: timedOut ? "timeout" : "failed_turn",
         eliminated: ev.eliminated,
       });
+      progress(
+        team,
+        timedOut ? "timeout" : "failed_turn",
+        "pass (turn lost)",
+        ply
+      );
     }
 
     ply++;

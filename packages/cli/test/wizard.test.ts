@@ -197,7 +197,7 @@ test("runPlay handles select and text cancellation once without starting work", 
     };
     const code = await runPlay({
       ...okDeps,
-      runArena: async () => { arenaCount++ },
+      runArena: async () => { arenaCount++; return { failedGames: 0 }; },
       submitRun: () => { submitCount++ },
       isTTY: true,
       now: () => new Date("2026-07-27T00:00:00Z"),
@@ -357,6 +357,7 @@ test("auth gate: 中止 returns cancelled and arena is never called", async () =
       ...deps,
       runArena: async () => {
         arenaCalled = true;
+        return { failedGames: 0 };
       },
       submitRun: () => {
         throw new Error("must not submit");
@@ -403,6 +404,7 @@ test("runPlay passes an explicit run-id and prints submission guidance with it",
       ...okDeps,
       runArena: async (a) => {
         seenArgs = a;
+        return { failedGames: 0 };
       },
       submitRun: () => {
         throw new Error("must not submit");
@@ -437,7 +439,7 @@ test("opting into auto-submit publishes the run instead of printing instructions
   const code = await runPlay(
     {
       ...okDeps,
-      runArena: async () => {},
+      runArena: async () => ({ failedGames: 0 }),
       submitRun: (dir) => { submitted.push(dir); },
       isTTY: true,
       now: () => now,
@@ -469,6 +471,7 @@ test("canonical two-game play waits for the whole set and submits exactly once",
       runArena: async (args) => {
         seenArgs = args;
         await arenaPending;
+        return { failedGames: 0 };
       },
       submitRun: () => { submitCount++; },
       isTTY: true,
@@ -528,7 +531,7 @@ test("a failed auto-submit falls back to the manual route instead of throwing", 
   const code = await runPlay(
     {
       ...okDeps,
-      runArena: async () => {},
+      runArena: async () => ({ failedGames: 0 }),
       submitRun: () => {
         throw new Error("push rejected (non-fast-forward)");
       },
@@ -703,7 +706,7 @@ function headlessIO(): WizardIO & { printed: string[] } {
 
 const headlessDeps = (over: Partial<Parameters<typeof runPlay>[0]> = {}) => ({
   ...okDeps,
-  runArena: async () => {},
+  runArena: async () => ({ failedGames: 0 }),
   submitRun: () => { throw new Error("must not submit"); },
   isTTY: false,
   now: () => new Date("2026-07-27T12:00:00Z"),
@@ -714,7 +717,7 @@ test("headless: complete flags run the match, publish nothing, and say so", asyn
   let seen: Record<string, string | boolean> | null = null;
   const io = headlessIO();
   const code = await runPlay(
-    headlessDeps({ runArena: async (a) => { seen = a; } }),
+    headlessDeps({ runArena: async (a) => { seen = a; return { failedGames: 0 }; } }),
     io,
     { "team-a": "random", "team-b": "greedy", games: "1", seed: "7" }
   );
@@ -761,7 +764,7 @@ test("headless: missing team flags name what is missing and start nothing", asyn
   let ran = false;
   const io = headlessIO();
   const code = await runPlay(
-    headlessDeps({ runArena: async () => { ran = true; } }),
+    headlessDeps({ runArena: async () => { ran = true; return { failedGames: 0 }; } }),
     io,
     { "team-a": "random" }
   );
@@ -787,7 +790,7 @@ test("flag syntax is rejected before anything runs", async () => {
     const io = headlessIO();
     const code = await runPlay(
       headlessDeps({
-        runArena: async () => { ran = true; },
+        runArena: async () => { ran = true; return { failedGames: 0 }; },
         submitRun: () => { submitted = true; },
       }),
       io,
@@ -806,7 +809,7 @@ test("headless: a missing provider CLI fails without prompting", async () => {
   const code = await runPlay(
     headlessDeps({
       checkCommand: () => ({ ok: false }),
-      runArena: async () => { ran = true; },
+      runArena: async () => { ran = true; return { failedGames: 0 }; },
     }),
     io,
     { "team-a": "claude-cli:claude-opus-5@high", "team-b": "greedy" }
@@ -826,7 +829,7 @@ test("headless: product-cpu pins are accepted from flags as well as env", async 
   ] as const) {
     let seen: Record<string, string | boolean> | null = null;
     const code = await runPlay(
-      { ...deps, runArena: async (a) => { seen = a; } },
+      { ...deps, runArena: async (a) => { seen = a; return { failedGames: 0 }; } },
       headlessIO(),
       {
         "team-a": `product-cpu:${PRODUCT_CPU_POLICY}:level_3`,
@@ -850,7 +853,7 @@ test("interactive: supplied flags replace their prompts, the rest are still aske
   ]);
   let seen: Record<string, string | boolean> | null = null;
   const code = await runPlay(
-    { ...okDeps, runArena: async (a) => { seen = a; }, submitRun: () => {}, isTTY: true, now: () => new Date() },
+    { ...okDeps, runArena: async (a) => { seen = a; return { failedGames: 0 }; }, submitRun: () => {}, isTTY: true, now: () => new Date() },
     io,
     { "team-a": "random" }
   );
@@ -903,7 +906,7 @@ test("a harness that borrows another provider's credentials is preflighted", asy
   let ran = false;
   const io = headlessIO();
   const code = await runPlay(
-    headlessDeps({ checkCommand: () => ({ ok: false }), runArena: async () => { ran = true; } }),
+    headlessDeps({ checkCommand: () => ({ ok: false }), runArena: async () => { ran = true; return { failedGames: 0 }; } }),
     io,
     { "team-a": "claude-cli-learn:claude-opus-5@high", "team-b": "greedy" }
   );
@@ -924,7 +927,7 @@ test("out-of-range numbers are rejected before auth and before the match", async
     const code = await runPlay(
       headlessDeps({
         checkCommand: () => { authChecked = true; return { ok: true, version: "x" }; },
-        runArena: async () => { ran = true; },
+        runArena: async () => { ran = true; return { failedGames: 0 }; },
       }),
       io,
       { "team-a": "random", "team-b": "greedy", ...args }
@@ -950,7 +953,7 @@ test("interactive: one of games/swap supplied still asks for the other", async (
   let seen: Record<string, string | boolean> | null = null;
   assert.equal(
     await runPlay(
-      { ...okDeps, runArena: async (a) => { seen = a; }, submitRun: () => {}, isTTY: true, now: () => new Date() },
+      { ...okDeps, runArena: async (a) => { seen = a; return { failedGames: 0 }; }, submitRun: () => {}, isTTY: true, now: () => new Date() },
       gamesOnly,
       { "team-a": "random", games: "4" }
     ),
@@ -968,7 +971,7 @@ test("interactive: one of games/swap supplied still asks for the other", async (
   seen = null;
   assert.equal(
     await runPlay(
-      { ...okDeps, runArena: async (a) => { seen = a; }, submitRun: () => {}, isTTY: true, now: () => new Date() },
+      { ...okDeps, runArena: async (a) => { seen = a; return { failedGames: 0 }; }, submitRun: () => {}, isTTY: true, now: () => new Date() },
       swapOnly,
       { "team-a": "random", swap: true }
     ),
@@ -977,4 +980,46 @@ test("interactive: one of games/swap supplied still asks for the other", async (
   swapOnly.assertDone();
   assert.equal(seen!["games"], "3", "the answer to the games question must be used");
   assert.equal(seen!["swap"], true);
+});
+
+test("headless: --serial is recognized and passed through to the runner", async () => {
+  let seen: Record<string, string | boolean> | null = null;
+  const io = headlessIO();
+  const code = await runPlay(
+    headlessDeps({ runArena: async (a) => { seen = a; return { failedGames: 0 }; } }),
+    io,
+    { "team-a": "random", "team-b": "greedy", games: "3", serial: true }
+  );
+  assert.equal(code, 0);
+  assert.equal(seen!["serial"], true);
+});
+
+test("headless: --serial rejects a value like the other presence flags", async () => {
+  let ran = false;
+  const io = headlessIO();
+  const code = await runPlay(
+    headlessDeps({ runArena: async () => { ran = true; return { failedGames: 0 }; } }),
+    io,
+    { "team-a": "random", "team-b": "greedy", serial: "false" }
+  );
+  assert.equal(code, 1);
+  assert.equal(ran, false);
+  assert.ok(io.printed.join("\n").includes("--serial は値を取りません"));
+});
+
+test("a partial run is never submitted and exits non-zero", async () => {
+  let submitted = false;
+  const io = headlessIO();
+  const code = await runPlay(
+    headlessDeps({
+      runArena: async () => ({ failedGames: 1 }),
+      submitRun: () => { submitted = true; },
+    }),
+    io,
+    { "team-a": "random", "team-b": "greedy", games: "2", submit: true }
+  );
+  assert.equal(code, 1);
+  assert.equal(submitted, false, "partial runs must not reach the ledger");
+  const out = io.printed.join("\n");
+  assert.ok(out.includes("部分的な run は提出しません"));
 });
