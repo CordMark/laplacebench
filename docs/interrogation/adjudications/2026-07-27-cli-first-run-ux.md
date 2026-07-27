@@ -124,3 +124,19 @@ Requirement source: ユーザー対話 2026-07-27。public runで seed confusion
   - by: auto
   - prediction: hit
 - ラウンド 2・指摘計 1 件で APPROVED（confidence 0.99）
+
+## Release completion
+
+- reviewed implementation commit: `5a2ea703cdabaf3460d8bd5113520874cda12875`
+- GitHub: `origin/main`へpush済み。CI `30258146279` と Publish community arena
+  `30258145998` は成功。
+- final toolchain: Node `v26.5.0` / npm `11.17.0`。clean pushed commitから
+  `--ignore-scripts`で2回packし、67 files / packed 116044 bytes / unpacked 469360 bytes / tgz
+  bytesが一致。
+- npm `laplacebench@0.2.1`: `latest=0.2.1`、`gitHead=5a2ea703...`。
+  integrity `sha512-gMXTE49S6btMC1gECI8YCuAKiRFzCNro8T1GldYoE2nRnx9+CgWtp3UK+amo6b/e1WO+D6ITjtvRY9v9ZF+GwQ==`、
+  shasum `d4f80291597bd842a5c5d895b246fc4728634915` は事前acceptance済みtgzと一致。
+- exact tgz: inventory/path/type/source-map/host-state/secret scan、clean install、headless
+  `--seed 0` baseline game、1/1 replay verify、PTY arrows/Enter/no-seed/Escape/cursor restoreを通過。
+- fresh cacheのpublic `npx laplacebench@latest play`: Baseline A/Bを矢印選択し、
+  `2局・先後交代（推奨）`の次がseedではなく提出選択であることを確認。Escape後にrun未作成。

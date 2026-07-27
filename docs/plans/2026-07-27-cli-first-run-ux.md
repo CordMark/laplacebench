@@ -1,5 +1,5 @@
 ---
-status: approved
+status: implemented
 direction: direction-cli-first-run-ux
 owner: bench
 risk_tier: heavy
