@@ -128,3 +128,17 @@ Requirement source: ユーザー対話 2026-07-27。npm 公開物が current REA
 
 - ラウンド 1・指摘計 0 件で APPROVED（confidence 0.97。clean release commit 後の
   two-pack digest check と public npm acceptance は後続 gate として維持）
+
+## Publication evidence
+
+- clean source / registry `gitHead`:
+  `f7cbf3dba81cb6f7ce1d9cf7ae2a1ccff9aea363`
+- final two-pack: 67 files / 29 safe source maps / version `0.2.0` / byte-identical
+- expected and registry integrity:
+  `sha512-l2dSKPpEutDMPNc93DWXgZIZoUEodwZQFt7Z97YVrDGRxZxIbiOv531A7OpETEBa0W2paIdSZE2EHkCh/nBADQ==`
+- expected and registry shasum: `ff36c3750a9f5b7e53d6f8a70d2c528b6c6c3e3f`
+- npm `latest=0.2.0`; publish time `2026-07-27T09:58:47.861Z`
+- GitHub source commit checks: CI success、Publish community arena success
+- isolated external acceptance: fresh directory / fresh npm cache の
+  `npx --yes laplacebench@latest play` が Team A provider menu（Claude / Codex /
+  Anthropic API / LaPlace CPU / Baseline）まで到達。モデル未選択・対局未開始で中止

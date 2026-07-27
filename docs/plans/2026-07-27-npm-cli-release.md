@@ -1,5 +1,5 @@
 ---
-status: approved
+status: implemented
 direction: direction-npm-cli-release
 owner: bench
 risk_tier: heavy
@@ -195,3 +195,18 @@ current model catalog が出るところまで確認して中止する。対局�
   と byte-identical
 - clean external `npx laplacebench@latest play` がモデル選択まで到達
 - user が自分でモデルを選べる地点で操作を引き渡せる
+
+## Release result
+
+- source commit: `f7cbf3dba81cb6f7ce1d9cf7ae2a1ccff9aea363`（GitHub `main` へ push、
+  CI / Publish community arena とも success）
+- npm: `laplacebench@0.2.0` published 2026-07-27T09:58:47.861Z、`latest=0.2.0`
+- registry `gitHead`: source commit と一致
+- registry `dist.integrity`:
+  `sha512-l2dSKPpEutDMPNc93DWXgZIZoUEodwZQFt7Z97YVrDGRxZxIbiOv531A7OpETEBa0W2paIdSZE2EHkCh/nBADQ==`
+- registry `dist.shasum`: `ff36c3750a9f5b7e53d6f8a70d2c528b6c6c3e3f`
+- 上記2 digest は clean source commit から2回 byte-identical に pack し、inventory / secret
+  scan / clean install / baseline game / replay verify を通した final tarball と一致
+- isolated empty directory + isolated npm cache の
+  `npx --yes laplacebench@latest play` が current Team A provider menu まで到達。モデルは
+  選ばず中止し、ユーザー本人へ引き渡した
