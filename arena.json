@@ -2,8 +2,8 @@
   "schema": "laplace-bench-arena-v1",
   "ruleset": "laplace-8x8-v1",
   "lane": "community",
-  "source_sha": "3d851d7fb701718de115926a12612f9b6b3b0f4a",
-  "generated_at": "2026-07-27T13:07:42.000Z",
+  "source_sha": "51672b3c7763118153036772ae71e8b6d9f4ee91",
+  "generated_at": "2026-07-27T14:31:52.000Z",
   "verified_run_count": 4,
   "verified_game_count": 9,
   "public_agent_count": 5,
@@ -40,6 +40,7 @@
         {
           "raw_ref": "keisuke70--2026-07-27T1032-claude-cli_claude-opus-5_medium-vs-claude-cli_claude-fable-5_medium/game-001",
           "played_at": "2026-07-27T12:16:54.648Z",
+          "duration_ms": 3191997,
           "team_a": {
             "agent": "claude-cli:claude-fable-5@medium",
             "headline_id": "claude-fable-5@medium"
@@ -66,6 +67,16 @@
               "token_budget": 0
             }
           },
+          "team_tokens": {
+            "A": {
+              "output": 68110,
+              "total": 680025
+            },
+            "B": {
+              "output": 110531,
+              "total": 1297368
+            }
+          },
           "replay": {
             "id": "10b35c90ee36f0809a43ed016430760a68e68bce6e83788f3af67ae00e95268d",
             "bytes": 179476,
@@ -75,6 +86,7 @@
         {
           "raw_ref": "keisuke70--2026-07-27T1032-claude-cli_claude-opus-5_medium-vs-claude-cli_claude-fable-5_medium/game-000",
           "played_at": "2026-07-27T11:23:42.646Z",
+          "duration_ms": 3077506,
           "team_a": {
             "agent": "claude-cli:claude-opus-5@medium",
             "headline_id": "claude-opus-5@medium"
@@ -99,6 +111,16 @@
               "legality": 0,
               "timeout": 0,
               "token_budget": 0
+            }
+          },
+          "team_tokens": {
+            "A": {
+              "output": 130502,
+              "total": 2017953
+            },
+            "B": {
+              "output": 101057,
+              "total": 1845430
             }
           },
           "replay": {
@@ -140,6 +162,7 @@
         {
           "raw_ref": "keisuke70--20260727-sol-high-vs-medium/game-000",
           "played_at": "2026-07-26T18:28:38.065Z",
+          "duration_ms": 248250,
           "team_a": {
             "agent": "codex-cli:gpt-5.6-sol@high",
             "headline_id": "gpt-5.6-sol@high"
@@ -164,6 +187,16 @@
               "legality": 0,
               "timeout": 0,
               "token_budget": 0
+            }
+          },
+          "team_tokens": {
+            "A": {
+              "output": 13319,
+              "total": 445803
+            },
+            "B": {
+              "output": 10915,
+              "total": 317221
             }
           },
           "replay": {
@@ -205,6 +238,7 @@
         {
           "raw_ref": "keisuke70--20260725-sol56h-vs-opus5h/game-001",
           "played_at": "2026-07-25T13:06:18.013Z",
+          "duration_ms": 3088587,
           "team_a": {
             "agent": "claude-cli:claude-opus-5@high",
             "headline_id": "claude-opus-5@high"
@@ -231,6 +265,16 @@
               "token_budget": 2
             }
           },
+          "team_tokens": {
+            "A": {
+              "output": 159038,
+              "total": 2510986
+            },
+            "B": {
+              "output": 283682,
+              "total": 4384917
+            }
+          },
           "replay": {
             "id": "8fbce0a8913f28336892871868428c5f74808a84d0fe8ad43aa0609e7b12fc7a",
             "bytes": 159168,
@@ -240,6 +284,7 @@
         {
           "raw_ref": "keisuke70--20260725-sol56h-vs-opus5h/game-000",
           "played_at": "2026-07-25T12:14:49.421Z",
+          "duration_ms": 3328615,
           "team_a": {
             "agent": "codex-cli:gpt-5.6-sol@high",
             "headline_id": "gpt-5.6-sol@high"
@@ -264,6 +309,16 @@
               "legality": 0,
               "timeout": 0,
               "token_budget": 0
+            }
+          },
+          "team_tokens": {
+            "A": {
+              "output": 254272,
+              "total": 5430385
+            },
+            "B": {
+              "output": 183502,
+              "total": 2407073
             }
           },
           "replay": {
