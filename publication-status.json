@@ -1,11 +1,12 @@
 {
   "schema": "laplace-bench-publication-v1",
-  "state": "building",
+  "state": "ready",
   "source_sha": "b8e48e105f986aa16f3446404f3d9ddcf92c76a4",
-  "updated_at": "2026-07-27T09:01:55.513Z",
+  "updated_at": "2026-07-27T09:02:04.031Z",
   "last_success": {
-    "source_sha": "7e051d4f2f6674bd9c8505f2d94999c27c357472",
-    "artifact_commit": "5db719bd9416844e609b3ec4731c31b0a7670c3d",
-    "published_at": "2026-07-26T20:25:56.884Z"
-  }
+    "source_sha": "b8e48e105f986aa16f3446404f3d9ddcf92c76a4",
+    "artifact_commit": "ed60dad811761dbf5e01f6e7935d8f2dcc7d52ec",
+    "published_at": "2026-07-27T09:02:04.031Z"
+  },
+  "artifact_commit": "ed60dad811761dbf5e01f6e7935d8f2dcc7d52ec"
 }
