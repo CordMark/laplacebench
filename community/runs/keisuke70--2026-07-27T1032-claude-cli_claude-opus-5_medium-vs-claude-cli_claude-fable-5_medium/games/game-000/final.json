@@ -1,0 +1,96 @@
+{
+  "gameId": "game-000",
+  "ruleset": "laplace-8x8-v1",
+  "seed": 90937,
+  "winner": "B",
+  "reason": "center",
+  "plies": 42,
+  "losses": {
+    "Red": 4,
+    "Blue": 3,
+    "Yellow": 1,
+    "Green": 0
+  },
+  "teams": {
+    "A": {
+      "agent": "claude-cli:claude-opus-5@medium",
+      "turns": 21,
+      "moves": 21,
+      "actCalls": 21,
+      "formatFailures": 0,
+      "legalityFailures": 0,
+      "failedTurns": 0,
+      "forcedPasses": 0,
+      "timeoutSkips": 0,
+      "tokenBudgetSkips": 0,
+      "noteOmissions": 0,
+      "inputTokens": 1887451,
+      "outputTokens": 130502,
+      "cacheReadTokens": 1731852,
+      "latencyMs": 1659108,
+      "usage": {
+        "schema": "laplace-model-usage-v1",
+        "adapterCalls": 21,
+        "reportedCalls": 21,
+        "unreportedCalls": 0,
+        "legacyUnversionedCalls": 0,
+        "providers": [
+          "anthropic"
+        ],
+        "sources": [
+          "claude-cli"
+        ],
+        "inputTotalTokens": 1887451,
+        "inputUncachedTokens": 155599,
+        "cacheReadTokens": 1731852,
+        "cacheWriteTokens": 155559,
+        "cacheWriteReportedCalls": 21,
+        "outputTotalTokens": 130502,
+        "reasoningTokens": 0,
+        "reasoningReportedCalls": 0,
+        "applicationInputBytes": 20492,
+        "applicationOutputBytes": 31016
+      }
+    },
+    "B": {
+      "agent": "claude-cli:claude-fable-5@medium",
+      "turns": 21,
+      "moves": 21,
+      "actCalls": 21,
+      "formatFailures": 0,
+      "legalityFailures": 0,
+      "failedTurns": 0,
+      "forcedPasses": 0,
+      "timeoutSkips": 0,
+      "tokenBudgetSkips": 0,
+      "noteOmissions": 0,
+      "inputTokens": 1744373,
+      "outputTokens": 101057,
+      "cacheReadTokens": 1601597,
+      "latencyMs": 1418266,
+      "usage": {
+        "schema": "laplace-model-usage-v1",
+        "adapterCalls": 21,
+        "reportedCalls": 21,
+        "unreportedCalls": 0,
+        "legacyUnversionedCalls": 0,
+        "providers": [
+          "anthropic"
+        ],
+        "sources": [
+          "claude-cli"
+        ],
+        "inputTotalTokens": 1744373,
+        "inputUncachedTokens": 142776,
+        "cacheReadTokens": 1601597,
+        "cacheWriteTokens": 142736,
+        "cacheWriteReportedCalls": 21,
+        "outputTotalTokens": 101057,
+        "reasoningTokens": 0,
+        "reasoningReportedCalls": 0,
+        "applicationInputBytes": 20593,
+        "applicationOutputBytes": 23150
+      }
+    }
+  }
+}

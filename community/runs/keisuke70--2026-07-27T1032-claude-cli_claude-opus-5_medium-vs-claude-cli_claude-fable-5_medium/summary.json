@@ -1,0 +1,140 @@
+{
+  "run_dir": "/Users/kei/projects/laplacebench/runs/2026-07-27T1032-claude-cli_claude-opus-5_medium-vs-claude-cli_claude-fable-5_medium",
+  "usage_schema": "laplace-model-usage-v1",
+  "usage_comparability": {
+    "token_totals": "directly comparable only within the same provider, model, adapter, effort, and harness version",
+    "cross_provider": "descriptive only: tokenizers and provider-injected CLI context differ",
+    "application_bytes": "tokenizer-neutral LaplaceBench logical-turn I/O only; excludes provider-injected context and hidden reasoning"
+  },
+  "games": 2,
+  "avg_plies": 39,
+  "results": [
+    {
+      "game": "game-000",
+      "team_a": "claude-cli:claude-opus-5@medium",
+      "team_b": "claude-cli:claude-fable-5@medium",
+      "winner": "B",
+      "reason": "center",
+      "plies": 42
+    },
+    {
+      "game": "game-001",
+      "team_a": "claude-cli:claude-fable-5@medium",
+      "team_b": "claude-cli:claude-opus-5@medium",
+      "winner": "A",
+      "reason": "center",
+      "plies": 35
+    }
+  ],
+  "agents": {
+    "claude-cli:claude-opus-5@medium": {
+      "record": "0W-0D-2L",
+      "win_reasons": {},
+      "draw_reasons": {},
+      "draw_rate": 0,
+      "illegal_rate_per_turn": 0,
+      "format_failure_rate_per_turn": 0,
+      "failed_turns": 0,
+      "forced_passes": 0,
+      "timeout_skips": 0,
+      "token_budget_skips": 0,
+      "note_omissions": 0,
+      "note_omission_rate_per_move": 0,
+      "turns": 38,
+      "tokens_in": 3074288,
+      "tokens_out": 241033,
+      "tokens_cache_read": 2784704,
+      "usage": {
+        "schema": "laplace-model-usage-v1",
+        "status": "complete",
+        "adapter_calls": 38,
+        "reported_calls": 38,
+        "unreported_calls": 0,
+        "legacy_unversioned_calls": 0,
+        "providers": [
+          "anthropic"
+        ],
+        "sources": [
+          "claude-cli"
+        ],
+        "input_tokens_total": 3074288,
+        "input_tokens_uncached": 289584,
+        "cache_read_tokens": 2784704,
+        "cache_write_tokens": 289511,
+        "cache_write_reported_calls": 38,
+        "output_tokens_total": 241033,
+        "reasoning_tokens": null,
+        "reasoning_reported_calls": 0,
+        "total_tokens": 3315321,
+        "fresh_tokens": 530617,
+        "application_input_bytes": 38577,
+        "application_output_bytes": 55932,
+        "averages": {
+          "per_reported_call": {
+            "total_tokens": 87245,
+            "fresh_tokens": 13964,
+            "application_input_bytes": 1015,
+            "application_output_bytes": 1472
+          },
+          "per_game": {
+            "total_tokens": 1657661,
+            "fresh_tokens": 265309
+          },
+          "per_turn": {
+            "total_tokens": 87245,
+            "fresh_tokens": 13964
+          }
+        }
+      },
+      "avg_latency_ms": 81602
+    },
+    "claude-cli:claude-fable-5@medium": {
+      "record": "2W-0D-0L",
+      "win_reasons": {
+        "center": 2
+      },
+      "draw_reasons": {},
+      "draw_rate": 0,
+      "illegal_rate_per_turn": 0.026,
+      "format_failure_rate_per_turn": 0.077,
+      "failed_turns": 1,
+      "forced_passes": 0,
+      "timeout_skips": 0,
+      "token_budget_skips": 0,
+      "note_omissions": 0,
+      "note_omission_rate_per_move": 0,
+      "turns": 39,
+      "tokens_in": 2356288,
+      "tokens_out": 169167,
+      "tokens_cache_read": 2202731,
+      "usage": {
+        "schema": "laplace-model-usage-v1",
+        "status": "partial",
+        "adapter_calls": 42,
+        "reported_calls": 39,
+        "unreported_calls": 3,
+        "legacy_unversioned_calls": 0,
+        "providers": [
+          "anthropic"
+        ],
+        "sources": [
+          "claude-cli"
+        ],
+        "input_tokens_total": 2356288,
+        "input_tokens_uncached": 153557,
+        "cache_read_tokens": 2202731,
+        "cache_write_tokens": 153486,
+        "cache_write_reported_calls": 39,
+        "output_tokens_total": 169167,
+        "reasoning_tokens": null,
+        "reasoning_reported_calls": 0,
+        "total_tokens": 2525455,
+        "fresh_tokens": 322724,
+        "application_input_bytes": 38884,
+        "application_output_bytes": 49984,
+        "averages": null
+      },
+      "avg_latency_ms": 75437
+    }
+  }
+}

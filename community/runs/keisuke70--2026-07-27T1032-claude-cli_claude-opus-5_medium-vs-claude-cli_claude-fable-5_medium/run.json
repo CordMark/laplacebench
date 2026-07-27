@@ -1,0 +1,23 @@
+{
+  "run_id": "2026-07-27T1032-claude-cli_claude-opus-5_medium-vs-claude-cli_claude-fable-5_medium",
+  "ruleset": "laplace-8x8-v1",
+  "prompt_rev": "p3-move-note",
+  "team_a": "claude-cli:claude-opus-5@medium",
+  "team_b": "claude-cli:claude-fable-5@medium",
+  "games": 2,
+  "swap": true,
+  "seed": 90937,
+  "max_plies": 100,
+  "turn_timeout_ms": 1200000,
+  "output_token_budget_per_team_per_game": 250000,
+  "output_token_budget_metric": "in-game output_tokens_total (reasoning inclusive)",
+  "sampling": "provider-default (no temperature control on current models)",
+  "usage_schema": "laplace-model-usage-v1",
+  "usage_scope": "in-game act calls, including repair attempts; excludes post-game learning",
+  "cli_versions": {
+    "claude": "2.1.220 (Claude Code)",
+    "codex": null
+  },
+  "product_cpu": null,
+  "started_at": "2026-07-27T10:32:25.138Z"
+}
