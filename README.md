@@ -1,19 +1,53 @@
 # LaplaceBench
 
-**An open arena where language models compete at a board game nobody knows.**
+**Two models, one board, a frozen referee — head-to-head results, not
+leaderboard scores.**
 
-LAPLACE is a novel 8x8, four-color, 2-vs-2 strategy game (rook movement,
-sandwich/enclosure captures, Void pieces, two victory routes). Because it is
-absent from training data, a match measures what we actually care about:
-learning unfamiliar rules cold, tracking a full board over a long game,
-coordinating two allied armies with one mind, and returning reliable
-structured actions — with a deterministic referee deciding everything.
+Benchmark numbers are getting harder to trust: fixed test sets leak into
+training corpora and become optimization targets, and a rising score stops
+meaning what it claimed to mean. LaplaceBench takes the opposite shape.
+Instead of an answer key there is an opponent, and instead of a score there
+is a head-to-head result — win, loss, or the occasional draw — decided move
+by move by a deterministic referee and replayable by anyone. And the game
+itself is clean: as of `laplace-8x8-v1` (July 2026), we know of no games, no
+opening theory, and no discussion of LAPLACE outside this project — nothing
+for a model to have memorized. If that ever stops being true, it will mean this benchmark
+became famous enough to enter training pipelines — a success worth having —
+and the ruleset is versioned so the game simply moves on.
 
-One model controls Red+Yellow, the other Blue+Green: the native 2v2 game
-becomes a clean model-vs-model duel. Models never click a browser; they read
-an observation and return coordinates. Humans get the browser: every game
-exports (replay-verified) into a spectator web UI with the product board,
-animations, and per-model reliability stats.
+The game is LAPLACE, a novel 8x8, four-color, 2-vs-2 strategy game. Pieces
+move like rooks. A capture takes every piece caught in a straight line
+between two pieces of a single color — your teammate's pieces included — and
+a piece sealed off from every move it has also falls. A color that loses
+three pieces is eliminated; its survivors become Voids, still mobile and
+still capturable but unable to capture. Two roads to victory: occupy the
+four center squares as a team, or eliminate both enemy colors. One model
+commands Red+Yellow, the other Blue+Green — one mind runs two armies that
+can never combine for a capture — so the native 2v2 game becomes a clean
+model-vs-model duel.
+
+Models never click a browser; they read an observation and return
+coordinates. Humans get the browser: every game exports (replay-verified)
+into a spectator web UI with the product board, animations, and per-model
+reliability stats.
+
+## What a match measures
+
+Both sides get the same rulebook and the same view of the board — no list of
+legal moves, no hints. From there, one game exercises several sides of a
+model at once, and the logs keep them separate:
+
+- **Reading rules cold** — legality has to be derived from the rulebook
+  prose; every illegal attempt is recorded and scored.
+- **Running two armies with one mind** — a team's two colors act on
+  alternating turns and can never combine for a capture, and a careless
+  line-up hands the opponent your own pieces.
+- **Strategy without theory** — two victory routes (center or elimination),
+  an opponent whose plan has to be read, and no opening book anywhere to
+  remember.
+- **Staying reliable over a long game** — dozens of turns in one continuous
+  conversation, every reply required as well-formed coordinates; format
+  failures are scored, not forgiven.
 
 ## Scope: this is a model benchmark
 
@@ -46,12 +80,15 @@ Deliberately outside that scope for now:
   subscription CLI, so those matches stay labeled as their own condition
   rather than treated as clean-model runs.
 
-The set of *events* inside the model benchmark is expected to grow. One
-candidate already on the table: give each of a team's two colors its own
-context and its own request thread, so allies can no longer be coordinated by
-a single mind and the benchmark measures how well a model shares intent with a
-partner that cannot read its thoughts. Today's base condition — one model, one
-context, both of its colors — stays the reference point.
+The set of *events* inside the model benchmark is expected to grow. LAPLACE
+is at heart a 2v2 team game, and today's base condition flattens that: one
+model plays both of its team's colors in one context. The leading candidate
+event restores the native team structure — each color gets its own model and
+its own conversation, four minds on one board, allies who cannot read each
+other's thoughts — turning the same game into a measure of how well a model
+shares intent with a partner. A board-image (vision) track is on the same
+roadmap, and the deferred harness-engineering division above could return as
+its own labeled contest. Today's base condition stays the reference point.
 
 ## What exists today
 
