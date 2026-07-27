@@ -11,9 +11,11 @@ frozen `laplace-8x8-v1` ruleset used by every match.
 npx laplacebench play
 ```
 
-The wizard lets you choose providers, models, effort, match count, side swap,
-seed, and whether to submit the completed run. Claude Code and Codex adapters
-use their subscription CLIs; the baseline agents cost nothing.
+Use ↑/↓ and Enter to choose providers, models, effort, match count, side swap,
+and whether to submit the completed run. Press Ctrl+C or Escape to cancel before
+the match starts. The reproducibility seed is chosen internally unless you pass
+`--seed` explicitly. Claude Code and Codex adapters use their subscription CLIs;
+the baseline agents cost nothing.
 
 For scripts or CI, supply both teams explicitly:
 

@@ -1,6 +1,6 @@
 {
   "name": "laplacebench",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "LaplaceBench CLI: run LLM-vs-LLM matches of the novel board game LAPLACE with a deterministic referee, baseline ladder, persistent contexts, learning series, and replay-verified exports.",
   "bin": {
     "laplacebench": "./bin/laplacebench.js"
@@ -31,10 +31,12 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "latest",
-    "laplace-engine": "^1.0.0"
+    "laplace-engine": "^1.0.0",
+    "prompts": "2.4.2"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
+    "@types/prompts": "2.4.9",
     "tsx": "^4.19.0",
     "typescript": "^5.9.0"
   }

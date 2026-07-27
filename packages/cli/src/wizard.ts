@@ -1,5 +1,5 @@
-import * as readline from "node:readline";
 import * as path from "node:path";
+import prompts from "prompts";
 import { PRODUCT_CPU_POLICY, PROVIDERS, type ProviderEntry } from "./catalog";
 
 /** Injectable I/O so the whole flow is testable with scripted answers. */
@@ -8,6 +8,20 @@ export interface WizardIO {
   input(prompt: string, def?: string): Promise<string>;
   print(line: string): void;
 }
+
+/** Raised only when the person explicitly cancels an interactive prompt. */
+export class WizardCancelledError extends Error {
+  constructor() {
+    super("wizard cancelled");
+    this.name = "WizardCancelledError";
+  }
+}
+
+/** Narrow prompt-runner seam: production uses `prompts`, tests inject a fake. */
+export type PromptRunner = <T extends string = string>(
+  question: prompts.PromptObject<T>,
+  options?: prompts.Options
+) => Promise<prompts.Answers<T>>;
 
 export interface WizardDeps {
   env: NodeJS.ProcessEnv;
@@ -76,6 +90,13 @@ export function isIntegerText(text: string): boolean {
   return /^-?\d+$/.test(trimmed) && Number.isSafeInteger(parseInt(trimmed, 10));
 }
 
+/** Japanese IME users may enter full-width digits in integer text prompts. */
+export function normalizePromptIntegerText(text: string): string {
+  return text.replace(/[０-９]/g, (digit) =>
+    String.fromCharCode(digit.charCodeAt(0) - 0xfee0)
+  );
+}
+
 /**
  * Syntax and range check for `play`'s flags. Runs before authentication and
  * before any match starts, and reports every problem at once rather than the
@@ -123,7 +144,7 @@ async function promptInteger(
   valid: (n: number) => boolean
 ): Promise<number> {
   for (;;) {
-    const text = (await io.input(prompt, def)).trim();
+    const text = normalizePromptIntegerText(await io.input(prompt, def)).trim();
     if (isIntegerText(text)) {
       const n = parseInt(text, 10);
       if (valid(n)) return n;
@@ -300,13 +321,13 @@ export async function runWizardFlow(
   if (interactive && gamesFlag === undefined && swapFlag === undefined) {
     // Neither supplied: the canonical preset still answers both at once.
     const preset = await io.select("対局数:", [
-      "2局・スワップあり (推奨=正準ペア)",
-      "カスタム",
+      "2局・先後交代（推奨）",
+      "詳細設定",
     ]);
     swap = true;
     if (preset === 1) {
       games = await promptInteger(io, "対局数:", "2", (n) => n >= 1);
-      swap = (await io.select("サイドスワップ:", ["あり", "なし"])) === 0;
+      swap = (await io.select("先後:", ["先後を交代する", "固定する"])) === 0;
     }
   } else if (interactive) {
     // One was supplied: ask for the other rather than assuming it.
@@ -314,7 +335,7 @@ export async function runWizardFlow(
       games = await promptInteger(io, "対局数:", "2", (n) => n >= 1);
     }
     if (swapFlag === undefined) {
-      swap = (await io.select("サイドスワップ:", ["あり", "なし"])) === 0;
+      swap = (await io.select("先後:", ["先後を交代する", "固定する"])) === 0;
     }
   }
   if (!Number.isSafeInteger(games) || games < 1) {
@@ -322,12 +343,10 @@ export async function runWizardFlow(
     return { cancelled: true };
   }
 
-  const defaultSeed = deps.randomSeed();
-  const seed = flag("seed") !== undefined
-    ? parseInt(flag("seed")!, 10)
-    : interactive
-      ? await promptInteger(io, "seed:", String(defaultSeed), () => true)
-      : defaultSeed;
+  const seedFlag = flag("seed");
+  const seed = seedFlag !== undefined
+    ? parseInt(seedFlag, 10)
+    : deps.randomSeed();
 
   // Asked here, while the player is still making decisions, so the run itself
   // ends hands-off. Publishing is on the player's account, so it is never the
@@ -336,8 +355,8 @@ export async function runWizardFlow(
     ? true
     : interactive
       ? (await io.select("終了後に公開台帳へ自動提出しますか?", [
-          "しない",
-          "する (GitHub アカウントで提出・自動マージ)",
+          "今回は提出しない",
+          "GitHubで公開提出する（検証後、自動マージ）",
         ])) === 1
       : false;
 
@@ -349,10 +368,12 @@ export async function runWizardFlow(
   const gate = await authGate(io, deps, [a.provider, b.provider], extraArgs, interactive);
   if (gate === "cancelled" || gate === "failed") return { cancelled: true };
 
+  const matchSummary = `games=${games} swap=${swap ? "on" : "off"}` +
+    (!interactive || seedFlag !== undefined ? ` seed=${seed}` : "");
   const summaryLines = [
     `Team A: ${a.spec}`,
     `Team B: ${b.spec}`,
-    `games=${games} swap=${swap ? "on" : "off"} seed=${seed}`,
+    matchSummary,
     `自動提出: ${autoSubmit ? "する" : "しない"}`,
   ];
   return { specA: a.spec, specB: b.spec, games, swap, seed, autoSubmit, extraArgs, summaryLines };
@@ -401,34 +422,45 @@ export function submissionState(
   return [...head, ...submissionGuidance(runId)];
 }
 
-function makeReadlineIO(): WizardIO & { close(): void } {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-  const ask = (q: string) =>
-    new Promise<string>((res) => rl.question(q, res));
+export function makePromptIO(
+  runPrompt: PromptRunner = prompts
+): WizardIO & { close(): void } {
+  const ask = async <T>(question: prompts.PromptObject<"value">): Promise<T> => {
+    let cancelled = false;
+    const answer = await runPrompt(question, {
+      onCancel: () => {
+        cancelled = true;
+        return false;
+      },
+    });
+    if (cancelled || !Object.prototype.hasOwnProperty.call(answer, "value")) {
+      throw new WizardCancelledError();
+    }
+    return answer.value as T;
+  };
   return {
     async select(title, options) {
-      for (;;) {
-        console.log(`\n${title}`);
-        options.forEach((o, i) => console.log(`  ${i + 1}) ${o}`));
-        const ans = (await ask("> ")).trim();
-        const n = parseInt(ans, 10);
-        if (Number.isInteger(n) && n >= 1 && n <= options.length) return n - 1;
-        console.log(`1〜${options.length} の番号を入力してください`);
-      }
+      return ask<number>({
+        type: "select",
+        name: "value",
+        message: title,
+        initial: 0,
+        hint: "↑/↓で選択・Enterで決定（Escで中止）",
+        choices: options.map((option, index) => ({ title: option, value: index })),
+      });
     },
     async input(prompt, def) {
-      const ans = (await ask(`${prompt}${def !== undefined ? ` [${def}]` : ""} `)).trim();
-      return ans === "" && def !== undefined ? def : ans;
+      return ask<string>({
+        type: "text",
+        name: "value",
+        message: prompt,
+        ...(def !== undefined ? { initial: def } : {}),
+      });
     },
     print(line) {
       console.log(line);
     },
-    close() {
-      rl.close();
-    },
+    close() {},
   };
 }
 
@@ -461,7 +493,7 @@ export async function runPlay(
   io?: WizardIO,
   args: Record<string, string | boolean> = {}
 ): Promise<number> {
-  const rlio = io ?? makeReadlineIO();
+  const rlio = io ?? makePromptIO();
   try {
     const errors = flagErrors(args);
     if (errors.length > 0) {
@@ -481,7 +513,14 @@ export async function runPlay(
       return 1;
     }
 
-    const result = await runWizardFlow(rlio, deps, args, interactive);
+    let result: WizardResult;
+    try {
+      result = await runWizardFlow(rlio, deps, args, interactive);
+    } catch (error) {
+      if (!(error instanceof WizardCancelledError)) throw error;
+      rlio.print("中止しました。対局は開始されていません。");
+      return 1;
+    }
     if (isCancelled(result)) {
       rlio.print("中止しました。対局は開始されていません。");
       return 1;

@@ -30,4 +30,8 @@ test("the packaged README only advertises commands present in the package", () =
   assert.match(readme, /npx laplacebench submit runs\/<run-id>/);
   assert.doesNotMatch(readme, /npx tsx src\/cli\.ts/);
   assert.doesNotMatch(readme, /LAPLACE_APP_ROOT/);
+  assert.match(readme, /↑\/↓ and Enter/);
+  assert.match(readme, /Ctrl\+C or Escape/);
+  assert.match(readme, /seed is chosen internally/);
+  assert.doesNotMatch(readme, /choose[^.]*seed/i);
 });
