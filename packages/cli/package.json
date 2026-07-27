@@ -1,6 +1,6 @@
 {
   "name": "laplacebench",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "LaplaceBench CLI: run LLM-vs-LLM matches of the novel board game LAPLACE with a deterministic referee, baseline ladder, persistent contexts, learning series, and replay-verified exports.",
   "bin": {
     "laplacebench": "bin/laplacebench.js"
