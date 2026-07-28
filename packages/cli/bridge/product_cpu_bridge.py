@@ -1,68 +1,213 @@
-"""LaplaceBench <-> product CPU bridge (protocol: product-cpu-bridge-v1).
+"""LaplaceBench <-> bundled product CPU bridge (product-cpu-bridge-v1).
 
-Speaks line-delimited JSON on stdin/stdout. Imports the product repository's
-``ai/src`` read-only; stdlib only, so it runs on bare python3 (3.11+) with no
-venv. Replicates the product API's resolution path exactly:
-``get_cpu_level(level_id)`` -> ``MinimaxAgent(profile, strict_profile=True)``
-with a fresh agent per request, matching ``ai/src/api/app.py``.
+The package contains byte-exact, commit-addressed product CPU snapshots. This
+process verifies the package-trusted index, policy manifest, file set, and
+every source digest before importing one policy. It never reads a product
+checkout or network resource at runtime.
 """
+
+from __future__ import annotations
 
 import argparse
 import contextlib
+import hashlib
+import importlib.abc
+import importlib.util
 import io
 import json
-import subprocess
+from pathlib import Path
+import re
 import sys
 import time
+from types import MappingProxyType
+from typing import Any
+
+sys.dont_write_bytecode = True
 
 
-def _git(product_repo: str, *args: str) -> str:
-    return subprocess.run(
-        ["git", "-C", product_repo, *args],
-        check=True,
-        capture_output=True,
-        text=True,
-    ).stdout.strip()
+BRIDGE_ROOT = Path(__file__).resolve().parent
+TRUSTED_INDEX = BRIDGE_ROOT / "trusted_product_cpu_policies.json"
+VENDOR_ROOT = BRIDGE_ROOT / "vendor"
+FULL_SHA = re.compile(r"^[0-9a-f]{40}$")
+
+
+def _read_json(path: Path) -> tuple[bytes, dict[str, Any]]:
+    raw = path.read_bytes()
+    parsed = json.loads(raw)
+    if not isinstance(parsed, dict):
+        raise ValueError(f"{path.name} must contain an object")
+    return raw, parsed
+
+
+def _sha256(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+class _SnapshotImporter(importlib.abc.MetaPathFinder, importlib.abc.Loader):
+    """Import the exact bytes that passed digest verification."""
+
+    def __init__(self, sources: dict[str, bytes], policy_root: Path):
+        self._sources = MappingProxyType(dict(sources))
+        self._policy_root = policy_root
+
+    def _relative(self, fullname: str) -> tuple[str, bool] | None:
+        module_path = fullname.replace(".", "/")
+        package = f"{module_path}/__init__.py"
+        if package in self._sources:
+            return package, True
+        module = f"{module_path}.py"
+        if module in self._sources:
+            return module, False
+        return None
+
+    def find_spec(self, fullname: str, path=None, target=None):
+        found = self._relative(fullname)
+        if found is None:
+            return None
+        relative, is_package = found
+        return importlib.util.spec_from_loader(
+            fullname,
+            self,
+            origin=str(self._policy_root / relative),
+            is_package=is_package,
+        )
+
+    def create_module(self, spec):
+        return None
+
+    def exec_module(self, module):
+        found = self._relative(module.__name__)
+        if found is None:
+            raise ImportError(f"verified source missing for {module.__name__}")
+        relative, _ = found
+        code = compile(
+            self._sources[relative],
+            str(self._policy_root / relative),
+            "exec",
+            dont_inherit=True,
+        )
+        exec(code, module.__dict__)
+
+
+def _verified_policy_snapshot(policy: str):
+    if sys.version_info < (3, 11):
+        raise RuntimeError(
+            f"Python 3.11+ is required (found {sys.version.split()[0]})"
+        )
+
+    _, trusted = _read_json(TRUSTED_INDEX)
+    if trusted.get("schema") != "laplace-bundled-product-cpu-index-v1":
+        raise ValueError("unsupported trusted product CPU index schema")
+    policies = trusted.get("policies")
+    if not isinstance(policies, dict) or policy not in policies:
+        raise ValueError(f"unsupported bundled product CPU policy: {policy}")
+    anchor = policies[policy]
+    if not isinstance(anchor, dict):
+        raise ValueError(f"malformed trusted policy anchor: {policy}")
+
+    bundle_dir = anchor.get("bundle_dir")
+    if (
+        not isinstance(bundle_dir, str)
+        or not re.fullmatch(r"generations/[0-9a-f]{64}/" + re.escape(policy), bundle_dir)
+    ):
+        raise ValueError(f"bundled {policy} bundle directory is malformed")
+    policy_root = VENDOR_ROOT / bundle_dir
+    manifest_path = policy_root / "manifest.json"
+    manifest_raw, manifest = _read_json(manifest_path)
+    if _sha256(manifest_raw) != anchor.get("manifest_sha256"):
+        raise ValueError(f"bundled {policy} manifest digest mismatch")
+    if manifest.get("schema") != "laplace-bundled-product-cpu-policy-v1":
+        raise ValueError(f"unsupported bundled {policy} manifest schema")
+    if manifest.get("policy_version") != policy:
+        raise ValueError(f"bundled {policy} manifest policy_version mismatch")
+    for key in ("command_role", "product_commit"):
+        if manifest.get(key) != anchor.get(key):
+            raise ValueError(f"bundled {policy} manifest {key} mismatch")
+    commit = anchor.get("product_commit")
+    if not isinstance(commit, str) or not FULL_SHA.fullmatch(commit):
+        raise ValueError(f"bundled {policy} product commit is not a full SHA")
+
+    files = manifest.get("files")
+    if not isinstance(files, dict) or not files:
+        raise ValueError(f"bundled {policy} manifest has no files")
+    expected = set(files)
+    actual = {
+        source.relative_to(policy_root).as_posix()
+        for source in (policy_root / "agents").rglob("*.py")
+        if source.is_file()
+    }
+    if actual != expected:
+        raise ValueError(
+            f"bundled {policy} Python file set mismatch: "
+            f"expected={sorted(expected)}, actual={sorted(actual)}"
+        )
+    snapshot: dict[str, bytes] = {}
+    for relative, expected_digest in sorted(files.items()):
+        if (
+            not isinstance(relative, str)
+            or not relative.startswith("agents/")
+            or not isinstance(expected_digest, str)
+            or not re.fullmatch(r"[0-9a-f]{64}", expected_digest)
+        ):
+            raise ValueError(f"bundled {policy} manifest file entry is malformed")
+        source = policy_root / relative
+        source_bytes = source.read_bytes()
+        if _sha256(source_bytes) != expected_digest:
+            raise ValueError(f"bundled {policy} source digest mismatch: {relative}")
+        snapshot[relative] = source_bytes
+
+    return anchor, policy_root, snapshot
+
+
+def _load_policy(policy: str):
+    anchor, policy_root, snapshot = _verified_policy_snapshot(policy)
+
+    importer = _SnapshotImporter(snapshot, policy_root)
+    sys.meta_path.insert(0, importer)
+    levels = importlib.import_module("agents.cpu_levels")
+    minimax = importlib.import_module("agents.minimax")
+    weights = importlib.import_module("agents.weight_profiles")
+
+    if getattr(levels, "CPU_POLICY_VERSION", None) != policy:
+        raise ValueError(f"bundled {policy} active policy mismatch")
+    visible_symbol = anchor.get("visible_tiers_symbol")
+    resolver_symbol = anchor.get("level_resolver_symbol")
+    visible_tiers = getattr(levels, visible_symbol, None)
+    resolver = getattr(levels, resolver_symbol, None)
+    if not isinstance(visible_tiers, tuple) or not callable(resolver):
+        raise ValueError(f"bundled {policy} registry symbols are unavailable")
+    return anchor, visible_tiers, resolver, minimax.MinimaxAgent, weights.WEIGHT_PROFILES
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--product-repo", required=True)
+    parser.add_argument("--policy", required=True)
     args = parser.parse_args()
 
-    sys.path.insert(0, f"{args.product_repo}/ai/src")
-    from agents.cpu_levels import (  # noqa: E402
-        CPU_POLICY_VERSION,
-        CPU_V4_VISIBLE_TIERS,
-        get_cpu_level,
+    anchor, visible_tiers, get_cpu_level, MinimaxAgent, weight_profiles = _load_policy(
+        args.policy
     )
-    from agents.minimax import MinimaxAgent  # noqa: E402
-    from agents.weight_profiles import WEIGHT_PROFILES  # noqa: E402
-
-    # Mirror app.py's _validate_active_cpu_profiles, limited to visible tiers.
-    for tier in CPU_V4_VISIBLE_TIERS:
-        if tier.profile_name not in WEIGHT_PROFILES:
-            print(f"missing profile: {tier.profile_name}", file=sys.stderr)
-            return 1
+    for tier in visible_tiers:
+        if tier.profile_name not in weight_profiles:
+            raise ValueError(f"missing profile: {tier.profile_name}")
         agent = MinimaxAgent(
             profile_name=tier.profile_name,
             error_policy="raise",
             strict_profile=True,
         )
         if agent.weight_profile_name != tier.profile_name:
-            print(f"profile resolution mismatch: {tier.profile_name}", file=sys.stderr)
-            return 1
+            raise ValueError(f"profile resolution mismatch: {tier.profile_name}")
 
-    visible = {tier.level_id: tier for tier in CPU_V4_VISIBLE_TIERS}
+    visible = {tier.level_id: tier for tier in visible_tiers}
     emit = sys.stdout
     print(
         json.dumps(
             {
                 "t": "hello",
                 "protocol": "product-cpu-bridge-v1",
-                "policy_version": CPU_POLICY_VERSION,
-                "product_commit": _git(args.product_repo, "rev-parse", "HEAD"),
-                "product_dirty": bool(_git(args.product_repo, "status", "--porcelain")),
+                "policy_version": args.policy,
+                "product_commit": anchor["product_commit"],
+                "distribution": "bundled",
                 "python": sys.version,
                 "visible_tiers": [
                     {
@@ -70,7 +215,7 @@ def main() -> int:
                         "profile_name": tier.profile_name,
                         "p95_limit_seconds": tier.p95_limit_seconds,
                     }
-                    for tier in CPU_V4_VISIBLE_TIERS
+                    for tier in visible_tiers
                 ],
             }
         ),
@@ -140,4 +285,8 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except Exception as exc:
+        print(f"{type(exc).__name__}: {exc}", file=sys.stderr)
+        sys.exit(1)

@@ -1,0 +1,18 @@
+{
+  "schema": "laplace-bundled-product-cpu-policy-v1",
+  "policy_version": "cpu-v6",
+  "command_role": "play",
+  "source_repository": "https://github.com/Japan-Automation-Technology/Laplace.git",
+  "source_root": "ai/src/agents",
+  "product_commit": "101b739ff41a612c9b2c512d57d0a5ba4d233d47",
+  "generated_notice": "Generated from exact Git objects; do not edit vendored files by hand.",
+  "files": {
+    "agents/__init__.py": "3c1e96e51f0a69f8f2e163ea835e9653c49ba1c4d7d76b7c46bf2ced00f52f15",
+    "agents/base.py": "3c608e892c29813f9b46492c96657ab454eaaaab31ff91580fe9c8148ffcf3ca",
+    "agents/cpu_levels.py": "5b8b8baed49b3b5dc7bc15980eda9ee1e493e8eb8754f5440c9913b6502cfb1d",
+    "agents/cpu_tier_profiles.py": "8767a40ffed26daac9cf80f9a0098759fe0e8c6fccebc6a46028711e5f8d4846",
+    "agents/minimax.py": "9e1ca7634777e60f3e7f6b2d1fddb40aa3381ef18740430a9d0dbeb7f77a9645",
+    "agents/tactical_candidates.py": "ec2b2e4b7947036fcd5641edec83ff7a99b3693f3a06b478951bd05a0dc02870",
+    "agents/weight_profiles.py": "878f976de2be8a039d9aaec5701932f2d25f7c6ebcf78a6f7e260f6fa9934edc"
+  }
+}

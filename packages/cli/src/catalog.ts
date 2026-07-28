@@ -44,15 +44,27 @@ export const CLAUDE_MODELS: { value: string; label: string }[] = [
   { value: "claude-haiku-4-5", label: "Haiku 4.5" },
 ];
 
+/** Current model ids exposed by the Codex CLI. Keep full ids in recorded specs;
+ * the custom entry remains available when the CLI adds a model between releases. */
+export const CODEX_MODELS: { value: string; label: string }[] = [
+  { value: "gpt-5.6-sol", label: "GPT-5.6 Sol" },
+  { value: "gpt-5.6-terra", label: "GPT-5.6 Terra" },
+  { value: "gpt-5.6-luna", label: "GPT-5.6 Luna" },
+  { value: "gpt-5.5", label: "GPT-5.5" },
+  { value: "gpt-5.4", label: "GPT-5.4" },
+  { value: "gpt-5.4-mini", label: "GPT-5.4 Mini" },
+  { value: "gpt-5.3-codex-spark", label: "GPT-5.3 Codex Spark" },
+];
+
 /** Stable public labels for exact headline identities. Unknown model ids are
  * deliberately displayed verbatim by the arena publisher. */
 export const PUBLIC_HEADLINE_LABELS: Readonly<Record<string, string>> = {
   ...Object.fromEntries(CLAUDE_MODELS.map((model) => [model.value, model.label])),
+  ...Object.fromEntries(CODEX_MODELS.map((model) => [model.value, model.label])),
   ...Object.fromEntries(Array.from(
     { length: 6 },
     (_, index) => [`cpu-v6:level_${index + 1}`, `LaPlace CPU Lv${index + 1}`],
   )),
-  "gpt-5.6-sol": "GPT-5.6 Sol",
   "codex-cli": "Codex CLI (model not recorded)",
 };
 
@@ -74,7 +86,7 @@ export interface ProviderEntry {
   models: { value: string; label: string }[];
   /** Whether a free-form model can be typed in. */
   allowCustomModel: boolean;
-  /** Published effort choices ("" = provider default, omitted from spec). */
+  /** Published, explicit effort choices. Empty/unrecorded remains parseable but is not selectable. */
   efforts: string[];
   /** Compose the spec string for a selection. */
   buildSpec(model: string, effort: string): string;
@@ -92,7 +104,7 @@ export const PROVIDERS: ProviderEntry[] = [
     label: "Claude (subscription / claude CLI)",
     models: CLAUDE_MODELS,
     allowCustomModel: true,
-    efforts: ["", "low", "medium", "high", "xhigh"],
+    efforts: ["low", "medium", "high", "xhigh"],
     buildSpec: (model, effort) =>
       `claude-cli:${model}${effort ? `@${effort}` : ""}`,
     auth: {
@@ -104,9 +116,9 @@ export const PROVIDERS: ProviderEntry[] = [
   {
     key: "codex-cli",
     label: "Codex (ChatGPT subscription / codex CLI)",
-    models: [{ value: "", label: "default (plan's default model)" }],
+    models: CODEX_MODELS,
     allowCustomModel: true,
-    efforts: ["", "low", "medium", "high"],
+    efforts: ["low", "medium", "high"],
     buildSpec: (model, effort) =>
       `codex-cli${model ? `:${model}` : effort ? ":" : ""}${effort ? `@${effort}` : ""}`,
     auth: {
@@ -140,8 +152,8 @@ export const PROVIDERS: ProviderEntry[] = [
     buildSpec: (model) => `product-cpu:${PRODUCT_CPU_POLICY}:${model}`,
     auth: {
       commands: [],
-      envVars: ["LAPLACE_PRODUCT_REPO", "LAPLACE_PRODUCT_COMMIT"],
-      note: "a pinned product checkout; the wizard will prompt if unset",
+      envVars: [],
+      note: "bundled in this package; Python 3.11+ is checked before the run starts",
     },
   },
   {
@@ -330,12 +342,7 @@ export function isLlmSpec(spec: string): boolean {
 export function usageAgentSpecsLine(): string {
   const published = PROVIDERS.map((p) => {
     const models = p.models.map((m) => m.value || "default").join("/");
-    const effort = p.efforts.length > 1 ? "[@effort]" : "";
-    const sample = p.buildSpec(
-      p.models[0].value,
-      p.efforts.length > 1 ? "" : ""
-    );
-    void sample;
+    const effort = p.efforts.length > 0 ? `@<${p.efforts.join("|")}>` : "";
     switch (p.key) {
       case "claude-cli":
         return `claude-cli:<${models}|model>${effort}`;

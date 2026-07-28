@@ -16,8 +16,10 @@ import {
   type GameProgress,
 } from "./runner";
 import { PROMPT_REV } from "./prompt";
-import { usageAgentSpecsLine } from "./catalog";
-import type { Agent } from "./types";
+import { MatchPreflightError } from "./playerrors";
+import { PRODUCT_CPU_POLICY, usageAgentSpecsLine } from "./catalog";
+import { classifyRunnableAgentSpec, type LatencyTelemetry } from "./publicgames";
+import type { Agent, AgentReply } from "./types";
 
 /** Positional arguments: excludes --flags AND the values they consume.
  * (The old `filter(!startsWith("--"))` silently swallowed option values —
@@ -53,6 +55,19 @@ function parseArgs(argv: string[]): Record<string, string | boolean> {
 }
 
 const PRODUCT_CPU_SPEC = /^product-cpu:([a-z0-9-]+):(level_\d+)$/;
+export const BUNDLED_REGRET_POLICY = "cpu-v4";
+
+export function assertBundledProductCpuRole(
+  policy: string,
+  role: "play" | "regret"
+): void {
+  const expected = role === "play" ? PRODUCT_CPU_POLICY : BUNDLED_REGRET_POLICY;
+  if (policy !== expected) {
+    throw new Error(
+      `${role} supports bundled ${expected} only, got ${policy}. ${role === "play" ? "対局" : "解析"}は開始していません。`
+    );
+  }
+}
 
 /** Specs whose agents consume model tokens (the fairness envelope applies). */
 export function isLlmSpec(spec: string): boolean {
@@ -90,90 +105,69 @@ export function resolveMatchResources(
   return { turnTimeoutMs, outputTokenBudget };
 }
 
-interface ProductCpuContext {
-  productRepo: string;
-  expectedCommit: string;
-}
-
-/** Resolve product repo + commit pin from CLI args and env. Fail-closed. */
-function productCpuContext(args: Record<string, string | boolean>): ProductCpuContext {
-  const productRepo = String(
-    args["product-repo"] ?? process.env.LAPLACE_PRODUCT_REPO ?? ""
-  );
-  const expectedCommit = String(
-    args["product-commit"] ?? process.env.LAPLACE_PRODUCT_COMMIT ?? ""
-  );
-  if (!productRepo) {
-    throw new Error(
-      "product-cpu specs need the product checkout: pass --product-repo or set LAPLACE_PRODUCT_REPO"
-    );
-  }
-  if (!expectedCommit) {
-    throw new Error(
-      "product-cpu specs need a commit pin: pass --product-commit or set LAPLACE_PRODUCT_COMMIT"
-    );
-  }
-  return { productRepo, expectedCommit };
+export function enforceLatencyContract(
+  agent: Agent,
+  spec: string,
+  expected: LatencyTelemetry,
+): Agent {
+  return {
+    ...agent,
+    async act(input): Promise<AgentReply> {
+      const reply = await agent.act(input);
+      const measured = reply.latencyMs !== undefined;
+      if ((expected === "measured") !== measured) {
+        throw new Error(`${spec}: latency telemetry contract violated`);
+      }
+      if (measured && (!Number.isSafeInteger(reply.latencyMs) || reply.latencyMs! < 0)) {
+        throw new Error(`${spec}: latencyMs must be a nonnegative safe integer`);
+      }
+      return reply;
+    },
+  };
 }
 
 async function makeAgent(
   spec: string,
   seed: number,
-  ctx: { runDir: string; productCpu?: ProductCpuContext }
+  ctx: { runDir: string }
 ): Promise<Agent> {
-  const productCpu = spec.match(PRODUCT_CPU_SPEC);
-  if (productCpu) {
-    if (!ctx.productCpu) {
-      throw new Error(`product-cpu spec ${spec} used without --product-repo/--product-commit context`);
+  const parsed = classifyRunnableAgentSpec(spec);
+  if (!parsed) throw new Error(`Unknown agent spec: ${spec}`);
+  let agent: Agent;
+  switch (parsed.kind) {
+    case "product-cpu": {
+      assertBundledProductCpuRole(parsed.policy, "play");
+      const { createProductCpuAgent } = require("./agents/productcpu") as typeof import("./agents/productcpu");
+      agent = await createProductCpuAgent(parsed.level, seed, { expectedPolicy: parsed.policy });
+      break;
     }
-    const { createProductCpuAgent } = require("./agents/productcpu") as typeof import("./agents/productcpu");
-    return createProductCpuAgent(productCpu[2], seed, {
-      productRepo: ctx.productCpu.productRepo,
-      expectedCommit: ctx.productCpu.expectedCommit,
-      expectedPolicy: productCpu[1],
-    });
+    case "random": agent = randomAgent(seed); break;
+    case "greedy": agent = greedyAgent(seed); break;
+    case "center-greedy": agent = centerGreedyAgent(seed, parsed.parameter); break;
+    case "chaos": agent = chaosAgent(seed); break;
+    case "takeshi": agent = takeshiAgent(parsed.parameter); break;
+    case "anthropic": {
+      const { anthropicAgent } = require("./agents/llm") as typeof import("./agents/llm");
+      agent = anthropicAgent({ model: parsed.model });
+      break;
+    }
+    case "claude-cli-learn": {
+      const { learningClaudeCliAgent } = require("./agents/learning") as typeof import("./agents/learning");
+      agent = learningClaudeCliAgent({ model: parsed.model, effort: parsed.effort, runDir: ctx.runDir });
+      break;
+    }
+    case "claude-cli": {
+      const { claudeCliAgent } = require("./agents/cli") as typeof import("./agents/cli");
+      agent = claudeCliAgent({ model: parsed.model, effort: parsed.effort });
+      break;
+    }
+    case "codex-cli": {
+      const { codexCliAgent } = require("./agents/cli") as typeof import("./agents/cli");
+      agent = codexCliAgent({ model: parsed.model, effort: parsed.effort });
+      break;
+    }
   }
-  if (spec === "random") return randomAgent(seed);
-  if (spec === "greedy") return greedyAgent(seed);
-  if (spec === "center-greedy") return centerGreedyAgent(seed);
-  const centerW = spec.match(/^center-greedy:w(\d+)$/);
-  if (centerW) return centerGreedyAgent(seed, parseInt(centerW[1], 10));
-  if (spec === "chaos") return chaosAgent(seed);
-  if (spec === "takeshi") return takeshiAgent();
-  const takeshiDepth = spec.match(/^takeshi:d(\d+)$/);
-  if (takeshiDepth) return takeshiAgent(parseInt(takeshiDepth[1], 10));
-  const anthropic = spec.match(/^anthropic:(.+)$/);
-  if (anthropic) {
-    // Lazy import so baseline runs never need the SDK or an API key.
-    const { anthropicAgent } = require("./agents/llm") as typeof import("./agents/llm");
-    return anthropicAgent({ model: anthropic[1] });
-  }
-  const claudeLearn = spec.match(/^claude-cli-learn(?::(.+))?$/);
-  if (claudeLearn) {
-    const { learningClaudeCliAgent } = require("./agents/learning") as typeof import("./agents/learning");
-    return learningClaudeCliAgent({ ...splitModelEffort(claudeLearn[1]), runDir: ctx.runDir });
-  }
-  const claudeCli = spec.match(/^claude-cli(?::(.+))?$/);
-  if (claudeCli) {
-    const { claudeCliAgent } = require("./agents/cli") as typeof import("./agents/cli");
-    return claudeCliAgent(splitModelEffort(claudeCli[1]));
-  }
-  const codexCli = spec.match(/^codex-cli(?::(.+))?$/);
-  if (codexCli) {
-    const { codexCliAgent } = require("./agents/cli") as typeof import("./agents/cli");
-    return codexCliAgent(splitModelEffort(codexCli[1]));
-  }
-  throw new Error(`Unknown agent spec: ${spec}`);
-}
-
-/** "model@effort" | "model" | "@effort" | undefined -> {model?, effort?} */
-function splitModelEffort(s: string | undefined): { model?: string; effort?: string } {
-  if (!s) return {};
-  const at = s.lastIndexOf("@");
-  if (at === -1) return { model: s };
-  const model = s.slice(0, at);
-  const effort = s.slice(at + 1);
-  return { model: model || undefined, effort: effort || undefined };
+  return enforceLatencyContract(agent, spec, parsed.latency);
 }
 
 function commandVersion(command: string): string | null {
@@ -351,47 +345,45 @@ export async function arena(
     new Date().toISOString().replace(/[:.]/g, "").slice(0, 15) + `-${specA}-vs-${specB}`.replace(/[^a-zA-Z0-9_-]/g, "_");
   // Runs live under the caller's working directory, not the package install.
   const runDir = path.resolve(process.cwd(), "runs", runId);
-  fs.mkdirSync(runDir, { recursive: true });
 
-  // Metadata-only preflight: for product-cpu specs, spawn a bridge, verify
-  // hello (policy/commit/dirty/tier), capture provenance, dispose — all
-  // BEFORE run.json is written, so provenance and names are settled first.
+  // Metadata-only preflight happens before the run directory exists.
   const productSpecs = [specA, specB].filter((s) => PRODUCT_CPU_SPEC.test(s));
-  let productCpuCtx: ProductCpuContext | undefined;
   let productProvenance: object | null = null;
   if (productSpecs.length > 0) {
-    productCpuCtx = productCpuContext(args);
-    const { preflightProductCpu } = require("./agents/productcpu") as typeof import("./agents/productcpu");
-    let hello: import("./agents/productcpu").BridgeHello | null = null;
-    for (const spec of productSpecs) {
-      const m = spec.match(PRODUCT_CPU_SPEC)!;
-      hello = await preflightProductCpu(
-        {
-          productRepo: productCpuCtx.productRepo,
-          expectedCommit: productCpuCtx.expectedCommit,
-          expectedPolicy: m[1],
+    try {
+      const { preflightProductCpu } = require("./agents/productcpu") as typeof import("./agents/productcpu");
+      let hello: import("./agents/productcpu").BridgeHello | null = null;
+      for (const spec of productSpecs) {
+        const m = spec.match(PRODUCT_CPU_SPEC)!;
+        assertBundledProductCpuRole(m[1], "play");
+        hello = await preflightProductCpu(
+          { expectedPolicy: m[1] },
+          m[2]
+        );
+      }
+      productProvenance = {
+        policy_version: hello!.policy_version,
+        product_commit: hello!.product_commit,
+        distribution: hello!.distribution,
+        python: hello!.python,
+        protocol: hello!.protocol,
+        teams: {
+          A: PRODUCT_CPU_SPEC.test(specA)
+            ? { spec: specA, level_id: specA.match(PRODUCT_CPU_SPEC)![2] }
+            : null,
+          B: PRODUCT_CPU_SPEC.test(specB)
+            ? { spec: specB, level_id: specB.match(PRODUCT_CPU_SPEC)![2] }
+            : null,
         },
-        m[2]
+      };
+    } catch (error) {
+      throw new MatchPreflightError(
+        error instanceof Error ? error.message : String(error)
       );
     }
-    productProvenance = {
-      policy_version: hello!.policy_version,
-      product_commit: hello!.product_commit,
-      python: hello!.python,
-      protocol: hello!.protocol,
-      product_repo: productCpuCtx.productRepo,
-      dirty: hello!.product_dirty,
-      teams: {
-        A: PRODUCT_CPU_SPEC.test(specA)
-          ? { spec: specA, level_id: specA.match(PRODUCT_CPU_SPEC)![2] }
-          : null,
-        B: PRODUCT_CPU_SPEC.test(specB)
-          ? { spec: specB, level_id: specB.match(PRODUCT_CPU_SPEC)![2] }
-          : null,
-      },
-    };
   }
 
+  fs.mkdirSync(runDir, { recursive: true });
   fs.writeFileSync(
     path.join(runDir, "run.json"),
     JSON.stringify(
@@ -439,7 +431,7 @@ export async function arena(
   const makePair = async (g: number): Promise<ArenaGamePair> => {
     const swapped = swap && g % 2 === 1;
     const gameSeed = seed + g * 1000;
-    const ctx = { runDir, productCpu: productCpuCtx };
+    const ctx = { runDir };
     const first = await makeAgent(swapped ? specB : specA, gameSeed + 1, ctx);
     let second: Agent;
     try {
@@ -594,11 +586,9 @@ async function main(): Promise<void> {
     const oracleSpec = String(args["oracle"] ?? "product-cpu:cpu-v4:level_5");
     const m = oracleSpec.match(PRODUCT_CPU_SPEC);
     if (!m) throw new Error(`--oracle must be a product-cpu spec, got: ${oracleSpec}`);
-    const ctx = productCpuContext(args);
+    assertBundledProductCpuRole(m[1], "regret");
     const { analyzeRunRegret } = require("./regret") as typeof import("./regret");
     const summary = await analyzeRunRegret(runDir, {
-      productRepo: ctx.productRepo,
-      expectedCommit: ctx.expectedCommit,
       expectedPolicy: m[1],
       oracleLevelId: m[2],
     });
@@ -635,7 +625,7 @@ async function main(): Promise<void> {
     );
   } else {
     console.log(
-      "usage:\n  laplacebench play                                 (interactive: pick providers, models, effort)\n  laplacebench play --team-a <spec> --team-b <spec> [--games N] [--swap] [--serial] [--seed N] [--run-id <id>] [--submit] [--max-plies N] [--output-token-budget N] [--turn-timeout-ms N]\n                                                    (non-interactive: --team-a and --team-b are required; anything else supplied is not asked for)\n  laplacebench summarize <runDir>\n  laplacebench regret <runDir> [--oracle product-cpu:cpu-v4:level_5]  (offline per-move regret vs frozen product oracle)\n  laplacebench export-web <runDir> [--out <dir>]   (verify + local replay JSON)\n  laplacebench verify <runDir...>                  (deterministic replay verification)\n  laplacebench submit <runDir>                     (verify + publish to the community ledger; needs gh auth)\n  laplacebench standings <runDir...> [--out <md>] [--json-out <json>]  (temporary v2 compatibility output)\n  laplacebench public-arena <runDir...> --out <dir> --source-sha <sha> --generated-at <time>  (CI artifact generator)\n\nmatch resources:\n  --serial                 run multiple games sequentially (default: parallel when --games > 1; learning agents always run sequentially)\n  --output-token-budget N  per team/game, in-game output tokens; default 250000 for LLM matches (canonical envelope), none for baseline-only\n  --turn-timeout-ms N      shared across both attempts in a turn; default 1200000 for LLM matches (backstop), 300000 otherwise\n  --max-plies N            default 100 (canonical cap for laplace-8x8-v1 matches)\n\nproduct CPU (play + regret):\n  --product-repo <path>    product checkout (or env LAPLACE_PRODUCT_REPO)\n  --product-commit <sha>   required commit pin (or env LAPLACE_PRODUCT_COMMIT)\n\n" +
+      "usage:\n  laplacebench play                                 (interactive: pick providers, models, effort)\n  laplacebench play --team-a <spec> --team-b <spec> [--games N] [--swap] [--serial] [--seed N] [--run-id <id>] [--submit] [--max-plies N] [--output-token-budget N] [--turn-timeout-ms N]\n                                                    (non-interactive: --team-a and --team-b are required; anything else supplied is not asked for)\n  laplacebench summarize <runDir>\n  laplacebench regret <runDir> [--oracle product-cpu:cpu-v4:level_5]  (offline per-move regret vs frozen product oracle)\n  laplacebench export-web <runDir> [--out <dir>]   (verify + local replay JSON)\n  laplacebench verify <runDir...>                  (deterministic replay verification)\n  laplacebench submit <runDir>                     (verify + publish to the community ledger; needs gh auth)\n  laplacebench standings <runDir...> [--out <md>] [--json-out <json>]  (temporary v2 compatibility output)\n  laplacebench public-arena <runDir...> --out <dir> --source-sha <sha> --generated-at <time>  (CI artifact generator)\n\nmatch resources:\n  --serial                 run multiple games sequentially (default: parallel when --games > 1; learning agents always run sequentially)\n  --output-token-budget N  per team/game, in-game output tokens; default 250000 for LLM matches (canonical envelope), none for baseline-only\n  --turn-timeout-ms N      shared across both attempts in a turn; default 1200000 for LLM matches (backstop), 300000 otherwise\n  --max-plies N            default 100 (canonical cap for laplace-8x8-v1 matches)\n\nproduct CPU (play + regret):\n  bundled in the package; Python 3.11+ is required (no product checkout or commit input)\n\n" +
         usageAgentSpecsLine() +
         "\n  (claude-cli/codex-cli run under your Claude/ChatGPT subscription — no API key)"
     );

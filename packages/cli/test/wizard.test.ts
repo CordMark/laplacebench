@@ -1,13 +1,16 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import * as path from "node:path";
 import test from "node:test";
 import {
   MODEL_SHORTHAND,
+  CODEX_MODELS,
   PRODUCT_CPU_POLICY,
   PROVIDERS,
   usageAgentSpecsLine,
 } from "../src/catalog";
 import { arenaDefaults, isLlmSpec } from "../src/cli";
+import { MatchPreflightError } from "../src/playerrors";
 import {
   isCancelled,
   makePromptIO,
@@ -44,7 +47,15 @@ test("catalog specs agree with the resolvers", () => {
   }
   // effort labeling flows into the spec (condition-label auto consistency)
   const claude = PROVIDERS.find((p) => p.key === "claude-cli")!;
+  const codex = PROVIDERS.find((p) => p.key === "codex-cli")!;
+  assert.deepEqual(claude.efforts, ["low", "medium", "high", "xhigh"]);
+  assert.deepEqual(codex.efforts, ["low", "medium", "high"]);
+  assert.deepEqual(codex.models, CODEX_MODELS);
+  assert.equal(codex.models[0].value, "gpt-5.6-sol");
+  assert.ok(codex.models.every((model) => model.value !== ""));
+  assert.ok([...claude.efforts, ...codex.efforts].every(Boolean));
   assert.equal(claude.buildSpec("claude-opus-5", "high"), "claude-cli:claude-opus-5@high");
+  // Historical/free-form effort-less specs remain readable; the menu no longer generates them.
   assert.equal(claude.buildSpec("claude-opus-5", ""), "claude-cli:claude-opus-5");
   // baselines are random/greedy only (takeshi deliberately unlisted)
   const baseline = PROVIDERS.find((p) => p.key === "baseline")!;
@@ -81,6 +92,10 @@ test("published model choices are full ids, never ambiguous shorthands", () => {
       assert.match(m.value, /^claude-[a-z]+-[\d-]+$/, `${key}: ${m.value}`);
     }
   }
+  const codex = PROVIDERS.find((p) => p.key === "codex-cli")!;
+  for (const model of codex.models) {
+    assert.match(model.value, /^gpt-[a-z0-9.-]+$/, `codex-cli: ${model.value}`);
+  }
   // Newest first, so the current flagship is the default selection.
   assert.equal(PROVIDERS.find((p) => p.key === "claude-cli")!.models[0].value, "claude-opus-5");
   // Shorthands survive as a typing convenience for the API track only.
@@ -94,8 +109,8 @@ test("published model choices are full ids, never ambiguous shorthands", () => {
 interface ScriptedIO extends WizardIO {
   printed: string[];
   prompts: Array<
-    | { kind: "select"; title: string; options: string[] }
-    | { kind: "input"; title: string }
+    | { kind: "select"; title: string; options: string[]; initial: number }
+    | { kind: "input"; title: string; initial?: string }
   >;
   assertDone(): void;
 }
@@ -115,17 +130,17 @@ function scriptedIO(answers: (number | string)[]): ScriptedIO {
     assertDone() {
       assert.deepEqual(queue, [], `unused scripted answers: ${JSON.stringify(queue)}`);
     },
-    async select(title, options) {
-      seenPrompts.push({ kind: "select", title, options: [...options] });
+    async select(title, options, initial = 0) {
+      seenPrompts.push({ kind: "select", title, options: [...options], initial });
       const v = next();
       if (typeof v !== "number") throw new Error(`expected select answer, got ${v}`);
       return v;
     },
     async input(prompt, def) {
-      seenPrompts.push({ kind: "input", title: prompt });
+      seenPrompts.push({ kind: "input", title: prompt, initial: def });
       const v = next();
       if (typeof v !== "string") throw new Error(`expected input answer, got ${v}`);
-      return v === "" && def !== undefined ? def : v;
+      return v;
     },
     print(line) {
       printed.push(line);
@@ -134,7 +149,7 @@ function scriptedIO(answers: (number | string)[]): ScriptedIO {
 }
 
 const okDeps = {
-  env: { LAPLACE_PRODUCT_REPO: "/repo", LAPLACE_PRODUCT_COMMIT: "abc123" } as NodeJS.ProcessEnv,
+  env: {} as NodeJS.ProcessEnv,
   checkCommand: () => ({ ok: true, version: "1.0-test" }),
   randomSeed: () => 4242,
 };
@@ -218,11 +233,11 @@ test("wizard flow: claude-cli:opus@high vs product-cpu level_3 with canonical pr
   const io = scriptedIO([
     providerIndex("claude-cli"), // Team A provider
     0, // model: Opus 5 (newest first)
-    3, // effort: ["", low, medium, high, xhigh] -> index 3 = high
+    2, // effort: [low, medium, high, xhigh] -> index 2 = high
     providerIndex("product-cpu"), // Team B provider
     2, // level_3
     0, // games preset: canonical 2+swap
-    0, // 自動提出: しない
+    1, // 自動提出: しない
   ]);
   const result = await runWizardFlow(io, okDeps);
   io.assertDone();
@@ -233,8 +248,7 @@ test("wizard flow: claude-cli:opus@high vs product-cpu level_3 with canonical pr
   assert.equal(plan.games, 2);
   assert.equal(plan.swap, true);
   assert.equal(plan.seed, 4242);
-  assert.equal(plan.extraArgs["product-repo"], "/repo");
-  assert.equal(plan.extraArgs["product-commit"], "abc123");
+  assert.equal(io.prompts.some((prompt) => prompt.kind === "input"), false);
   assert.deepEqual(io.prompts.map(({ kind, title }) => ({ kind, title })), [
     { kind: "select", title: "Team A のAIを選択:" },
     { kind: "select", title: "モデル:" },
@@ -249,36 +263,39 @@ test("wizard flow: claude-cli:opus@high vs product-cpu level_3 with canonical pr
   assert.deepEqual(presetPrompt?.kind === "select" ? presetPrompt.options : [], [
     "2局・先後交代（推奨）",
     "詳細設定",
+    "← 前の項目に戻る",
   ]);
   const submitPrompt = io.prompts.find(
     (prompt) => prompt.title === "終了後に公開台帳へ自動提出しますか?"
   );
   assert.equal(submitPrompt?.kind, "select");
   assert.deepEqual(submitPrompt?.kind === "select" ? submitPrompt.options : [], [
-    "今回は提出しない",
     "GitHubで公開提出する（検証後、自動マージ）",
+    "今回は提出しない",
+    "← 前の項目に戻る",
   ]);
+  assert.equal(submitPrompt?.kind === "select" ? submitPrompt.initial : -1, 1);
   assert.doesNotMatch(JSON.stringify(io.prompts), /スワップあり|推奨=正準ペア|カスタム/);
   assert.ok(!plan.summaryLines.join("\n").includes("seed="));
 });
 
-test("wizard flow: default effort omits @effort; custom model input works", async () => {
+test("wizard flow: explicit effort and custom model input work", async () => {
   const io = scriptedIO([
     providerIndex("claude-cli"),
     5, // (手入力) — after the five published models
     "my-custom-model", // custom model input
-    0, // effort default
+    0, // effort low
     providerIndex("baseline"),
     1, // greedy
     1, // games: custom
     "4", // games count
     0, // swap: あり
-    0, // 自動提出: しない
+    1, // 自動提出: しない
   ]);
   const result = await runWizardFlow(io, okDeps, { seed: "777" });
   io.assertDone();
   const plan = result as WizardPlan;
-  assert.equal(plan.specA, "claude-cli:my-custom-model");
+  assert.equal(plan.specA, "claude-cli:my-custom-model@low");
   assert.equal(plan.specB, "greedy");
   assert.equal(plan.games, 4);
   assert.equal(plan.seed, 777);
@@ -287,8 +304,101 @@ test("wizard flow: default effort omits @effort; custom model input works", asyn
   assert.deepEqual(sidePrompt?.kind === "select" ? sidePrompt.options : [], [
     "先後を交代する",
     "固定する",
+    "← 前の項目に戻る",
   ]);
   assert.doesNotMatch(JSON.stringify(io.prompts), /サイドスワップ|あり|なし/);
+});
+
+test("back navigation exits custom text without a value and revises the prior model", async () => {
+  const io = scriptedIO([
+    providerIndex("claude-cli"),
+    5, // custom model
+    "", // empty Enter -> back to model choice
+    0, // use Opus 5 instead
+    2, // high effort
+    providerIndex("baseline"),
+    1, // greedy
+    0, // canonical preset
+    1, // do not submit
+  ]);
+  const plan = (await runWizardFlow(io, okDeps)) as WizardPlan;
+  io.assertDone();
+  assert.equal(plan.specA, "claude-cli:claude-opus-5@high");
+  assert.equal(plan.specB, "greedy");
+  assert.ok(io.prompts.some((prompt) => prompt.kind === "input" && /空のままEnterで戻る/.test(prompt.title)));
+});
+
+test("back navigation preserves independent detailed settings and their cursor defaults", async () => {
+  const io = scriptedIO([
+    providerIndex("baseline"), 0,
+    providerIndex("baseline"), 1,
+    1, // detailed
+    "4",
+    1, // fixed sides
+    2, // submit -> back
+    2, // swap -> back
+    "", // games -> back to preset
+    1, // detailed again
+    "4",
+    1, // fixed sides again
+    1, // do not submit
+  ]);
+  const plan = (await runWizardFlow(io, okDeps)) as WizardPlan;
+  io.assertDone();
+  assert.equal(plan.games, 4);
+  assert.equal(plan.swap, false);
+  const presets = io.prompts.filter((prompt) => prompt.kind === "select" && prompt.title === "対局数:");
+  assert.equal(presets.at(-1)?.kind === "select" ? presets.at(-1)!.initial : -1, 1);
+  const gamesInputs = io.prompts.filter((prompt) => prompt.kind === "input" && prompt.title.startsWith("対局数"));
+  assert.equal(gamesInputs.at(-1)?.kind === "input" ? gamesInputs.at(-1)!.initial : undefined, "4");
+  const swaps = io.prompts.filter((prompt) => prompt.kind === "select" && prompt.title === "先後:");
+  assert.equal(swaps.at(-1)?.kind === "select" ? swaps.at(-1)!.initial : -1, 1);
+});
+
+test("changing Team A invalidates only its dependent values and preserves Team B", async () => {
+  const io = scriptedIO([
+    providerIndex("claude-cli"), 0, 2, // A Opus high
+    providerIndex("baseline"), 1, // B greedy
+    0, // canonical
+    2, // submit -> back
+    2, // preset -> back
+    2, // B model -> back
+    PROVIDERS.length, // B provider -> back
+    4, // A effort -> back
+    6, // A model -> back
+    providerIndex("codex-cli"), // change provider
+    0, // Codex flagship model (Claude model was invalidated)
+    2, // high effort was compatible and is still the initial value
+    providerIndex("baseline"), // retained B provider
+    1, // retained greedy model
+    0,
+    1,
+  ]);
+  const plan = (await runWizardFlow(io, okDeps)) as WizardPlan;
+  io.assertDone();
+  assert.equal(plan.specA, "codex-cli:gpt-5.6-sol@high");
+  assert.equal(plan.specB, "greedy");
+  const bProviders = io.prompts.filter(
+    (prompt) => prompt.kind === "select" && prompt.title === "Team B のAIを選択:"
+  );
+  assert.equal(bProviders.at(-1)?.kind === "select" ? bProviders.at(-1)!.initial : -1, providerIndex("baseline"));
+  const efforts = io.prompts.filter((prompt) => prompt.kind === "select" && prompt.title === "effort:");
+  assert.equal(efforts.at(-1)?.kind === "select" ? efforts.at(-1)!.initial : -1, 2);
+});
+
+test("first editable text step has no nonexistent back target", async () => {
+  const io = scriptedIO(["", "3"]);
+  const plan = (await runWizardFlow(io, okDeps, {
+    "team-a": "random",
+    "team-b": "greedy",
+    swap: true,
+    submit: true,
+  })) as WizardPlan;
+  io.assertDone();
+  assert.equal(plan.games, 3);
+  assert.equal(plan.autoSubmit, true);
+  assert.equal(io.printed.filter((line) => line === "整数を入力してください").length, 1);
+  assert.equal(io.prompts[0].kind === "input" ? io.prompts[0].title : "", "対局数:");
 });
 
 test("wizard flow: baseline vs baseline passes with no auth requirements", async () => {
@@ -296,7 +406,7 @@ test("wizard flow: baseline vs baseline passes with no auth requirements", async
     providerIndex("baseline"), 0, // random
     providerIndex("baseline"), 1, // greedy
     0, // canonical preset
-    0, // 自動提出: しない
+    1, // 自動提出: しない
   ]);
   const deps = { ...okDeps, checkCommand: () => ({ ok: false }) }; // no CLIs at all
   const result = await runWizardFlow(io, deps);
@@ -311,10 +421,10 @@ test("auth gate: missing claude CLI loops until recheck succeeds", async () => {
     checkCommand: () => (ok ? { ok: true, version: "v" } : { ok: false }),
   };
   const io = scriptedIO([
-    providerIndex("claude-cli"), 0, 0, // A: claude-cli Opus 5, default effort
+    providerIndex("claude-cli"), 0, 0, // A: claude-cli Opus 5, low effort
     providerIndex("baseline"), 0, // B: random
     0, // canonical preset
-    0, // 自動提出: しない
+    1, // 自動提出: しない
     0, // auth failed -> 再チェック (wrapper flips ok before the next pass)
   ]);
   // flip ok to true after the first recheck request
@@ -337,8 +447,8 @@ test("auth gate: 中止 returns cancelled and arena is never called", async () =
   const io = scriptedIO([
     providerIndex("claude-cli"), 0, 0,
     providerIndex("baseline"), 0,
-    0, 0,
-    1, // 中止
+    0, 1,
+    2, // 中止
   ]);
   const result = await runWizardFlow(io, deps);
   io.assertDone();
@@ -349,8 +459,8 @@ test("auth gate: 中止 returns cancelled and arena is never called", async () =
   const runIO = scriptedIO([
     providerIndex("claude-cli"), 0, 0,
     providerIndex("baseline"), 0,
-    0, 0,
-    1, // 中止
+    0, 1,
+    2, // 中止
   ]);
   const code = await runPlay(
     {
@@ -372,20 +482,57 @@ test("auth gate: 中止 returns cancelled and arena is never called", async () =
   assert.equal(arenaCalled, false);
 });
 
-test("wizard flow: product-cpu env missing prompts for path/commit", async () => {
+test("auth failure can return to editable settings but never exposes complete flags", async () => {
+  const missing = { ...okDeps, checkCommand: () => ({ ok: false }) };
+  const partial = scriptedIO([
+    providerIndex("baseline"), 0, // editable Team B
+    0, // canonical
+    1, // do not submit
+    1, // auth -> settings
+    2, // submit -> back
+    0, // canonical again
+    1, // do not submit
+    2, // auth -> cancel
+  ]);
+  const partialResult = await runWizardFlow(partial, missing, {
+    "team-a": "claude-cli:claude-opus-5@high",
+  });
+  partial.assertDone();
+  assert.ok(isCancelled(partialResult));
+  const partialAuth = partial.prompts.filter(
+    (prompt) => prompt.kind === "select" && prompt.title === "解決後に再チェックしますか?"
+  );
+  assert.deepEqual(partialAuth[0].kind === "select" ? partialAuth[0].options : [], [
+    "再チェック", "設定に戻る", "中止",
+  ]);
+
+  const fixed = scriptedIO([1]); // retry / cancel; no settings-back
+  const fixedResult = await runWizardFlow(fixed, missing, {
+    "team-a": "claude-cli:claude-opus-5@high",
+    "team-b": "greedy",
+    games: "2",
+    swap: true,
+    submit: true,
+  });
+  fixed.assertDone();
+  assert.ok(isCancelled(fixedResult));
+  const fixedAuth = fixed.prompts[0];
+  assert.deepEqual(fixedAuth.kind === "select" ? fixedAuth.options : [], ["再チェック", "中止"]);
+});
+
+test("wizard flow: bundled product-cpu never prompts for checkout or commit", async () => {
   const deps = { ...okDeps, env: {} as NodeJS.ProcessEnv };
   const io = scriptedIO([
     providerIndex("product-cpu"), 4, // level_5
     providerIndex("baseline"), 0,
     0, 0,
-    "/typed/repo", // product path input
-    "deadbeef", // commit input
   ]);
   const result = await runWizardFlow(io, deps);
   io.assertDone();
   const plan = result as WizardPlan;
-  assert.equal(plan.extraArgs["product-repo"], "/typed/repo");
-  assert.equal(plan.extraArgs["product-commit"], "deadbeef");
+  assert.equal(plan.specA, `product-cpu:${PRODUCT_CPU_POLICY}:level_5`);
+  assert.equal(io.prompts.some((prompt) => prompt.kind === "input"), false);
+  assert.doesNotMatch(io.printed.join("\n"), /checkout|commit pin|LAPLACE_PRODUCT/);
 });
 
 // ---------------------------------------------------------------------------
@@ -397,7 +544,7 @@ test("runPlay passes an explicit run-id and prints submission guidance with it",
   const io = scriptedIO([
     providerIndex("baseline"), 0,
     providerIndex("baseline"), 1,
-    0, 0, // 自動提出: しない
+    0, 1, // 自動提出: しない
   ]);
   const code = await runPlay(
     {
@@ -433,7 +580,7 @@ test("opting into auto-submit publishes the run instead of printing instructions
     providerIndex("baseline"), 0,
     providerIndex("baseline"), 1,
     0,
-    1, // 自動提出: する
+    0, // 自動提出: する
   ]);
   const now = new Date("2026-07-25T12:00:00Z");
   const code = await runPlay(
@@ -463,7 +610,7 @@ test("canonical two-game play waits for the whole set and submits exactly once",
     providerIndex("baseline"), 0,
     providerIndex("baseline"), 1,
     0, // canonical two-game preset
-    1, // auto-submit
+    0, // auto-submit
   ]);
   const play = runPlay(
     {
@@ -498,7 +645,7 @@ test("a failed canonical set is never submitted", async () => {
     providerIndex("baseline"), 0,
     providerIndex("baseline"), 1,
     0, // canonical two-game preset
-    1, // auto-submit
+    0, // auto-submit
   ]);
   await assert.rejects(
     runPlay(
@@ -521,12 +668,38 @@ test("a failed canonical set is never submitted", async () => {
   assert.equal(submitCount, 0);
 });
 
+test("an expected match preflight refusal is concise and never submitted", async () => {
+  let submitCount = 0;
+  const io = scriptedIO([
+    providerIndex("product-cpu"), 0,
+    providerIndex("baseline"), 0,
+    0,
+    1,
+  ]);
+  const code = await runPlay(
+    {
+      ...okDeps,
+      runArena: async () => {
+        throw new MatchPreflightError("Python 3.11以上が必要です。対局は開始していません。");
+      },
+      submitRun: () => { submitCount++; },
+      isTTY: true,
+      now: () => new Date("2026-07-28T00:00:00Z"),
+    },
+    io
+  );
+  io.assertDone();
+  assert.equal(code, 1);
+  assert.equal(submitCount, 0);
+  assert.match(io.printed.join("\n"), /対局を開始できません: Python 3\.11以上/);
+});
+
 test("a failed auto-submit falls back to the manual route instead of throwing", async () => {
   const io = scriptedIO([
     providerIndex("baseline"), 0,
     providerIndex("baseline"), 1,
     0,
-    1, // 自動提出: する
+    0, // 自動提出: する
   ]);
   const code = await runPlay(
     {
@@ -553,7 +726,7 @@ test("the auto-submit choice is asked once, up front, and defaults to off", asyn
     providerIndex("baseline"), 0,
     providerIndex("baseline"), 1,
     0,
-    0, // 自動提出: しない
+    1, // 自動提出: しない
   ]);
   const plan = (await runWizardFlow(io, okDeps)) as WizardPlan;
   io.assertDone();
@@ -590,13 +763,13 @@ test("CLI help output is generated from the catalog and exits 1", () => {
   let out = "";
   let status = 0;
   try {
-    out = execFileSync("node", ["bin/laplacebench.js", "definitely-unknown-cmd"], {
+    out = execFileSync("node", [path.join(__dirname, "..", "bin", "laplacebench.js"), "definitely-unknown-cmd"], {
       encoding: "utf8",
     });
   } catch (err: unknown) {
-    const e = err as { status: number; stdout: string };
+    const e = err as { status: number; stdout: string; stderr: string };
     status = e.status;
-    out = e.stdout ?? "";
+    out = `${e.stdout ?? ""}${e.stderr ?? ""}`;
   }
   assert.equal(status, 1);
   assert.match(out, /laplacebench play/);
@@ -677,16 +850,13 @@ test("full-width normalization is limited to interactive integer prompts", async
     providerIndex("product-cpu"),
     0,
     0,
-    0,
-    "/tmp/１２",
-    "ａｂ１２",
+    1,
   ]);
   const deps = { ...okDeps, env: {} as NodeJS.ProcessEnv };
   const plan = (await runWizardFlow(io, deps)) as WizardPlan;
   io.assertDone();
-  assert.equal(plan.specA, "claude-cli:ｍｙ-model１２");
-  assert.equal(plan.extraArgs["product-repo"], "/tmp/１２");
-  assert.equal(plan.extraArgs["product-commit"], "ａｂ１２");
+  assert.equal(plan.specA, "claude-cli:ｍｙ-model１２@low");
+  assert.equal(io.prompts.filter((prompt) => prompt.kind === "input").length, 1);
 });
 
 // ---------------------------------------------------------------------------
@@ -819,28 +989,37 @@ test("headless: a missing provider CLI fails without prompting", async () => {
   assert.ok(io.printed.join("\n").includes("不足"));
 });
 
-test("headless: product-cpu pins are accepted from flags as well as env", async () => {
-  for (const [args, deps] of [
-    [
-      { "product-repo": "/from-flag", "product-commit": "deadbeef" },
-      headlessDeps({ env: {} as NodeJS.ProcessEnv }),
-    ],
-    [{}, headlessDeps()],
-  ] as const) {
-    let seen: Record<string, string | boolean> | null = null;
-    const code = await runPlay(
-      { ...deps, runArena: async (a) => { seen = a; return { failedGames: 0 }; } },
-      headlessIO(),
-      {
-        "team-a": `product-cpu:${PRODUCT_CPU_POLICY}:level_3`,
-        "team-b": "greedy",
-        ...args,
-      }
-    );
-    assert.equal(code, 0);
-    assert.ok(seen!["product-repo"], "the pin must reach the runner");
-    assert.ok(seen!["product-commit"]);
-  }
+test("headless: bundled product-cpu needs no checkout flags", async () => {
+  let seen: Record<string, string | boolean> | null = null;
+  const code = await runPlay(
+    { ...headlessDeps(), runArena: async (a) => { seen = a; return { failedGames: 0 }; } },
+    headlessIO(),
+    {
+      "team-a": `product-cpu:${PRODUCT_CPU_POLICY}:level_3`,
+      "team-b": "greedy",
+    }
+  );
+  assert.equal(code, 0);
+  assert.equal("product-repo" in seen!, false);
+  assert.equal("product-commit" in seen!, false);
+});
+
+test("retired product checkout flags are rejected before a match starts", async () => {
+  let ran = false;
+  const io = headlessIO();
+  const code = await runPlay(
+    { ...headlessDeps(), runArena: async () => { ran = true; return { failedGames: 0 }; } },
+    io,
+    {
+      "team-a": `product-cpu:${PRODUCT_CPU_POLICY}:level_3`,
+      "team-b": "greedy",
+      "product-repo": "/old",
+      "product-commit": "deadbeef",
+    }
+  );
+  assert.equal(code, 1);
+  assert.equal(ran, false);
+  assert.match(io.printed.join("\n"), /認識できないフラグ/);
 });
 
 test("interactive: supplied flags replace their prompts, the rest are still asked", async () => {
@@ -849,7 +1028,7 @@ test("interactive: supplied flags replace their prompts, the rest are still aske
   const io = scriptedIO([
     providerIndex("baseline"), 1, // Team B: greedy
     0,                            // games preset: canonical
-    0,                            // 自動提出: しない
+    1,                            // 自動提出: しない
   ]);
   let seen: Record<string, string | boolean> | null = null;
   const code = await runPlay(
@@ -948,7 +1127,7 @@ test("interactive: one of games/swap supplied still asks for the other", async (
   const gamesOnly = scriptedIO([
     providerIndex("baseline"), 1, // Team B
     0,                            // サイドスワップ: あり
-    0,                            // 自動提出: しない
+    1,                            // 自動提出: しない
   ]);
   let seen: Record<string, string | boolean> | null = null;
   assert.equal(
@@ -966,7 +1145,7 @@ test("interactive: one of games/swap supplied still asks for the other", async (
   const swapOnly = scriptedIO([
     providerIndex("baseline"), 1,
     "3",  // 対局数
-    0,    // 自動提出: しない
+    1,    // 自動提出: しない
   ]);
   seen = null;
   assert.equal(

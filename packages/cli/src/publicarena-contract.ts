@@ -79,6 +79,11 @@ export interface PublicGame {
   failures: { A: SideFailures; B: SideFailures };
   /** Null side = no usage telemetry reported (e.g. baseline agents). */
   team_tokens: { A: SideTokens | null; B: SideTokens | null };
+  /**
+   * Replay-validated average response latency per side and turn. Baselines do
+   * not report response latency; their side is null rather than a fabricated 0.
+   */
+  team_latency_ms: { A: number | null; B: number | null };
   replay: {
     id: string;
     bytes: number;

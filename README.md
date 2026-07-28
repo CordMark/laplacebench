@@ -185,8 +185,8 @@ replay JSON.
 - [Anchor ladder v1](docs/anchor-ladder-v1.md) — the fixed baseline ordering
   (random/greedy/center-greedy/takeshi:dN) used to keep ratings comparable
   as models come and go
-- [Product CPU adapter spec (design only)](docs/product-cpu-adapter-v1-spec.md)
-  — naming/interface prepared for importing a future product CPU baseline
+- [Bundled Product CPU adapter](docs/product-cpu-adapter-v1-spec.md)
+  — cpu-v6 play and the frozen cpu-v4 regret oracle ship with the CLI
 - [Model protocol schemas](schemas/)
 
 ## Status

@@ -1,0 +1,21 @@
+{
+  "schema": "laplace-bundled-product-cpu-index-v1",
+  "policies": {
+    "cpu-v4": {
+      "command_role": "regret",
+      "product_commit": "d316b30914cb49942486f744099468fe0561ea02",
+      "manifest_sha256": "8ed172c3ac50768484fa7cc9cdb49563dd2f35f46dec5386c2ebe079faf2ee43",
+      "visible_tiers_symbol": "CPU_V4_VISIBLE_TIERS",
+      "level_resolver_symbol": "get_cpu_level",
+      "bundle_dir": "generations/3a761dbac0c2fcf45b17f93c3fb57bd1f39a9a3101e258fc2fb73bd0663aab2f/cpu-v4"
+    },
+    "cpu-v6": {
+      "command_role": "play",
+      "product_commit": "101b739ff41a612c9b2c512d57d0a5ba4d233d47",
+      "manifest_sha256": "4743418e84d8d2072982d12e0d6fb39ec179430d2c8752c13492a2223d2e04a8",
+      "visible_tiers_symbol": "CPU_VISIBLE_TIERS",
+      "level_resolver_symbol": "get_cpu_level",
+      "bundle_dir": "generations/3a761dbac0c2fcf45b17f93c3fb57bd1f39a9a3101e258fc2fb73bd0663aab2f/cpu-v6"
+    }
+  }
+}

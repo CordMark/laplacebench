@@ -64,6 +64,11 @@ Regret values are comparable only within the same oracle generation
 
 ## Reproduce
 
+> **Current CLI note (2026-07-28):** cpu-v4 is now bundled as the frozen regret
+> oracle, so current `regret` commands need no checkout path or commit input.
+> The exports below are retained unchanged as the historical commands used to
+> produce this ladder before bundling.
+
 > **コマンド名について (2026-07-27)**: 以下は当時 `arena` で実行した記録であり、
 > 書き換えていない。現在の入口は `play` に統合されたが、`arena` は非推奨 alias
 > として残っているので**記載のコマンドはそのまま再現できる**。このラダーを

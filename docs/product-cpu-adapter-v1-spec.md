@@ -1,5 +1,18 @@
 # Product CPU adapter — naming and interface spec
 
+> **Revision 2026-07-28 — bundled policies, no runtime checkout.** The CLI now
+> ships two byte-exact, commit-addressed snapshots: cpu-v6 for `play` and the
+> frozen cpu-v4 Lv5 oracle for `regret`. A package-trusted policy index binds
+> each command role to its full product commit, manifest digest, and registry
+> symbols; each manifest binds the exact Python file set and SHA-256 digests.
+> The bridge verifies index → manifest → files before importing and records
+> `distribution: "bundled"`, policy, product commit, protocol, and Python
+> version. Users no longer supply a product checkout, path, environment
+> variable, commit pin, or dirty-tree state. Python 3.11+ remains required.
+> Play accepts only cpu-v6 and regret only cpu-v4; there is no latest-policy
+> fallback or external-checkout override. The 2026-07-24 revision and original
+> HTTP design below are retained as historical decisions where they conflict.
+
 > **Revision 2026-07-24 — implemented, transport changed to a local Python
 > bridge.** The naming convention below is unchanged and now live
 > (`product-cpu:cpu-v4:level_1` … `level_5`). The HTTP transport this spec
@@ -19,7 +32,7 @@
 > compat aliases are deliberately not exposed. See
 > `docs/plans/2026-07-24-product-cpu-import-and-regret.md`.
 
-Status: implemented (bridge transport). The remainder of this document is the
+Status: implemented (bundled bridge transport). The remainder of this document is the
 original 2026-07-23 design; sections that conflict with the revision note
 above are historical. This document exists so that
 when the product repository's CPU strengthening slice finishes

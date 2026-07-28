@@ -1,10 +1,11 @@
 import * as path from "node:path";
 import prompts from "prompts";
 import { PRODUCT_CPU_POLICY, PROVIDERS, type ProviderEntry } from "./catalog";
+import { MatchPreflightError } from "./playerrors";
 
 /** Injectable I/O so the whole flow is testable with scripted answers. */
 export interface WizardIO {
-  select(title: string, options: string[]): Promise<number>;
+  select(title: string, options: string[], initial?: number): Promise<number>;
   input(prompt: string, def?: string): Promise<string>;
   print(line: string): void;
 }
@@ -39,8 +40,6 @@ export interface WizardPlan {
   seed: number;
   /** Publish the finished run without a second prompt. */
   autoSubmit: boolean;
-  /** Extra arena args (e.g. product repo/commit collected interactively). */
-  extraArgs: Record<string, string>;
   summaryLines: string[];
 }
 
@@ -57,7 +56,7 @@ export function isCancelled(r: WizardResult): r is { cancelled: true } {
  */
 const VALUE_FLAGS = [
   "team-a", "team-b", "games", "seed", "max-plies", "output-token-budget",
-  "turn-timeout-ms", "run-id", "product-repo", "product-commit",
+  "turn-timeout-ms", "run-id",
 ] as const;
 
 /**
@@ -75,7 +74,7 @@ const INTEGER_FLAGS = [
 /**
  * Integer flags that must be positive. Checked here rather than left to the
  * runner: the contract is that bad input costs nothing, and reaching the
- * runner means the auth preflight already ran and "対局開始" was already
+ * runner means the auth preflight already ran and the settings were already
  * printed for a match that then dies.
  */
 const POSITIVE_FLAGS = [
@@ -141,10 +140,12 @@ async function promptInteger(
   io: WizardIO,
   prompt: string,
   def: string,
-  valid: (n: number) => boolean
-): Promise<number> {
+  valid: (n: number) => boolean,
+  allowBack = false
+): Promise<number | "back"> {
   for (;;) {
     const text = normalizePromptIntegerText(await io.input(prompt, def)).trim();
+    if (text === "" && allowBack) return "back";
     if (isIntegerText(text)) {
       const n = parseInt(text, 10);
       if (valid(n)) return n;
@@ -176,33 +177,52 @@ const AUTH_OWNER: Readonly<Record<string, string>> = {
   "claude-cli-learn": "claude-cli",
 };
 
-async function pickTeam(io: WizardIO, teamName: string): Promise<{ spec: string; provider: ProviderEntry }> {
-  const p = await io.select(
-    `Team ${teamName} のAIを選択:`,
-    PROVIDERS.map((x) => x.label)
+const BACK_LABEL = "← 前の項目に戻る";
+
+type TeamState = {
+  providerIndex: number;
+  model: string;
+  customModel: boolean;
+  customModelValue: string;
+  effort: string;
+};
+
+type Step =
+  | { kind: "provider" | "model" | "custom-model" | "effort"; team: "A" | "B" }
+  | { kind: "match-preset" | "games" | "swap" | "submit" };
+
+function initialTeam(): TeamState {
+  const provider = PROVIDERS[0];
+  return {
+    providerIndex: 0,
+    model: provider.models[0].value,
+    customModel: false,
+    customModelValue: "",
+    effort: provider.efforts[0] ?? "",
+  };
+}
+
+function teamProvider(state: TeamState): ProviderEntry {
+  return PROVIDERS[state.providerIndex];
+}
+
+function teamSpec(state: TeamState): string {
+  return teamProvider(state).buildSpec(
+    state.customModel ? state.customModelValue : state.model,
+    state.effort
   );
-  const provider = PROVIDERS[p];
+}
 
-  const modelOptions = provider.models.map((m) => m.label);
-  if (provider.allowCustomModel) modelOptions.push("(手入力)");
-  const mi = await io.select("モデル:", modelOptions);
-  let model: string;
-  if (provider.allowCustomModel && mi === provider.models.length) {
-    model = (await io.input("モデルIDを入力:")).trim();
-  } else {
-    model = provider.models[mi].value;
-  }
-
-  let effort = "";
-  if (provider.efforts.length > 1) {
-    const ei = await io.select(
-      "effort:",
-      provider.efforts.map((e) => (e === "" ? "default" : e))
-    );
-    effort = provider.efforts[ei];
-  }
-
-  return { spec: provider.buildSpec(model, effort), provider };
+async function selectStep(
+  io: WizardIO,
+  title: string,
+  options: string[],
+  initial: number,
+  allowBack: boolean
+): Promise<number | "back"> {
+  const shown = allowBack ? [...options, BACK_LABEL] : options;
+  const selected = await io.select(title, shown, Math.max(0, Math.min(initial, options.length - 1)));
+  return allowBack && selected === options.length ? "back" : selected;
 }
 
 /**
@@ -220,9 +240,9 @@ async function authGate(
   io: WizardIO,
   deps: WizardDeps,
   providers: ProviderEntry[],
-  extraArgs: Record<string, string>,
-  interactive = true
-): Promise<"ok" | "cancelled" | "failed"> {
+  interactive = true,
+  allowBack = false
+): Promise<"ok" | "back" | "cancelled" | "failed"> {
   for (;;) {
     const failures: string[] = [];
     io.print("── 認証チェック ──");
@@ -240,7 +260,6 @@ async function authGate(
         }
       }
       for (const envVar of p.auth.envVars) {
-        if (p.key === "product-cpu") continue; // handled below (interactive)
         if (deps.env[envVar]) {
           io.print(`  ✓ ${envVar}: 設定済み`);
         } else {
@@ -248,32 +267,7 @@ async function authGate(
           failures.push(envVar);
         }
       }
-      if (p.key === "product-cpu") {
-        const repo =
-          extraArgs["product-repo"] ?? deps.env.LAPLACE_PRODUCT_REPO ?? "";
-        const commit =
-          extraArgs["product-commit"] ?? deps.env.LAPLACE_PRODUCT_COMMIT ?? "";
-        if (repo && commit) {
-          extraArgs["product-repo"] = repo;
-          extraArgs["product-commit"] = commit;
-          io.print(`  ✓ product checkout: ${repo} @ ${commit.slice(0, 12)}`);
-        } else if (!interactive) {
-          io.print("  ✗ product checkout のパスとコミット pin が必要です (--product-repo / --product-commit または LAPLACE_PRODUCT_REPO / LAPLACE_PRODUCT_COMMIT)");
-          failures.push("product-cpu");
-        } else {
-          const r = (await io.input("product checkout のパス:", repo)).trim();
-          const c = (await io.input("pin するコミットSHA:", commit)).trim();
-          if (r && c) {
-            extraArgs["product-repo"] = r;
-            extraArgs["product-commit"] = c;
-            io.print(`  ✓ product checkout: ${r} @ ${c.slice(0, 12)}`);
-          } else {
-            io.print("  ✗ product checkout のパスとコミット pin が必要です");
-            failures.push("product-cpu");
-          }
-        }
-      }
-      if (p.auth.note && (p.auth.commands.length || p.auth.envVars.length)) {
+      if (p.auth.note) {
         io.print(`    (${p.auth.note})`);
       }
     }
@@ -282,11 +276,12 @@ async function authGate(
       io.print(`不足: ${failures.join(", ")} — 解決してから再実行してください。対局は開始していません。`);
       return "failed";
     }
-    const choice = await io.select("解決後に再チェックしますか?", [
-      "再チェック",
-      "中止",
-    ]);
-    if (choice === 1) return "cancelled";
+    const options = allowBack
+      ? ["再チェック", "設定に戻る", "中止"]
+      : ["再チェック", "中止"];
+    const choice = await io.select("解決後に再チェックしますか?", options, 0);
+    if (allowBack && choice === 1) return "back";
+    if (choice === options.length - 1) return "cancelled";
   }
 }
 
@@ -304,79 +299,196 @@ export async function runWizardFlow(
 ): Promise<WizardResult> {
   const flag = (key: string): string | undefined =>
     typeof args[key] === "string" ? (args[key] as string) : undefined;
-
-  const a = flag("team-a") !== undefined
-    ? { spec: flag("team-a")!, provider: providerFor(flag("team-a")!) }
-    : await pickTeam(io, "A");
-  const b = flag("team-b") !== undefined
-    ? { spec: flag("team-b")!, provider: providerFor(flag("team-b")!) }
-    : await pickTeam(io, "B");
-
-  // Resolved independently. Collapsing the two would let `play --games 4`
-  // silently decide side-swapping, which the player never chose.
+  const teamAFlag = flag("team-a");
+  const teamBFlag = flag("team-b");
   const gamesFlag = flag("games");
   const swapFlag = args["swap"] === true ? true : undefined;
-  let games = gamesFlag !== undefined ? parseInt(gamesFlag, 10) : 2;
-  let swap = swapFlag ?? false;
-  if (interactive && gamesFlag === undefined && swapFlag === undefined) {
-    // Neither supplied: the canonical preset still answers both at once.
-    const preset = await io.select("対局数:", [
-      "2局・先後交代（推奨）",
-      "詳細設定",
-    ]);
-    swap = true;
-    if (preset === 1) {
-      games = await promptInteger(io, "対局数:", "2", (n) => n >= 1);
-      swap = (await io.select("先後:", ["先後を交代する", "固定する"])) === 0;
-    }
-  } else if (interactive) {
-    // One was supplied: ask for the other rather than assuming it.
-    if (gamesFlag === undefined) {
-      games = await promptInteger(io, "対局数:", "2", (n) => n >= 1);
-    }
-    if (swapFlag === undefined) {
-      swap = (await io.select("先後:", ["先後を交代する", "固定する"])) === 0;
-    }
-  }
-  if (!Number.isSafeInteger(games) || games < 1) {
-    io.print("--games は 1 以上の整数で指定してください");
-    return { cancelled: true };
+  const submitFlag = args["submit"] === true ? true : undefined;
+
+  if (!interactive) {
+    const a = { spec: teamAFlag!, provider: providerFor(teamAFlag!) };
+    const b = { spec: teamBFlag!, provider: providerFor(teamBFlag!) };
+    const games = gamesFlag === undefined ? 2 : parseInt(gamesFlag, 10);
+    const swap = swapFlag ?? false;
+    const gate = await authGate(io, deps, [a.provider, b.provider], false);
+    if (gate !== "ok") return { cancelled: true };
+    const seed = flag("seed") === undefined ? deps.randomSeed() : parseInt(flag("seed")!, 10);
+    const summaryLines = [
+      `Team A: ${a.spec}`,
+      `Team B: ${b.spec}`,
+      `games=${games} swap=${swap ? "on" : "off"} seed=${seed}`,
+      `自動提出: ${submitFlag ? "する" : "しない"}`,
+    ];
+    return { specA: a.spec, specB: b.spec, games, swap, seed, autoSubmit: submitFlag ?? false, summaryLines };
   }
 
+  const teams: Record<"A" | "B", TeamState> = { A: initialTeam(), B: initialTeam() };
+  let detailed = false;
+  let customGames = gamesFlag === undefined ? 2 : parseInt(gamesFlag, 10);
+  let customSwap = swapFlag ?? true;
+  let autoSubmit = submitFlag ?? false;
+
+  const steps = (): Step[] => {
+    const result: Step[] = [];
+    for (const team of ["A", "B"] as const) {
+      if ((team === "A" ? teamAFlag : teamBFlag) !== undefined) continue;
+      const state = teams[team];
+      const provider = teamProvider(state);
+      result.push({ kind: "provider", team }, { kind: "model", team });
+      if (state.customModel) result.push({ kind: "custom-model", team });
+      if (provider.efforts.length > 0) result.push({ kind: "effort", team });
+    }
+    if (gamesFlag === undefined && swapFlag === undefined) {
+      result.push({ kind: "match-preset" });
+      if (detailed) result.push({ kind: "games" }, { kind: "swap" });
+    } else {
+      if (gamesFlag === undefined) result.push({ kind: "games" });
+      if (swapFlag === undefined) result.push({ kind: "swap" });
+    }
+    if (submitFlag === undefined) result.push({ kind: "submit" });
+    return result;
+  };
+
+  let position = 0;
+  for (;;) {
+    const currentSteps = steps();
+    if (position >= currentSteps.length) {
+      const providers = [
+        teamAFlag === undefined ? teamProvider(teams.A) : providerFor(teamAFlag),
+        teamBFlag === undefined ? teamProvider(teams.B) : providerFor(teamBFlag),
+      ];
+      const gate = await authGate(io, deps, providers, true, currentSteps.length > 0);
+      if (gate === "back") {
+        position = currentSteps.length - 1;
+        continue;
+      }
+      if (gate !== "ok") return { cancelled: true };
+      break;
+    }
+
+    const step = currentSteps[position];
+    const allowBack = position > 0;
+    let goBack = false;
+    if (step.kind === "provider") {
+      const state = teams[step.team];
+      const selected = await selectStep(
+        io,
+        `Team ${step.team} のAIを選択:`,
+        PROVIDERS.map((provider) => provider.label),
+        state.providerIndex,
+        allowBack
+      );
+      if (selected === "back") goBack = true;
+      else if (selected !== state.providerIndex) {
+        const next = PROVIDERS[selected];
+        state.providerIndex = selected;
+        if (!next.models.some((model) => model.value === state.model) || state.customModel) {
+          state.model = next.models[0].value;
+          state.customModel = false;
+          state.customModelValue = "";
+        }
+        if (!next.efforts.includes(state.effort)) state.effort = next.efforts[0] ?? "";
+      }
+    } else if (step.kind === "model") {
+      const state = teams[step.team];
+      const provider = teamProvider(state);
+      const options = provider.models.map((model) => model.label);
+      if (provider.allowCustomModel) options.push("(手入力)");
+      const current = state.customModel
+        ? provider.models.length
+        : Math.max(0, provider.models.findIndex((model) => model.value === state.model));
+      const selected = await selectStep(io, "モデル:", options, current, allowBack);
+      if (selected === "back") goBack = true;
+      else if (provider.allowCustomModel && selected === provider.models.length) {
+        state.customModel = true;
+      } else {
+        state.model = provider.models[selected].value;
+        state.customModel = false;
+      }
+    } else if (step.kind === "custom-model") {
+      const state = teams[step.team];
+      const value = (await io.input(
+        allowBack ? "モデルIDを入力（空のままEnterで戻る）:" : "モデルIDを入力:",
+        state.customModelValue || undefined
+      )).trim();
+      if (value === "" && allowBack) goBack = true;
+      else if (value === "") io.print("モデルIDを入力してください");
+      else state.customModelValue = value;
+    } else if (step.kind === "effort") {
+      const state = teams[step.team];
+      const provider = teamProvider(state);
+      const initial = Math.max(0, provider.efforts.indexOf(state.effort));
+      const selected = await selectStep(io, "effort:", provider.efforts, initial, allowBack);
+      if (selected === "back") goBack = true;
+      else state.effort = provider.efforts[selected];
+    } else if (step.kind === "match-preset") {
+      const selected = await selectStep(
+        io,
+        "対局数:",
+        ["2局・先後交代（推奨）", "詳細設定"],
+        detailed ? 1 : 0,
+        allowBack
+      );
+      if (selected === "back") goBack = true;
+      else detailed = selected === 1;
+    } else if (step.kind === "games") {
+      const selected = await promptInteger(
+        io,
+        allowBack ? "対局数（空のままEnterで戻る）:" : "対局数:",
+        String(customGames),
+        (value) => value >= 1,
+        allowBack
+      );
+      if (selected === "back") goBack = true;
+      else customGames = selected;
+    } else if (step.kind === "swap") {
+      const selected = await selectStep(
+        io,
+        "先後:",
+        ["先後を交代する", "固定する"],
+        customSwap ? 0 : 1,
+        allowBack
+      );
+      if (selected === "back") goBack = true;
+      else customSwap = selected === 0;
+    } else {
+      const selected = await selectStep(
+        io,
+        "終了後に公開台帳へ自動提出しますか?",
+        ["GitHubで公開提出する（検証後、自動マージ）", "今回は提出しない"],
+        autoSubmit ? 0 : 1,
+        allowBack
+      );
+      if (selected === "back") goBack = true;
+      else autoSubmit = selected === 0;
+    }
+
+    if (goBack) position = Math.max(0, position - 1);
+    else position += 1;
+  }
+
+  const specA = teamAFlag ?? teamSpec(teams.A);
+  const specB = teamBFlag ?? teamSpec(teams.B);
+  const games = gamesFlag !== undefined ? parseInt(gamesFlag, 10) : detailed || swapFlag !== undefined ? customGames : 2;
+  const swap = swapFlag !== undefined ? swapFlag : detailed || gamesFlag !== undefined ? customSwap : true;
   const seedFlag = flag("seed");
-  const seed = seedFlag !== undefined
-    ? parseInt(seedFlag, 10)
-    : deps.randomSeed();
-
-  // Asked here, while the player is still making decisions, so the run itself
-  // ends hands-off. Publishing is on the player's account, so it is never the
-  // default — and never implied by a flag the player did not write.
-  const autoSubmit = args["submit"] === true
-    ? true
-    : interactive
-      ? (await io.select("終了後に公開台帳へ自動提出しますか?", [
-          "今回は提出しない",
-          "GitHubで公開提出する（検証後、自動マージ）",
-        ])) === 1
-      : false;
-
-  const extraArgs: Record<string, string> = {};
-  for (const key of ["product-repo", "product-commit"] as const) {
-    const value = flag(key);
-    if (value !== undefined) extraArgs[key] = value;
-  }
-  const gate = await authGate(io, deps, [a.provider, b.provider], extraArgs, interactive);
-  if (gate === "cancelled" || gate === "failed") return { cancelled: true };
-
+  const seed = seedFlag === undefined ? deps.randomSeed() : parseInt(seedFlag, 10);
   const matchSummary = `games=${games} swap=${swap ? "on" : "off"}` +
-    (!interactive || seedFlag !== undefined ? ` seed=${seed}` : "");
-  const summaryLines = [
-    `Team A: ${a.spec}`,
-    `Team B: ${b.spec}`,
-    matchSummary,
-    `自動提出: ${autoSubmit ? "する" : "しない"}`,
-  ];
-  return { specA: a.spec, specB: b.spec, games, swap, seed, autoSubmit, extraArgs, summaryLines };
+    (seedFlag !== undefined ? ` seed=${seed}` : "");
+  return {
+    specA,
+    specB,
+    games,
+    swap,
+    seed,
+    autoSubmit,
+    summaryLines: [
+      `Team A: ${specA}`,
+      `Team B: ${specB}`,
+      matchSummary,
+      `自動提出: ${autoSubmit ? "する" : "しない"}`,
+    ],
+  };
 }
 
 /** Same sanitization as arena's default run-id derivation. */
@@ -439,12 +551,12 @@ export function makePromptIO(
     return answer.value as T;
   };
   return {
-    async select(title, options) {
+    async select(title, options, initial = 0) {
       return ask<number>({
         type: "select",
         name: "value",
         message: title,
-        initial: 0,
+        initial: Math.max(0, Math.min(initial, options.length - 1)),
         hint: "↑/↓で選択・Enterで決定（Escで中止）",
         choices: options.map((option, index) => ({ title: option, value: index })),
       });
@@ -528,7 +640,7 @@ export async function runPlay(
       rlio.print("中止しました。対局は開始されていません。");
       return 1;
     }
-    rlio.print("── 対局開始 ──");
+    rlio.print("── 対局設定 ──");
     result.summaryLines.forEach((l) => rlio.print(`  ${l}`));
     const runId = typeof args["run-id"] === "string"
       ? args["run-id"]
@@ -540,16 +652,24 @@ export async function runPlay(
     for (const key of PASSTHROUGH_BOOLEAN_FLAGS) {
       if (args[key] === true) passthrough[key] = true;
     }
-    const { failedGames } = await deps.runArena({
-      "team-a": result.specA,
-      "team-b": result.specB,
-      games: String(result.games),
-      ...(result.swap ? { swap: true } : {}),
-      seed: String(result.seed),
-      "run-id": runId,
-      ...passthrough,
-      ...result.extraArgs,
-    });
+    let failedGames: number;
+    try {
+      ({ failedGames } = await deps.runArena({
+        "team-a": result.specA,
+        "team-b": result.specB,
+        games: String(result.games),
+        ...(result.swap ? { swap: true } : {}),
+        seed: String(result.seed),
+        "run-id": runId,
+        ...passthrough,
+      }));
+    } catch (error) {
+      if (!(error instanceof MatchPreflightError)) throw error;
+      rlio.print(
+        `対局を開始できません: ${error.message}`
+      );
+      return 1;
+    }
     if (failedGames > 0) {
       // A partial run must never reach the public ledger, even when the
       // caller asked for --submit: the completed games are on disk for

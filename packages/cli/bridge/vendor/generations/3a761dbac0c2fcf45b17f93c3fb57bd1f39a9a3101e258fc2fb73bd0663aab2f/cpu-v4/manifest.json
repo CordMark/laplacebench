@@ -1,0 +1,17 @@
+{
+  "schema": "laplace-bundled-product-cpu-policy-v1",
+  "policy_version": "cpu-v4",
+  "command_role": "regret",
+  "source_repository": "https://github.com/Japan-Automation-Technology/Laplace.git",
+  "source_root": "ai/src/agents",
+  "product_commit": "d316b30914cb49942486f744099468fe0561ea02",
+  "generated_notice": "Generated from exact Git objects; do not edit vendored files by hand.",
+  "files": {
+    "agents/__init__.py": "3c1e96e51f0a69f8f2e163ea835e9653c49ba1c4d7d76b7c46bf2ced00f52f15",
+    "agents/base.py": "3c608e892c29813f9b46492c96657ab454eaaaab31ff91580fe9c8148ffcf3ca",
+    "agents/cpu_levels.py": "10ce36791d5990061ac43b48b1fcb65c0b62badbeea694604b98c849f17f94d7",
+    "agents/cpu_tier_profiles.py": "8767a40ffed26daac9cf80f9a0098759fe0e8c6fccebc6a46028711e5f8d4846",
+    "agents/minimax.py": "89ef4ee4b982defa721cb45e7cdc275cf001396edc8bbe3dd22b8c9c676269d1",
+    "agents/weight_profiles.py": "c6791f736ebb8ba6a1f6d65509cb94e94160bee40c2f9f01c23cc114174cd699"
+  }
+}

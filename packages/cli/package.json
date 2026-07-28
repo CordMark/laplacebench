@@ -1,6 +1,6 @@
 {
   "name": "laplacebench",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "LaplaceBench CLI: run LLM-vs-LLM matches of the novel board game LAPLACE with a deterministic referee, baseline ladder, persistent contexts, learning series, and replay-verified exports.",
   "bin": {
     "laplacebench": "bin/laplacebench.js"
@@ -25,6 +25,10 @@
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "prepublishOnly": "npm test && npm run build",
     "arena": "tsx src/cli.ts arena",
+    "sync-product-cpu": "node scripts/sync-bundled-product-cpu.mjs",
+    "check-product-cpu": "node scripts/sync-bundled-product-cpu.mjs --check",
+    "prepack": "node scripts/product-cpu-package-lock.mjs acquire",
+    "postpack": "node scripts/product-cpu-package-lock.mjs release",
     "summarize": "tsx src/cli.ts summarize",
     "test": "tsx --test test/**/*.test.ts",
     "typecheck": "tsc --noEmit"

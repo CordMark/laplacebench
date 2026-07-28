@@ -6,12 +6,15 @@ import test from "node:test";
 import { randomAgent } from "../src/agents/random";
 import {
   arena,
+  enforceLatencyContract,
   formatProgressLine,
   isLearningSpec,
   resolveExecution,
   runGameSet,
 } from "../src/cli";
-import { buildArenaArtifacts, sideTokens } from "../src/publicarena";
+import { buildArenaArtifacts, sideLatency, sideTokens } from "../src/publicarena";
+import { classifyRunnableAgentSpec, reportsLatency } from "../src/publicgames";
+import type { Agent, AgentReply, TurnInput } from "../src/types";
 import { playGame, type GameProgress } from "../src/runner";
 
 const ROOT = path.resolve(__dirname, "../../..");
@@ -232,8 +235,8 @@ test("a single game or a learning spec keeps the serial execution label", async 
   }
 });
 
-test("arena catalog carries duration and token totals derived from the ledger", () => {
-  const { catalog } = buildArenaArtifacts(
+test("arena catalog carries duration, tokens, and replay-exact side latency", () => {
+  const { catalog, replays } = buildArenaArtifacts(
     COMMUNITY_RUNS,
     "0123456789abcdef0123456789abcdef01234567",
     "2026-07-27T00:00:00.000Z"
@@ -273,11 +276,76 @@ test("arena catalog carries duration and token totals derived from the ledger", 
           expected,
           `${game.raw_ref} team ${team} tokens must mirror final.json usage`
         );
+        const replay = JSON.parse(replays.get(game.replay.id)!.toString("utf8"));
+        const agent = team === "A" ? game.team_a.agent : game.team_b.agent;
+        const replayLatency = replay.bench.stats[team].avgLatencyMs;
+        assert.equal(
+          game.team_latency_ms[team],
+          reportsLatency(agent) ? replayLatency : null,
+          `${game.raw_ref} team ${team} latency must mirror the validated replay`
+        );
       }
       checked++;
     }
   }
   assert.ok(checked > 0, "the ledger must contain at least one public game");
+});
+
+test("every makeAgent spec form has an explicit latency classification", () => {
+  const cases: Array<[string, boolean]> = [
+    ["random", false],
+    ["greedy", false],
+    ["center-greedy", false],
+    ["center-greedy:w6", false],
+    ["chaos", false],
+    ["takeshi", false],
+    ["takeshi:d2", false],
+    ["product-cpu:cpu-v6:level_3", true],
+    ["anthropic:claude-opus-5", true],
+    ["claude-cli-learn:claude-opus-5@high", true],
+    ["claude-cli:claude-opus-5@high", true],
+    ["codex-cli:gpt-5.6-sol@high", true],
+  ];
+  for (const [spec, expected] of cases) {
+    assert.ok(classifyRunnableAgentSpec(spec), `${spec} must be in the shared factory registry`);
+    assert.equal(reportsLatency(spec), expected, spec);
+  }
+  assert.equal(classifyRunnableAgentSpec("future-adapter:model"), null);
+  assert.equal(reportsLatency("future-adapter:model"), null);
+});
+
+test("the factory wrapper fails loudly when reply-path latency drifts", async () => {
+  const fake = (reply: AgentReply): Agent => ({ name: "fake", async act() { return reply; } });
+  const input = {} as TurnInput;
+  for (const reply of [
+    { move: null, latencyMs: 0 },
+    { move: null, raw: "API_ERROR", latencyMs: 12 },
+    { move: null, timedOut: true, latencyMs: 20 },
+  ] satisfies AgentReply[]) {
+    assert.deepEqual(
+      await enforceLatencyContract(fake(reply), "anthropic:model", "measured").act(input),
+      reply,
+    );
+  }
+  await assert.rejects(
+    enforceLatencyContract(fake({ move: null, raw: "API_ERROR" }), "anthropic:model", "measured").act(input),
+    /latency telemetry contract violated/,
+  );
+  assert.deepEqual(
+    await enforceLatencyContract(fake({ move: null }), "random", "none").act(input),
+    { move: null },
+  );
+  await assert.rejects(
+    enforceLatencyContract(fake({ move: null, latencyMs: 1 }), "random", "none").act(input),
+    /latency telemetry contract violated/,
+  );
+});
+
+test("side latency keeps a measured zero and nulls an unmeasured baseline", () => {
+  assert.equal(sideLatency("anthropic:claude-opus-5", 0, "r/g.A"), 0);
+  assert.equal(sideLatency("product-cpu:cpu-v6:level_1", 0, "r/g.A"), 0);
+  assert.equal(sideLatency("random", 0, "r/g.B"), null);
+  assert.throws(() => sideLatency("anthropic:claude-opus-5", -1, "r/g.A"), /team_latency_ms/);
 });
 
 test("sideTokens is null exactly when a side reported no usage", () => {

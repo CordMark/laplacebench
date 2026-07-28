@@ -1,4 +1,4 @@
-import { spawn, type ChildProcess } from "node:child_process";
+import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import * as path from "node:path";
 import * as readline from "node:readline";
 import type { Agent, AgentReply, Move, TurnInput } from "../types";
@@ -14,15 +14,12 @@ export interface BridgeHello {
   protocol: string;
   policy_version: string;
   product_commit: string;
-  product_dirty: boolean;
+  distribution: "bundled";
   python: string;
   visible_tiers: { level_id: string; profile_name: string; p95_limit_seconds: number }[];
 }
 
 export interface ProductCpuOptions {
-  productRepo: string;
-  /** Required commit pin; a hello reporting any other commit is rejected. */
-  expectedCommit: string;
   /** Policy segment of the agent spec (e.g. the current "cpu-v6"). */
   expectedPolicy: string;
   /** Test hook: overrides the spawned command (default: python3 bridge). */
@@ -31,6 +28,61 @@ export interface ProductCpuOptions {
   moveTimeoutMs?: number;
   scoreTimeoutMs?: number;
   helloTimeoutMs?: number;
+}
+
+export interface PythonCommand {
+  command: string;
+  args: string[];
+}
+
+type PythonProbe = (
+  command: string,
+  args: string[]
+) => { status: number | null; stdout?: string; stderr?: string; error?: Error };
+
+/** Find a supported host interpreter without asking the user for a path. */
+export function resolvePythonCommand(
+  probe: PythonProbe = (command, args) => {
+    const result = spawnSync(command, args, { encoding: "utf8" });
+    return {
+      status: result.status,
+      stdout: result.stdout,
+      stderr: result.stderr,
+      error: result.error,
+    };
+  },
+  platform = process.platform
+): PythonCommand {
+  const candidates: PythonCommand[] = platform === "win32"
+    ? [
+        { command: "py", args: ["-3"] },
+        { command: "python", args: [] },
+        { command: "python3", args: [] },
+      ]
+    : [
+        { command: "python3.14", args: [] },
+        { command: "python3.13", args: [] },
+        { command: "python3.12", args: [] },
+        { command: "python3.11", args: [] },
+        { command: "python3", args: [] },
+        { command: "python", args: [] },
+      ];
+  const found: string[] = [];
+  for (const candidate of candidates) {
+    const result = probe(candidate.command, [...candidate.args, "--version"]);
+    if (result.error || result.status !== 0) continue;
+    const versionText = `${result.stdout ?? ""} ${result.stderr ?? ""}`.trim();
+    const match = versionText.match(/Python\s+(\d+)\.(\d+)/i);
+    if (!match) continue;
+    const major = Number(match[1]);
+    const minor = Number(match[2]);
+    if (major > 3 || (major === 3 && minor >= 11)) return candidate;
+    found.push(versionText);
+  }
+  const detail = found.length > 0 ? `（検出: ${found.join(", ")}）` : "";
+  throw new Error(
+    `LaPlace CPUにはPython 3.11以上が必要です${detail}。Pythonをインストールしてから再実行してください。対局は開始していません。`
+  );
 }
 
 export interface ScoredRoot {
@@ -66,9 +118,10 @@ export class ProductCpuBridge {
   constructor(opts: ProductCpuOptions) {
     this.moveTimeoutMs = opts.moveTimeoutMs ?? MOVE_TIMEOUT_MS;
     this.scoreTimeoutMs = opts.scoreTimeoutMs ?? SCORE_TIMEOUT_MS;
+    const python = opts.bridgeCommand ? null : resolvePythonCommand();
     const cmd = opts.bridgeCommand ?? {
-      command: "python3",
-      args: [BRIDGE_SCRIPT, "--product-repo", opts.productRepo],
+      command: python!.command,
+      args: [...python!.args, BRIDGE_SCRIPT, "--policy", opts.expectedPolicy],
     };
     this.child = spawn(cmd.command, cmd.args, { stdio: ["pipe", "pipe", "pipe"] });
     this.child.stderr!.on("data", (d: Buffer) => {
@@ -110,7 +163,7 @@ export class ProductCpuBridge {
           h.protocol !== BRIDGE_PROTOCOL ||
           typeof h.policy_version !== "string" ||
           typeof h.product_commit !== "string" ||
-          typeof h.product_dirty !== "boolean" ||
+          h.distribution !== "bundled" ||
           typeof h.python !== "string" ||
           !Array.isArray(h.visible_tiers)
         ) {
@@ -214,14 +267,6 @@ export function validateHello(hello: BridgeHello, opts: ProductCpuOptions, level
     throw new Error(
       `product CPU policy_version mismatch: spec says ${opts.expectedPolicy}, bridge reports ${hello.policy_version}`
     );
-  }
-  if (hello.product_commit !== opts.expectedCommit) {
-    throw new Error(
-      `product commit mismatch: pinned ${opts.expectedCommit}, checkout is ${hello.product_commit}`
-    );
-  }
-  if (hello.product_dirty) {
-    throw new Error("product checkout has uncommitted changes; refusing a dirty snapshot");
   }
   if (!hello.visible_tiers.some((t) => t.level_id === levelId)) {
     throw new Error(

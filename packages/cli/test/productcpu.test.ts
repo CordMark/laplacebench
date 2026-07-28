@@ -71,35 +71,28 @@ test("colon-containing agent names stay verbatim in run data, summary, standings
 });
 
 // ---------------------------------------------------------------------------
-// Real-product integration (env-gated; CI has no product checkout).
+// Real bundled-policy integration (runs from the package itself).
 // ---------------------------------------------------------------------------
 
-const PRODUCT_REPO = process.env.LAPLACE_PRODUCT_REPO;
-const PRODUCT_COMMIT = process.env.LAPLACE_PRODUCT_COMMIT;
-const gated = PRODUCT_REPO && PRODUCT_COMMIT ? test : test.skip;
-if (!PRODUCT_REPO || !PRODUCT_COMMIT) {
-  console.log(
-    "productcpu.test.ts: skipping real-product integration tests — set LAPLACE_PRODUCT_REPO and LAPLACE_PRODUCT_COMMIT to run them (CI has no product checkout)"
-  );
-}
+const CPU_V6_COMMIT = "101b739ff41a612c9b2c512d57d0a5ba4d233d47";
+const CPU_V4_COMMIT = "d316b30914cb49942486f744099468fe0561ea02";
 
-gated("real bridge: hello reports current cpu-v6 with six visible tiers", async () => {
+test("real bundled bridge: hello reports current cpu-v6 with six visible tiers", async () => {
   const { preflightProductCpu } = await import("../src/agents/productcpu");
   const hello = await preflightProductCpu(
-    { productRepo: PRODUCT_REPO!, expectedCommit: PRODUCT_COMMIT!, expectedPolicy: "cpu-v6" },
+    { expectedPolicy: "cpu-v6" },
     "level_3"
   );
   assert.equal(hello.policy_version, "cpu-v6");
   assert.equal(hello.visible_tiers.length, 6);
-  assert.equal(hello.product_dirty, false);
+  assert.equal(hello.product_commit, CPU_V6_COMMIT);
+  assert.equal(hello.distribution, "bundled");
 });
 
-gated("real bridge: same seed + position => same move (stochastic tier)", async () => {
+test("real bundled bridge: same seed + position => same move (stochastic tier)", async () => {
   const { ProductCpuBridge, toMoveRequestState } = await import("../src/agents/productcpu");
   const { newGame } = await import("../src/engine");
   const bridge = new ProductCpuBridge({
-    productRepo: PRODUCT_REPO!,
-    expectedCommit: PRODUCT_COMMIT!,
     expectedPolicy: "cpu-v6",
   });
   try {
@@ -117,7 +110,75 @@ gated("real bridge: same seed + position => same move (stochastic tier)", async 
   }
 });
 
-gated("real arena game: names and provenance are consistent end to end", async () => {
+test("real bundled cpu-v4 bridge remains the frozen five-tier regret oracle", async () => {
+  const { ProductCpuBridge, toMoveRequestState } = await import("../src/agents/productcpu");
+  const { newGame } = await import("../src/engine");
+  const bridge = new ProductCpuBridge({ expectedPolicy: "cpu-v4" });
+  try {
+    const hello = await bridge.hello;
+    assert.equal(hello.product_commit, CPU_V4_COMMIT);
+    assert.equal(hello.visible_tiers.length, 5);
+    const scored = await bridge.scoreRoots("level_5", toMoveRequestState(newGame().state));
+    assert.ok(scored.roots.some((root) => root.rank === 1));
+  } finally {
+    bridge.dispose();
+  }
+});
+
+test("cross-role and mixed product policies create no run directory", async () => {
+  const { arena } = await import("../src/cli");
+  for (const [teamA, teamB] of [
+    ["product-cpu:cpu-v4:level_1", "random"],
+    ["product-cpu:cpu-v6:level_1", "product-cpu:cpu-v4:level_1"],
+  ]) {
+    const previous = process.cwd();
+    const workDir = fs.mkdtempSync(path.join(os.tmpdir(), "laplace-product-role-"));
+    try {
+      process.chdir(workDir);
+      await assert.rejects(
+        arena({
+          "team-a": teamA,
+          "team-b": teamB,
+          games: "1",
+          seed: "1",
+          "run-id": "must-not-exist",
+        }),
+        /play supports bundled cpu-v6 only/
+      );
+      assert.equal(fs.existsSync(path.join(workDir, "runs")), false);
+    } finally {
+      process.chdir(previous);
+    }
+  }
+});
+
+test("missing Python is actionable and creates no run", async () => {
+  const { arena } = await import("../src/cli");
+  const previousCwd = process.cwd();
+  const previousPath = process.env.PATH;
+  const workDir = fs.mkdtempSync(path.join(os.tmpdir(), "laplace-product-python-"));
+  try {
+    process.chdir(workDir);
+    process.env.PATH = "";
+    await assert.rejects(
+      arena({
+        "team-a": "product-cpu:cpu-v6:level_1",
+        "team-b": "random",
+        games: "1",
+        seed: "1",
+        "run-id": "must-not-exist",
+      }),
+      /Python 3\.11以上.*対局は開始していません/
+    );
+    assert.equal(fs.existsSync(path.join(workDir, "runs")), false);
+  } finally {
+    process.chdir(previousCwd);
+    if (previousPath === undefined) delete process.env.PATH;
+    else process.env.PATH = previousPath;
+  }
+});
+
+test("real bundled arena game: names and provenance are consistent end to end", async () => {
   const { arena } = await import("../src/cli");
   const prevCwd = process.cwd();
   const workDir = fs.mkdtempSync(path.join(os.tmpdir(), "laplace-product-arena-"));
@@ -130,8 +191,6 @@ gated("real arena game: names and provenance are consistent end to end", async (
       seed: "11",
       "max-plies": "20",
       "run-id": "product-integration",
-      "product-repo": PRODUCT_REPO!,
-      "product-commit": PRODUCT_COMMIT!,
     });
   } finally {
     process.chdir(prevCwd);
@@ -139,7 +198,10 @@ gated("real arena game: names and provenance are consistent end to end", async (
   const runDir = path.join(workDir, "runs", "product-integration");
   const runJson = JSON.parse(fs.readFileSync(path.join(runDir, "run.json"), "utf8"));
   assert.equal(runJson.product_cpu.policy_version, "cpu-v6");
-  assert.equal(runJson.product_cpu.product_commit.startsWith(PRODUCT_COMMIT!.slice(0, 7)), true);
+  assert.equal(runJson.product_cpu.product_commit, CPU_V6_COMMIT);
+  assert.equal(runJson.product_cpu.distribution, "bundled");
+  assert.equal("product_repo" in runJson.product_cpu, false);
+  assert.equal("dirty" in runJson.product_cpu, false);
   assert.deepEqual(runJson.product_cpu.teams.A, {
     spec: "product-cpu:cpu-v6:level_1",
     level_id: "level_1",

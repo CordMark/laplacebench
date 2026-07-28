@@ -7,6 +7,7 @@ import {
   createProductCpuAgent,
   preflightProductCpu,
   perMoveSeed,
+  resolvePythonCommand,
   type ProductCpuOptions,
 } from "../src/agents/productcpu";
 
@@ -14,8 +15,6 @@ const FAKE = path.join(__dirname, "fake-product-bridge.cjs");
 
 function fakeOpts(mode: string, extra?: Partial<ProductCpuOptions>): ProductCpuOptions {
   return {
-    productRepo: "/nonexistent-unused",
-    expectedCommit: "d316b30",
     expectedPolicy: "cpu-v4",
     bridgeCommand: {
       command: process.execPath,
@@ -37,20 +36,11 @@ function withMode<T>(mode: string, fn: () => Promise<T>): Promise<T> {
   });
 }
 
-test("hello validation rejects policy mismatch, dirty tree, commit mismatch, hidden tier", async () => {
+test("hello validation rejects policy mismatch and hidden tier", async () => {
   await withMode("bad_policy", async () => {
     await assert.rejects(
       preflightProductCpu(fakeOpts("bad_policy"), "level_3"),
       /policy_version mismatch/
-    );
-  });
-  await withMode("dirty", async () => {
-    await assert.rejects(preflightProductCpu(fakeOpts("dirty"), "level_3"), /dirty/);
-  });
-  await withMode("wrong_commit", async () => {
-    await assert.rejects(
-      preflightProductCpu(fakeOpts("wrong_commit"), "level_3"),
-      /commit mismatch/
     );
   });
   await withMode("normal", async () => {
@@ -137,20 +127,29 @@ test("dispose terminates the child and closes the client", async () => {
   });
 });
 
-test("real bridge script fails closed on a missing product repo", async () => {
-  // Uses the actual python3 bridge with a nonexistent path: no hello, nonzero exit.
-  await assert.rejects(
-    preflightProductCpu(
-      {
-        productRepo: "/nonexistent/laplace-product",
-        expectedCommit: "d316b30",
-        expectedPolicy: "cpu-v4",
-        helloTimeoutMs: 15_000,
-      },
-      "level_3"
-    ),
-    /bridge (exited|spawn failed|hello timed out)/
+test("Python resolver accepts 3.11+, rejects old-only and missing hosts", () => {
+  const supported = resolvePythonCommand((command, args) => ({
+    status: command === "python3" ? 0 : 1,
+    stdout: args.at(-1) === "--version" ? "Python 3.11.9" : "",
+  }), "darwin");
+  assert.deepEqual(supported, { command: "python3", args: [] });
+
+  assert.throws(
+    () => resolvePythonCommand(() => ({ status: 0, stdout: "Python 3.10.14" }), "darwin"),
+    /Python 3\.11以上.*対局は開始していません/
   );
+  assert.throws(
+    () => resolvePythonCommand(() => ({ status: null, error: new Error("ENOENT") }), "linux"),
+    /Python 3\.11以上/
+  );
+
+  const calls: Array<[string, string[]]> = [];
+  const windows = resolvePythonCommand((command, args) => {
+    calls.push([command, args]);
+    return { status: 0, stdout: "Python 3.12.1" };
+  }, "win32");
+  assert.deepEqual(windows, { command: "py", args: ["-3"] });
+  assert.deepEqual(calls[0], ["py", ["-3", "--version"]]);
 });
 
 test("perMoveSeed follows the mod 2^31 contract, including large seeds", () => {
@@ -177,6 +176,14 @@ test("npm package ships the bridge script (files allowlist)", () => {
   assert.ok(
     fs.existsSync(path.join(__dirname, "..", "bridge", "product_cpu_bridge.py")),
     "bridge script must exist at the packaged path"
+  );
+  const indexPath = path.join(__dirname, "..", "bridge", "trusted_product_cpu_policies.json");
+  assert.ok(fs.existsSync(indexPath));
+  const index = JSON.parse(fs.readFileSync(indexPath, "utf8"));
+  assert.ok(
+    fs.existsSync(
+      path.join(__dirname, "..", "bridge", "vendor", index.policies["cpu-v6"].bundle_dir, "manifest.json")
+    )
   );
 });
 

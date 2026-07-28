@@ -79,8 +79,6 @@ test("chosen move missing from oracle roots throws (replay inconsistency)", () =
 });
 
 const REGRET_OPTS = {
-  productRepo: "unused",
-  expectedCommit: "d316b30",
   expectedPolicy: "cpu-v4",
   oracleLevelId: "level_5",
 };
@@ -96,7 +94,7 @@ function fakeOracle(mode: "ok" | "fail", disposals: string[]): ProductCpuBridge 
       protocol: "product-cpu-bridge-v1",
       policy_version: "cpu-v4",
       product_commit: "d316b30",
-      product_dirty: false,
+      distribution: "bundled",
       python: "fake",
       visible_tiers: [{ level_id: "level_5", profile_name: "x", p95_limit_seconds: 1 }],
     }),

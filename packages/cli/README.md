@@ -11,9 +11,12 @@ frozen `laplace-8x8-v1` ruleset used by every match.
 npx laplacebench play
 ```
 
-Use ↑/↓ and Enter to choose providers, models, effort, match count, side swap,
-and whether to submit the completed run. Press Ctrl+C or Escape to cancel before
-the match starts. The reproducibility seed is chosen internally unless you pass
+Use ↑/↓ and Enter to choose providers, models, an explicit effort, match count,
+side swap, and whether to submit the completed run. Choose
+`← 前の項目に戻る` to correct an earlier answer; independent later answers are
+kept when you revisit them. Press Ctrl+C or Escape to cancel before the match
+starts. The submit choice is opt-in even though it is listed first. The
+reproducibility seed is chosen internally unless you pass
 `--seed` explicitly. Claude Code and Codex adapters use their subscription CLIs;
 the baseline agents cost nothing.
 
@@ -49,14 +52,16 @@ remain accepted beyond the published set — e.g. `takeshi:dN`,
 ## Product CPU baselines + per-move regret
 
 `product-cpu:cpu-v6:level_N` runs the product's current CPU (six visible
-tiers) through a stdlib-only Python bridge — no venv, no HTTP server. Arena
-play needs the product checkout and a commit pin (fail-closed:
-policy/commit/dirty-tree/tier mismatches all refuse to run):
+tiers) through a stdlib-only Python bridge — no clone, product checkout,
+venv, HTTP server, path, or commit input. Choose **LaPlace CPU** in the wizard
+and play. The exact CPU source is bundled in this package and its product
+commit is recorded automatically in every run.
+
+Python 3.11 or newer is required. If no supported interpreter is available,
+the CLI stops before creating a run and prints installation guidance instead
+of silently substituting another agent.
 
 ```bash
-export LAPLACE_PRODUCT_REPO=/path/to/laplace-main
-export LAPLACE_PRODUCT_COMMIT=$(git -C "$LAPLACE_PRODUCT_REPO" rev-parse HEAD)
-
 npx laplacebench play --team-a product-cpu:cpu-v6:level_6 --team-b takeshi:d2 \
   --games 2 --swap --seed 42
 
@@ -73,8 +78,10 @@ Regret follows the oracle's lexicographic preference: the scalar
 `regret_value` is only computed when the chosen move shares the best move's
 `selectionClass` (nonnegative by construction); class mismatches are counted
 separately as categorical blunders (`missed_immediate_win`, `chose_unsafe`).
-Every output embeds the oracle identity (spec + product commit + per-position
-depth); values are comparable only within the same oracle generation.
+The frozen cpu-v4 regret oracle is bundled separately from the cpu-v6 play
+policy. Every output embeds the oracle identity (spec + product commit +
+per-position depth); values are comparable only within the same oracle
+generation. Cross-role policy use fails rather than being treated as latest.
 
 ## Verify, submit, and spectate
 
@@ -110,6 +117,13 @@ output into the product repository: after merge, CI runs `public-arena`, emits
 one deterministic replay per public game, and advances an explicit publication
 status only after the complete immutable generation exists. `/bench` lists the
 catalog; `/bench/replay?id=<sha256>` resolves only a catalog-listed replay.
+
+Each newly generated arena game also carries
+`team_latency_ms: { A, B }`, copied exactly from the validated replay's
+per-side `bench.stats.*.avgLatencyMs`. A baseline side is `null` because its
+in-process adapter reports no response-time telemetry; measured LLM and
+product-CPU sides remain numeric, including a legitimate zero. Older arena
+artifacts omit this additive field and remain valid.
 
 ## What gets recorded
 

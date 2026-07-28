@@ -28,7 +28,7 @@ import {
   type SideTokens,
   type Team,
 } from "./publicarena-contract";
-import { headlineKind, ordinal, publicPair } from "./publicgames";
+import { headlineKind, ordinal, publicPair, reportsLatency } from "./publicgames";
 import { buildPublicReplay } from "./publicreplay";
 
 interface MatchupAccumulator {
@@ -106,6 +106,16 @@ export function sideTokens(team: unknown, rawRef: string): SideTokens | null {
   const tokens = { output, total: input + output };
   assertSafeCount(tokens.total, `${rawRef}.team_tokens.total`);
   return tokens;
+}
+
+/** Exact replay value for measured adapter families; null for baselines. */
+export function sideLatency(
+  agent: string,
+  replayLatencyMs: number,
+  rawRef: string,
+): number | null {
+  assertSafeCount(replayLatencyMs, `${rawRef}.team_latency_ms`);
+  return reportsLatency(agent) === true ? replayLatencyMs : null;
 }
 
 function validateParticipant(existing: Participant, next: Participant): void {
@@ -189,6 +199,10 @@ export function buildArenaArtifacts(
         team_tokens: {
           A: sideTokens(teams?.A, rawRef),
           B: sideTokens(teams?.B, rawRef),
+        },
+        team_latency_ms: {
+          A: sideLatency(artifact.teamA, artifact.teamLatencyMs.A, `${rawRef}.A`),
+          B: sideLatency(artifact.teamB, artifact.teamLatencyMs.B, `${rawRef}.B`),
         },
         replay: { id: artifact.digest, bytes: artifact.bytes.length, schema: PUBLIC_REPLAY_SCHEMA },
       };

@@ -43,6 +43,8 @@ export interface PublicReplayArtifact {
   teamA: string;
   teamB: string;
   failures: { A: SideFailures; B: SideFailures };
+  /** Exact cleaned values written to `bench.stats.<side>.avgLatencyMs`. */
+  teamLatencyMs: Record<Team, number>;
 }
 
 const readEvents = (runDir: string, gameId: string): EventRecord[] =>
@@ -214,5 +216,9 @@ export function buildPublicReplay(
     teamA,
     teamB,
     failures: clean.summary,
+    teamLatencyMs: {
+      A: clean.stats.A.avgLatencyMs,
+      B: clean.stats.B.avgLatencyMs,
+    },
   };
 }

@@ -3,8 +3,6 @@
 // Behavior is selected with FAKE_BRIDGE_MODE:
 //   normal      — valid hello, echoes fixed moves / two scored roots
 //   bad_policy  — hello reports policy cpu-v9
-//   dirty       — hello reports product_dirty: true
-//   wrong_commit— hello reports commit "deadbeef"
 //   no_hello    — never prints hello (client hello timeout)
 //   nonjson     — hello ok, then answers requests with a non-JSON line
 //   crash       — hello ok, then exits mid-request without answering
@@ -14,7 +12,7 @@
 const readline = require("node:readline");
 
 const mode = process.env.FAKE_BRIDGE_MODE || "normal";
-const commit = mode === "wrong_commit" ? "deadbeef" : process.env.FAKE_BRIDGE_COMMIT || "d316b30";
+const commit = process.env.FAKE_BRIDGE_COMMIT || "d316b30914cb49942486f744099468fe0561ea02";
 
 const policy = process.env.FAKE_BRIDGE_POLICY || "cpu-v4";
 const visibleCount = Number(process.env.FAKE_BRIDGE_VISIBLE_COUNT || (policy === "cpu-v6" ? 6 : 5));
@@ -23,7 +21,7 @@ const hello = {
   protocol: "product-cpu-bridge-v1",
   policy_version: mode === "bad_policy" ? "cpu-v9" : policy,
   product_commit: commit,
-  product_dirty: mode === "dirty",
+  distribution: "bundled",
   python: "fake 3.99",
   visible_tiers: Array.from({ length: visibleCount }, (_, index) => index + 1).map((n) => ({
     level_id: `level_${n}`,
