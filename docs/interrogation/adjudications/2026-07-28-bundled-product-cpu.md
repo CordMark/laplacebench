@@ -96,6 +96,12 @@ Requirement source: ユーザー対話 2026-07-28。「これ一般向けに含�
 }
 ```
 
+## 2026-07-28 release-version corrective（tier: light）
+
+- npm registryへ先にimmutableな`0.2.5`が公開され、後続のCodex model menu修正を同versionへ上書きできないため、
+  最終artifactの未使用versionを`0.2.6`へ進めた。publish/tagは実行しない。
+- Implementation review（session impl-release-026）: ラウンド 1・指摘計 0 件で APPROVED（confidence 0.99）
+
 ## Publish-ready correction plan review (session plan-publish-ready-0-2-5)
 
 - 0.2.5のversion/lockfile更新を全検証・impl reviewより前へ移し、publish/push/tag作成をscope外と明記。
