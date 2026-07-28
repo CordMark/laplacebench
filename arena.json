@@ -2,8 +2,8 @@
   "schema": "laplace-bench-arena-v1",
   "ruleset": "laplace-8x8-v1",
   "lane": "community",
-  "source_sha": "51672b3c7763118153036772ae71e8b6d9f4ee91",
-  "generated_at": "2026-07-27T14:31:52.000Z",
+  "source_sha": "6dfbc330ec884d445655e75e10cc286eb9a22123",
+  "generated_at": "2026-07-28T03:05:46.000Z",
   "verified_run_count": 4,
   "verified_game_count": 9,
   "public_agent_count": 5,
@@ -77,6 +77,10 @@
               "total": 1297368
             }
           },
+          "team_latency_ms": {
+            "A": 83338,
+            "B": 84809
+          },
           "replay": {
             "id": "10b35c90ee36f0809a43ed016430760a68e68bce6e83788f3af67ae00e95268d",
             "bytes": 179476,
@@ -122,6 +126,10 @@
               "output": 101057,
               "total": 1845430
             }
+          },
+          "team_latency_ms": {
+            "A": 79005,
+            "B": 67536
           },
           "replay": {
             "id": "b81431309fec63986f7659a1eaf977a73aa3c24e65093d590b869aa15dd089b8",
@@ -199,6 +207,10 @@
               "total": 317221
             }
           },
+          "team_latency_ms": {
+            "A": 20493,
+            "B": 25054
+          },
           "replay": {
             "id": "39c16546b208b58b0b1e837bc75249384ca451a8eec9c0dea5511b23aac96b8d",
             "bytes": 47117,
@@ -275,6 +287,10 @@
               "total": 4384917
             }
           },
+          "team_latency_ms": {
+            "A": 104578,
+            "B": 68843
+          },
           "replay": {
             "id": "8fbce0a8913f28336892871868428c5f74808a84d0fe8ad43aa0609e7b12fc7a",
             "bytes": 159168,
@@ -320,6 +336,10 @@
               "output": 183502,
               "total": 2407073
             }
+          },
+          "team_latency_ms": {
+            "A": 60883,
+            "B": 111629
           },
           "replay": {
             "id": "056cf6e6394c5657ca94e026361a49f1fad7326ff93e2435a255c9f9bca87788",
