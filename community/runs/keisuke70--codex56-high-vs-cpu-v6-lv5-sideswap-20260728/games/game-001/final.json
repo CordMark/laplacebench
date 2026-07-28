@@ -1,0 +1,92 @@
+{
+  "gameId": "game-001",
+  "ruleset": "laplace-8x8-v1",
+  "seed": 94175,
+  "winner": "A",
+  "reason": "center",
+  "plies": 35,
+  "losses": {
+    "Red": 1,
+    "Blue": 3,
+    "Yellow": 0,
+    "Green": 2
+  },
+  "teams": {
+    "A": {
+      "agent": "product-cpu:cpu-v6:level_5",
+      "turns": 18,
+      "moves": 18,
+      "actCalls": 18,
+      "formatFailures": 0,
+      "legalityFailures": 0,
+      "failedTurns": 0,
+      "forcedPasses": 0,
+      "timeoutSkips": 0,
+      "tokenBudgetSkips": 0,
+      "noteOmissions": 18,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "cacheReadTokens": 0,
+      "latencyMs": 18704,
+      "usage": {
+        "schema": "laplace-model-usage-v1",
+        "adapterCalls": 0,
+        "reportedCalls": 0,
+        "unreportedCalls": 0,
+        "legacyUnversionedCalls": 0,
+        "providers": [],
+        "sources": [],
+        "inputTotalTokens": 0,
+        "inputUncachedTokens": 0,
+        "cacheReadTokens": 0,
+        "cacheWriteTokens": 0,
+        "cacheWriteReportedCalls": 0,
+        "outputTotalTokens": 0,
+        "reasoningTokens": 0,
+        "reasoningReportedCalls": 0,
+        "applicationInputBytes": 0,
+        "applicationOutputBytes": 0
+      }
+    },
+    "B": {
+      "agent": "codex-cli:gpt-5.6-sol@high",
+      "turns": 17,
+      "moves": 15,
+      "actCalls": 15,
+      "formatFailures": 0,
+      "legalityFailures": 0,
+      "failedTurns": 0,
+      "forcedPasses": 0,
+      "timeoutSkips": 0,
+      "tokenBudgetSkips": 2,
+      "noteOmissions": 0,
+      "inputTokens": 3247411,
+      "outputTokens": 258356,
+      "cacheReadTokens": 2687744,
+      "latencyMs": 769336,
+      "usage": {
+        "schema": "laplace-model-usage-v1",
+        "adapterCalls": 15,
+        "reportedCalls": 15,
+        "unreportedCalls": 0,
+        "legacyUnversionedCalls": 0,
+        "providers": [
+          "openai"
+        ],
+        "sources": [
+          "codex-cli"
+        ],
+        "inputTotalTokens": 3247411,
+        "inputUncachedTokens": 559667,
+        "cacheReadTokens": 2687744,
+        "cacheWriteTokens": 0,
+        "cacheWriteReportedCalls": 0,
+        "outputTotalTokens": 258356,
+        "reasoningTokens": 247590,
+        "reasoningReportedCalls": 15,
+        "applicationInputBytes": 17046,
+        "applicationOutputBytes": 4886
+      }
+    }
+  }
+}

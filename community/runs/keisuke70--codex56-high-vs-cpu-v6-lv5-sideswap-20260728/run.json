@@ -1,0 +1,37 @@
+{
+  "run_id": "codex56-high-vs-cpu-v6-lv5-sideswap-20260728",
+  "ruleset": "laplace-8x8-v1",
+  "prompt_rev": "p3-move-note",
+  "team_a": "codex-cli:gpt-5.6-sol@high",
+  "team_b": "product-cpu:cpu-v6:level_5",
+  "games": 2,
+  "swap": true,
+  "seed": 93175,
+  "max_plies": 100,
+  "turn_timeout_ms": 1200000,
+  "output_token_budget_per_team_per_game": 250000,
+  "output_token_budget_metric": "in-game output_tokens_total (reasoning inclusive)",
+  "sampling": "provider-default (no temperature control on current models)",
+  "usage_schema": "laplace-model-usage-v1",
+  "usage_scope": "in-game act calls, including repair attempts; excludes post-game learning",
+  "cli_versions": {
+    "claude": null,
+    "codex": "codex-cli 0.144.5"
+  },
+  "product_cpu": {
+    "policy_version": "cpu-v6",
+    "product_commit": "101b739ff41a612c9b2c512d57d0a5ba4d233d47",
+    "distribution": "bundled",
+    "python": "3.14.6 (main, Jun 10 2026, 10:03:53) [Clang 17.0.0 (clang-1700.6.4.2)]",
+    "protocol": "product-cpu-bridge-v1",
+    "teams": {
+      "A": null,
+      "B": {
+        "spec": "product-cpu:cpu-v6:level_5",
+        "level_id": "level_5"
+      }
+    }
+  },
+  "execution": "serial",
+  "started_at": "2026-07-28T08:36:43.185Z"
+}
