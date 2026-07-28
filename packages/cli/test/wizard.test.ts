@@ -755,15 +755,14 @@ test("runPlay without a TTY errors with flag guidance and exit 1", async () => {
 });
 
 // ---------------------------------------------------------------------------
-// CLI help integration (bin wrapper)
+// CLI help integration (source entry point; the packaged wrapper has its own test)
 // ---------------------------------------------------------------------------
 
 test("CLI help output is generated from the catalog and exits 1", () => {
-  execFileSync("npm", ["run", "build"], { stdio: "ignore" });
   let out = "";
   let status = 0;
   try {
-    out = execFileSync("node", [path.join(__dirname, "..", "bin", "laplacebench.js"), "definitely-unknown-cmd"], {
+    out = execFileSync(process.execPath, ["--import", "tsx", path.join(__dirname, "..", "src", "cli.ts"), "definitely-unknown-cmd"], {
       encoding: "utf8",
     });
   } catch (err: unknown) {
