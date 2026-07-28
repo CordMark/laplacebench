@@ -2,13 +2,137 @@
   "schema": "laplace-bench-arena-v1",
   "ruleset": "laplace-8x8-v1",
   "lane": "community",
-  "source_sha": "b45f9b8708166ffdcfbab0a8dfc603619ae9653c",
-  "generated_at": "2026-07-28T03:11:32.000Z",
-  "verified_run_count": 4,
-  "verified_game_count": 9,
-  "public_agent_count": 5,
-  "public_game_count": 5,
+  "source_sha": "1a7dc9494c80e4c54470b6dc115ee066ef4a331f",
+  "generated_at": "2026-07-28T09:04:43.000Z",
+  "verified_run_count": 5,
+  "verified_game_count": 11,
+  "public_agent_count": 6,
+  "public_game_count": 7,
   "matchups": [
+    {
+      "id": "c60910d0cd46d6ae440c1cae81055914a6bb2e8e3ae8d0a8eea3b7d5d4b0d288",
+      "left": {
+        "id": "cpu-v6:level_5",
+        "label": "LaPlace CPU Lv5",
+        "kind": "product-cpu"
+      },
+      "right": {
+        "id": "gpt-5.6-sol@high",
+        "label": "GPT-5.6 Sol (high)",
+        "kind": "llm"
+      },
+      "game_count": 2,
+      "left_wins": 2,
+      "right_wins": 0,
+      "draws": 0,
+      "last_played_at": "2026-07-28T09:04:40.140Z",
+      "conditions": [
+        {
+          "left_agent": "product-cpu:cpu-v6:level_5",
+          "right_agent": "codex-cli:gpt-5.6-sol@high",
+          "game_count": 2,
+          "left_wins": 2,
+          "right_wins": 0,
+          "draws": 0
+        }
+      ],
+      "games": [
+        {
+          "raw_ref": "keisuke70--codex56-high-vs-cpu-v6-lv5-sideswap-20260728/game-001",
+          "played_at": "2026-07-28T09:04:40.140Z",
+          "duration_ms": 788090,
+          "team_a": {
+            "agent": "product-cpu:cpu-v6:level_5",
+            "headline_id": "cpu-v6:level_5"
+          },
+          "team_b": {
+            "agent": "codex-cli:gpt-5.6-sol@high",
+            "headline_id": "gpt-5.6-sol@high"
+          },
+          "left_side": "A",
+          "winner": "A",
+          "reason": "center",
+          "plies": 35,
+          "failures": {
+            "A": {
+              "format": 0,
+              "legality": 0,
+              "timeout": 0,
+              "token_budget": 0
+            },
+            "B": {
+              "format": 0,
+              "legality": 0,
+              "timeout": 0,
+              "token_budget": 2
+            }
+          },
+          "team_tokens": {
+            "A": null,
+            "B": {
+              "output": 258356,
+              "total": 3505767
+            }
+          },
+          "team_latency_ms": {
+            "A": 1039,
+            "B": 51289
+          },
+          "replay": {
+            "id": "c01d5f5bba8723893d94744d5af9d0da4a4b2d028a6d6e9441d094c37f25a8d7",
+            "bytes": 131882,
+            "schema": "laplace-bench-replay-v1"
+          }
+        },
+        {
+          "raw_ref": "keisuke70--codex56-high-vs-cpu-v6-lv5-sideswap-20260728/game-000",
+          "played_at": "2026-07-28T08:51:31.962Z",
+          "duration_ms": 888716,
+          "team_a": {
+            "agent": "codex-cli:gpt-5.6-sol@high",
+            "headline_id": "gpt-5.6-sol@high"
+          },
+          "team_b": {
+            "agent": "product-cpu:cpu-v6:level_5",
+            "headline_id": "cpu-v6:level_5"
+          },
+          "left_side": "B",
+          "winner": "B",
+          "reason": "elimination",
+          "plies": 33,
+          "failures": {
+            "A": {
+              "format": 0,
+              "legality": 0,
+              "timeout": 0,
+              "token_budget": 3
+            },
+            "B": {
+              "format": 0,
+              "legality": 0,
+              "timeout": 0,
+              "token_budget": 0
+            }
+          },
+          "team_tokens": {
+            "A": {
+              "output": 282156,
+              "total": 3169056
+            },
+            "B": null
+          },
+          "team_latency_ms": {
+            "A": 62672,
+            "B": 703
+          },
+          "replay": {
+            "id": "bc733bf19ad1510179692be584d37cfa100f71520a46a9bfaf661c4be15641bd",
+            "bytes": 121892,
+            "schema": "laplace-bench-replay-v1"
+          }
+        }
+      ]
+    },
     {
       "id": "5f678b100aeebbfb6ee367a4d29800e8caf3caba75ab656c01f5e1449b8ea4f7",
       "left": {

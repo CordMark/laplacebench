@@ -1,0 +1,7126 @@
+{
+  "schema": "laplace-bench-replay-v1",
+  "history": [
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 1,
+      "turnStartedAt": "2026-07-28T08:51:32.050Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": null,
+      "lastMoveAt": null,
+      "lastMove": null,
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 2,
+      "turnStartedAt": "2026-07-28T08:51:53.941Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 1,
+      "lastMoveAt": "2026-07-28T08:51:53.941Z",
+      "lastMove": {
+        "from": [
+          0,
+          3
+        ],
+        "to": [
+          3,
+          3
+        ],
+        "capturedPositions": [],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": []
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 3,
+      "turnStartedAt": "2026-07-28T08:52:15.832Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 2,
+      "lastMoveAt": "2026-07-28T08:52:15.832Z",
+      "lastMove": {
+        "from": [
+          4,
+          7
+        ],
+        "to": [
+          4,
+          4
+        ],
+        "capturedPositions": [],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": []
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 4,
+      "turnStartedAt": "2026-07-28T08:52:37.724Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 3,
+      "lastMoveAt": "2026-07-28T08:52:37.724Z",
+      "lastMove": {
+        "from": [
+          7,
+          3
+        ],
+        "to": [
+          4,
+          3
+        ],
+        "capturedPositions": [],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": []
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 1,
+      "turnStartedAt": "2026-07-28T08:52:59.615Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 4,
+      "lastMoveAt": "2026-07-28T08:52:59.615Z",
+      "lastMove": {
+        "from": [
+          2,
+          0
+        ],
+        "to": [
+          2,
+          4
+        ],
+        "capturedPositions": [],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": []
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 2,
+      "turnStartedAt": "2026-07-28T08:53:21.506Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 1,
+      "lastMoveAt": "2026-07-28T08:53:21.506Z",
+      "lastMove": {
+        "from": [
+          0,
+          6
+        ],
+        "to": [
+          5,
+          6
+        ],
+        "capturedPositions": [],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": []
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 3,
+      "turnStartedAt": "2026-07-28T08:53:43.398Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 2,
+      "lastMoveAt": "2026-07-28T08:53:43.398Z",
+      "lastMove": {
+        "from": [
+          1,
+          7
+        ],
+        "to": [
+          1,
+          2
+        ],
+        "capturedPositions": [],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": []
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        0,
+        1,
+        0,
+        0
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 4,
+      "turnStartedAt": "2026-07-28T08:54:05.289Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 3,
+      "lastMoveAt": "2026-07-28T08:54:05.289Z",
+      "lastMove": {
+        "from": [
+          7,
+          5
+        ],
+        "to": [
+          4,
+          5
+        ],
+        "capturedPositions": [
+          [
+            4,
+            4
+          ]
+        ],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": [
+          {
+            "position": [
+              4,
+              4
+            ],
+            "player": 2
+          }
+        ]
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        0,
+        1,
+        0,
+        0
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 1,
+      "turnStartedAt": "2026-07-28T08:54:27.181Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 4,
+      "lastMoveAt": "2026-07-28T08:54:27.181Z",
+      "lastMove": {
+        "from": [
+          2,
+          4
+        ],
+        "to": [
+          4,
+          4
+        ],
+        "capturedPositions": [],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": []
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        0,
+        1,
+        0,
+        0
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 2,
+      "turnStartedAt": "2026-07-28T08:54:49.072Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 1,
+      "lastMoveAt": "2026-07-28T08:54:49.072Z",
+      "lastMove": {
+        "from": [
+          0,
+          4
+        ],
+        "to": [
+          3,
+          4
+        ],
+        "capturedPositions": [],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": []
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        0,
+        1,
+        0,
+        0
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 3,
+      "turnStartedAt": "2026-07-28T08:55:10.963Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 2,
+      "lastMoveAt": "2026-07-28T08:55:10.963Z",
+      "lastMove": {
+        "from": [
+          6,
+          7
+        ],
+        "to": [
+          6,
+          5
+        ],
+        "capturedPositions": [],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": []
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        0,
+        1,
+        0,
+        0
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 4,
+      "turnStartedAt": "2026-07-28T08:55:32.855Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 3,
+      "lastMoveAt": "2026-07-28T08:55:32.855Z",
+      "lastMove": {
+        "from": [
+          7,
+          1
+        ],
+        "to": [
+          4,
+          1
+        ],
+        "capturedPositions": [],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": []
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        0,
+        1,
+        0,
+        0
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 1,
+      "turnStartedAt": "2026-07-28T08:55:54.746Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 4,
+      "lastMoveAt": "2026-07-28T08:55:54.746Z",
+      "lastMove": {
+        "from": [
+          5,
+          0
+        ],
+        "to": [
+          5,
+          4
+        ],
+        "capturedPositions": [],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": []
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        0,
+        1,
+        0,
+        0
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 2,
+      "turnStartedAt": "2026-07-28T08:56:16.638Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 1,
+      "lastMoveAt": "2026-07-28T08:56:16.638Z",
+      "lastMove": {
+        "from": [
+          5,
+          6
+        ],
+        "to": [
+          2,
+          6
+        ],
+        "capturedPositions": [],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": []
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        0,
+        1,
+        0,
+        0
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 3,
+      "turnStartedAt": "2026-07-28T08:56:38.529Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 2,
+      "lastMoveAt": "2026-07-28T08:56:38.529Z",
+      "lastMove": {
+        "from": [
+          1,
+          2
+        ],
+        "to": [
+          2,
+          2
+        ],
+        "capturedPositions": [],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": []
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        0,
+        1,
+        0,
+        0
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 4,
+      "turnStartedAt": "2026-07-28T08:57:00.420Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 3,
+      "lastMoveAt": "2026-07-28T08:57:00.420Z",
+      "lastMove": {
+        "from": [
+          7,
+          2
+        ],
+        "to": [
+          5,
+          2
+        ],
+        "capturedPositions": [],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": []
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        0,
+        1,
+        0,
+        0
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 1,
+      "turnStartedAt": "2026-07-28T08:57:22.312Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 4,
+      "lastMoveAt": "2026-07-28T08:57:22.312Z",
+      "lastMove": {
+        "from": [
+          1,
+          0
+        ],
+        "to": [
+          1,
+          4
+        ],
+        "capturedPositions": [],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": []
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        0,
+        1,
+        0,
+        0
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 2,
+      "turnStartedAt": "2026-07-28T08:57:44.203Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 1,
+      "lastMoveAt": "2026-07-28T08:57:44.203Z",
+      "lastMove": {
+        "from": [
+          2,
+          6
+        ],
+        "to": [
+          2,
+          4
+        ],
+        "capturedPositions": [],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": []
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        0,
+        1,
+        0,
+        0
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 3,
+      "turnStartedAt": "2026-07-28T08:58:06.095Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 2,
+      "lastMoveAt": "2026-07-28T08:58:06.095Z",
+      "lastMove": {
+        "from": [
+          2,
+          7
+        ],
+        "to": [
+          2,
+          5
+        ],
+        "capturedPositions": [],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": []
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        0,
+        1,
+        0,
+        0
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 4,
+      "turnStartedAt": "2026-07-28T08:58:27.986Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 3,
+      "lastMoveAt": "2026-07-28T08:58:27.986Z",
+      "lastMove": {
+        "from": [
+          7,
+          4
+        ],
+        "to": [
+          6,
+          4
+        ],
+        "capturedPositions": [],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": []
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        0,
+        1,
+        0,
+        0
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 1,
+      "turnStartedAt": "2026-07-28T08:58:49.877Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 4,
+      "lastMoveAt": "2026-07-28T08:58:49.877Z",
+      "lastMove": {
+        "from": [
+          5,
+          4
+        ],
+        "to": [
+          5,
+          6
+        ],
+        "capturedPositions": [],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": []
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        0,
+        1,
+        0,
+        1
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 2,
+      "turnStartedAt": "2026-07-28T08:59:11.769Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 1,
+      "lastMoveAt": "2026-07-28T08:59:11.769Z",
+      "lastMove": {
+        "from": [
+          0,
+          2
+        ],
+        "to": [
+          0,
+          4
+        ],
+        "capturedPositions": [
+          [
+            1,
+            4
+          ]
+        ],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": [
+          {
+            "position": [
+              1,
+              4
+            ],
+            "player": 4
+          }
+        ]
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        1,
+        1,
+        0,
+        1
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 3,
+      "turnStartedAt": "2026-07-28T08:59:33.660Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 2,
+      "lastMoveAt": "2026-07-28T08:59:33.660Z",
+      "lastMove": {
+        "from": [
+          2,
+          2
+        ],
+        "to": [
+          2,
+          3
+        ],
+        "capturedPositions": [
+          [
+            2,
+            4
+          ]
+        ],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": [
+          {
+            "position": [
+              2,
+              4
+            ],
+            "player": 1
+          }
+        ]
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        1,
+        1,
+        0,
+        1
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 4,
+      "turnStartedAt": "2026-07-28T08:59:55.551Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 3,
+      "lastMoveAt": "2026-07-28T08:59:55.551Z",
+      "lastMove": {
+        "from": [
+          4,
+          5
+        ],
+        "to": [
+          5,
+          5
+        ],
+        "capturedPositions": [],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": []
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        1,
+        1,
+        0,
+        1
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 1,
+      "turnStartedAt": "2026-07-28T09:00:17.443Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 4,
+      "lastMoveAt": "2026-07-28T09:00:17.443Z",
+      "lastMove": {
+        "from": [
+          5,
+          6
+        ],
+        "to": [
+          3,
+          6
+        ],
+        "capturedPositions": [],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": []
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        1,
+        1,
+        0,
+        1
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 2,
+      "turnStartedAt": "2026-07-28T09:00:39.334Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 1,
+      "lastMoveAt": "2026-07-28T09:00:39.334Z",
+      "lastMove": {
+        "from": [
+          0,
+          5
+        ],
+        "to": [
+          1,
+          5
+        ],
+        "capturedPositions": [],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": []
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        1,
+        1,
+        0,
+        1
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 3,
+      "turnStartedAt": "2026-07-28T09:01:01.226Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 2,
+      "lastMoveAt": "2026-07-28T09:01:01.226Z",
+      "lastMove": {
+        "from": [
+          2,
+          5
+        ],
+        "to": [
+          2,
+          6
+        ],
+        "capturedPositions": [],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": []
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        1,
+        2,
+        0,
+        1
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 4,
+      "turnStartedAt": "2026-07-28T09:01:23.117Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 3,
+      "lastMoveAt": "2026-07-28T09:01:23.117Z",
+      "lastMove": {
+        "from": [
+          7,
+          6
+        ],
+        "to": [
+          7,
+          5
+        ],
+        "capturedPositions": [
+          [
+            6,
+            5
+          ]
+        ],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": [
+          {
+            "position": [
+              6,
+              5
+            ],
+            "player": 2
+          }
+        ]
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        1,
+        2,
+        0,
+        1
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 1,
+      "turnStartedAt": "2026-07-28T09:01:45.008Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 4,
+      "lastMoveAt": "2026-07-28T09:01:45.008Z",
+      "lastMove": {
+        "from": [
+          3,
+          6
+        ],
+        "to": [
+          3,
+          5
+        ],
+        "capturedPositions": [],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": []
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        1,
+        2,
+        0,
+        1
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 2,
+      "turnStartedAt": "2026-07-28T09:02:06.900Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 1,
+      "lastMoveAt": "2026-07-28T09:02:06.900Z",
+      "lastMove": {
+        "from": [
+          0,
+          1
+        ],
+        "to": [
+          3,
+          1
+        ],
+        "capturedPositions": [],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": []
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        1,
+        2,
+        0,
+        1
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 3,
+      "turnStartedAt": "2026-07-28T09:02:28.791Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 2,
+      "lastMoveAt": "2026-07-28T09:02:28.791Z",
+      "lastMove": {
+        "from": [
+          2,
+          6
+        ],
+        "to": [
+          3,
+          6
+        ],
+        "capturedPositions": [],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": []
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        1,
+        2,
+        0,
+        2
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 4,
+      "turnStartedAt": "2026-07-28T09:02:50.683Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 3,
+      "lastMoveAt": "2026-07-28T09:02:50.683Z",
+      "lastMove": {
+        "from": [
+          5,
+          5
+        ],
+        "to": [
+          4,
+          5
+        ],
+        "capturedPositions": [
+          [
+            4,
+            4
+          ]
+        ],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": [
+          {
+            "position": [
+              4,
+              4
+            ],
+            "player": 4
+          }
+        ]
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": false
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        1,
+        2,
+        0,
+        2
+      ],
+      "eliminatedPlayers": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 1,
+      "turnStartedAt": "2026-07-28T09:03:12.574Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 4,
+      "lastMoveAt": "2026-07-28T09:02:50.683Z",
+      "lastMove": {
+        "from": null,
+        "to": null,
+        "capturedPositions": [],
+        "eliminatedPlayer": null
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": true
+          },
+          {
+            "player": 2,
+            "isDead": true
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": true
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        1,
+        3,
+        0,
+        2
+      ],
+      "eliminatedPlayers": [
+        false,
+        true,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 2,
+      "turnStartedAt": "2026-07-28T09:03:34.465Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 1,
+      "lastMoveAt": "2026-07-28T09:03:34.465Z",
+      "lastMove": {
+        "from": [
+          1,
+          5
+        ],
+        "to": [
+          1,
+          3
+        ],
+        "capturedPositions": [
+          [
+            2,
+            3
+          ]
+        ],
+        "eliminatedPlayer": 2,
+        "capturedPiecesMeta": [
+          {
+            "position": [
+              2,
+              3
+            ],
+            "player": 2
+          }
+        ],
+        "remainingPiecePositions": [
+          [
+            3,
+            6
+          ],
+          [
+            3,
+            7
+          ],
+          [
+            5,
+            7
+          ]
+        ]
+      },
+      "consecutiveTimeouts": [
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": true
+          },
+          {
+            "player": 2,
+            "isDead": true
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": true
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        1,
+        3,
+        0,
+        2
+      ],
+      "eliminatedPlayers": [
+        false,
+        true,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 3,
+      "turnStartedAt": "2026-07-28T09:03:56.357Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": null,
+      "winningTeam": null,
+      "lastMoveBy": 2,
+      "lastMoveAt": "2026-07-28T09:03:34.465Z",
+      "lastMove": {
+        "from": null,
+        "to": null,
+        "capturedPositions": [],
+        "eliminatedPlayer": null
+      },
+      "consecutiveTimeouts": [
+        0,
+        1,
+        0,
+        1
+      ]
+    },
+    {
+      "board": [
+        [
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 1,
+            "isDead": false
+          },
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 2,
+            "isDead": true
+          },
+          {
+            "player": 2,
+            "isDead": true
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 2,
+            "isDead": true
+          }
+        ],
+        [
+          {
+            "player": 4,
+            "isDead": false
+          },
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+            "player": 3,
+            "isDead": false
+          },
+          null,
+          null
+        ]
+      ],
+      "boardSize": 8,
+      "capturedPieces": [
+        1,
+        3,
+        0,
+        2
+      ],
+      "eliminatedPlayers": [
+        false,
+        true,
+        false,
+        false
+      ],
+      "startingPiecesCount": 6,
+      "eliminationThreshold": 3,
+      "currentPlayer": 3,
+      "turnStartedAt": "2026-07-28T09:04:18.248Z",
+      "turnTimeLimit": 120,
+      "gameStartedAt": "2026-07-28T08:51:32.050Z",
+      "gameEndedAt": "2026-07-28T09:04:40.140Z",
+      "winningTeam": "A",
+      "lastMoveBy": 3,
+      "lastMoveAt": "2026-07-28T09:04:18.248Z",
+      "lastMove": {
+        "from": [
+          4,
+          5
+        ],
+        "to": [
+          4,
+          4
+        ],
+        "capturedPositions": [],
+        "eliminatedPlayer": null,
+        "capturedPiecesMeta": []
+      },
+      "consecutiveTimeouts": [
+        0,
+        1,
+        0,
+        1
+      ]
+    }
+  ],
+  "boardSize": 8,
+  "winningTeam": "A",
+  "bench": {
+    "file": "keisuke70--codex56-high-vs-cpu-v6-lv5-sideswap-20260728--game-001.json",
+    "run_id": "keisuke70--codex56-high-vs-cpu-v6-lv5-sideswap-20260728",
+    "game_id": "game-001",
+    "team_a": "product-cpu:cpu-v6:level_5",
+    "team_b": "codex-cli:gpt-5.6-sol@high",
+    "winner": "A",
+    "reason": "center",
+    "plies": 35,
+    "replayed": {
+      "plies": 35,
+      "reason": "center",
+      "turns": {
+        "A": 18,
+        "B": 17
+      },
+      "failures": {
+        "A": {
+          "format": 0,
+          "legality": 0
+        },
+        "B": {
+          "format": 0,
+          "legality": 0
+        }
+      }
+    },
+    "exported_at": "2026-07-28T09:04:40.140Z",
+    "stats": {
+      "A": {
+        "agent": "product-cpu:cpu-v6:level_5",
+        "turns": 18,
+        "moves": 18,
+        "formatFailures": 0,
+        "legalityFailures": 0,
+        "failedTurns": 0,
+        "timeoutSkips": 0,
+        "tokenBudgetSkips": 0,
+        "outputTokens": 0,
+        "cacheReadTokens": 0,
+        "avgLatencyMs": 1039
+      },
+      "B": {
+        "agent": "codex-cli:gpt-5.6-sol@high",
+        "turns": 17,
+        "moves": 15,
+        "formatFailures": 0,
+        "legalityFailures": 0,
+        "failedTurns": 0,
+        "timeoutSkips": 0,
+        "tokenBudgetSkips": 2,
+        "outputTokens": 258356,
+        "cacheReadTokens": 2687744,
+        "avgLatencyMs": 51289
+      }
+    },
+    "failures": [],
+    "commentary": [
+      {
+        "ply": 1,
+        "team": "B",
+        "color": "Blue",
+        "text": "I’m claiming the right-hand central square while keeping clear lanes for Green to approach from the left. This avoids placing Blue beside the advanced Red piece, where Red could immediately form a sandwich."
+      },
+      {
+        "ply": 3,
+        "team": "B",
+        "color": "Green",
+        "text": "Green develops onto column 4, preparing to enter the remaining open central square vertically without obstructing Blue’s position. The two opposing center pieces remain split by color, so neither currently has a same-color sandwich against our setup."
+      },
+      {
+        "ply": 5,
+        "team": "B",
+        "color": "Blue",
+        "text": "Blue begins a two-step flanking maneuver against Yellow’s central piece: from column 2 it can later descend to row 4, where the Blue already on (4,4) would complete a same-color sandwich. Yellow may have to retreat or spend a move blocking that route."
+      },
+      {
+        "ply": 7,
+        "team": "B",
+        "color": "Green",
+        "text": "Green replaces the captured Blue in the center, deliberately stepping between Yellow’s two row-four pieces. Because captures only trigger from the mover’s landing square, the pre-existing Yellow–Green–Yellow alignment is harmless; meanwhile, Green now threatens to move its edge piece to (4,2) next turn and sandwich the Yellow on (4,3)."
+      },
+      {
+        "ply": 9,
+        "team": "B",
+        "color": "Blue",
+        "text": "Blue develops beside the advanced Red on row 5. From (6,5), Blue threatens to step to (5,5), where the Blue edge piece on (5,7) would flank and capture Red at (5,6). This pressures that Red piece to move instead of freely attacking Green’s central blocker."
+      },
+      {
+        "ply": 11,
+        "team": "B",
+        "color": "Green",
+        "text": "Green reinforces the central blocker from below. Occupying (5,4) denies Red’s intended landing square there, so the Red on (5,6) cannot sandwich the central Green vertically against Red’s piece on (3,4). The supporting Green also gives the center piece room to remain in place despite Yellow’s blockade on row 4."
+      },
+      {
+        "ply": 13,
+        "team": "B",
+        "color": "Blue",
+        "text": "Blue shifts its prepared piece to row 2, creating a direct next-turn threat against the advanced Red: a move from (2,2) to (2,5) would sandwich Red at (2,6) against the Blue on (2,7). The staging square is not itself exposed to an immediate same-color Red sandwich."
+      },
+      {
+        "ply": 15,
+        "team": "B",
+        "color": "Green",
+        "text": "Green creates a second, simultaneous threat against Red. From (1,4), Green can descend to (2,4), sandwiching Red at (3,4) against the central Green on (4,4). Red must now account for pressure on both its piece at (3,4) and Blue’s pending flank against the Red at (2,6)."
+      },
+      {
+        "ply": 17,
+        "team": "B",
+        "color": "Blue",
+        "text": "Blue closes the gap on the right of Red’s row-two piece. With Blue now planned at (2,5), the Blue on (2,2) can move to (2,3) next turn and capture Red at (2,4). This also restricts Red’s horizontal escape route."
+      },
+      {
+        "ply": 19,
+        "team": "B",
+        "color": "Green",
+        "text": "Green keeps the flanking piece on (1,4) in place, preserving the trap around Red’s constrained piece on (2,4), and develops another attacker instead. From (5,6), Green threatens to move to (4,6), sandwiching Yellow at (4,5) against the central Green on (4,4)."
+      },
+      {
+        "ply": 21,
+        "team": "B",
+        "color": "Blue",
+        "text": "Blue now executes the prepared flank. Moving into (2,3) places Red at (2,4) directly between the moving Blue and the Blue on (2,5), so that advanced Red piece is captured in return for Green’s loss."
+      },
+      {
+        "ply": 23,
+        "team": "B",
+        "color": "Green",
+        "text": "Green redeploys to row 3 to begin constructing a same-color flank against Red’s two central pieces. The intended formation is a Green endpoint near (3,5), after which the Green on the left edge can eventually land at (3,2) and capture both adjacent Reds in one sandwich. The central Green remains in place to prevent Team A’s occupation win."
+      },
+      {
+        "ply": 25,
+        "team": "B",
+        "color": "Blue",
+        "text": "Blue withdraws the threatened piece to (2,6). Red had prepared to move a central Red onto (3,5), which would have sandwiched Blue on (2,5) against Red at (1,5). The new square preserves the piece without triggering a friendly-fire capture involving Green on (3,6)."
+      },
+      {
+        "ply": 27,
+        "team": "B",
+        "color": "Green",
+        "text": "Green completes the right-hand endpoint of its row-three trap by sliding to (3,5). It now threatens to move the left-edge Green to (3,2), which would place both central Reds between Green pieces and capture them together. Red must break that formation or surrender two pieces."
+      },
+      {
+        "ply": 29,
+        "team": "B",
+        "color": "Blue",
+        "text": "Blue joins the row-three formation on (3,6), staying protected beside the edge Blue while increasing pressure on the crowded Red center. Once Green clears (3,5), this Blue can become the close right endpoint for a future sandwich against the central Reds."
+      }
+    ]
+  }
+}
