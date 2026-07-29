@@ -101,11 +101,10 @@ export const CANONICAL_MAX_PLIES = 100;
 export const REPETITION_DRAW_OCCURRENCES = 3;
 
 /**
- * Canonical fairness envelope for matches involving LLM agents — provisional
- * canonical, reviewed before v1 final freeze (docs/match-conduct doc). The
- * wall clock is demoted to an anti-hang backstop; tokens are the instrument.
+ * Canonical fairness envelope for matches involving LLM agents. The wall
+ * clock is demoted to an anti-hang backstop; tokens are the instrument.
  */
-export const CANONICAL_OUTPUT_TOKEN_BUDGET = 250_000;
+export const CANONICAL_OUTPUT_TOKEN_BUDGET = 350_000;
 
 /** Backstop turn timeout for LLM matches (latency is recorded, not decisive). */
 export const LLM_TURN_TIMEOUT_MS = 1_200_000;

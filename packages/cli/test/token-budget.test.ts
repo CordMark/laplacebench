@@ -48,6 +48,7 @@ test("isLlmSpec: token envelope applies to model-driven specs only", () => {
 });
 
 test("resolveMatchResources: canonical defaults for LLM matches, legacy for baselines, flags win", () => {
+  assert.equal(CANONICAL_OUTPUT_TOKEN_BUDGET, 350_000);
   const llm = resolveMatchResources({}, "claude-cli:haiku", "product-cpu:cpu-v4:level_3");
   assert.equal(llm.outputTokenBudget, CANONICAL_OUTPUT_TOKEN_BUDGET);
   assert.equal(llm.turnTimeoutMs, LLM_TURN_TIMEOUT_MS);

@@ -114,15 +114,15 @@ condition.
 Since 2026-07-24 (prompt generation `p2-token-budget`, superseded on 2026-07-27 by
 `p3-move-note`, which requires a move note and therefore raises output volume) it is the canonical
 fairness envelope for matches involving LLM agents: **default 250,000 output
-tokens per team per game** (provisional-canonical, reviewed before the v1
-freeze — see `docs/match-conduct-laplace-8x8-v1.md`), disclosed to the model
+tokens per team per game until 2026-07-29, and 350,000 thereafter**, disclosed to the model
 in the system instructions and in every observation
 (`output_token_budget` / `output_tokens_used`). Baseline-only matches have no
 budget. It uses in-game `output_tokens_total`, which includes reasoning for
 both providers and avoids using vendor-injected input context as the common
 budget currency. The envelope is *nominally* equal across providers; the
 cross-provider tokenizer caveat above still applies to any cross-provider
-reading of it.
+reading of it. The budget recorded in each run is part of its match condition;
+changing the default never relabels historical runs.
 
 Admission is checked once at the start of a scheduled turn:
 

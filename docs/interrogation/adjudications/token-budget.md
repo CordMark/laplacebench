@@ -123,3 +123,22 @@ Tier defense: マッチ資源契約とプロンプト(測定入力)の変更(標
   事前登録の判定規則により 250k 再確認(accept)。消費 99.8%/87.6% =
   封筒は opus 級の実効的拘束スケールに正確に位置する。
 - ラウンド 2・指摘計 1 件で APPROVED(confidence 0.99)
+
+
+```json
+{
+  "direction_correction_v1": {
+    "correction_id": "f5c8afe2-1319-4a4e-a85e-dbaa67fd22d7",
+    "related_direction_event_id": "52f6c144-5d7b-4da0-806a-e9c76b160f31",
+    "occurred_at": "2026-07-29T06:53:39.764Z",
+    "source": "human",
+    "missed_families": [
+      "value-cost",
+      "time-scope"
+    ],
+    "summary": "2026-07-29: Human raised the canonical per-team/per-game LLM output-token default from 250k to 350k after a GPT-5.6 Sol high side-swapped run consumed 282k and 258k and incurred five budget-pass turns; future harness matches should receive additional headroom while explicit overrides and historical runs remain unchanged.",
+    "effect": "premise-corrected",
+    "high_risk": false
+  }
+}
+```
