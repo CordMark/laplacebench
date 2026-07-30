@@ -114,7 +114,7 @@ condition.
 Since 2026-07-24 (prompt generation `p2-token-budget`, superseded on 2026-07-27 by
 `p3-move-note`, which requires a move note and therefore raises output volume) it is the canonical
 fairness envelope for matches involving LLM agents: **default 250,000 output
-tokens per team per game until 2026-07-29, and 350,000 thereafter**, disclosed to the model
+tokens per team per game until 2026-07-29, 350,000 from then through Run 10 (2026-07-31), and 600,000 thereafter (Run 11 onward; the per-run recorded budget value is authoritative)**, disclosed to the model
 in the system instructions and in every observation
 (`output_token_budget` / `output_tokens_used`). Baseline-only matches have no
 budget. It uses in-game `output_tokens_total`, which includes reasoning for

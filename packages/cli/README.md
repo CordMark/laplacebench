@@ -39,7 +39,7 @@ With `--games` above 1, games run in parallel by default and the CLI says so
 at start; pass `--serial` to run them one at a time. Learning agents
 (`claude-cli-learn`) always run serially because their strategy notes build
 across games. Each turn prints a live progress line
-(`[game-000] ply 17/100 B (0,3)→(3,3) | out A 82k/350k · B 61k/350k | 12m03s`)
+(`[game-000] ply 17/100 B (0,3)→(3,3) | out A 82k/600k · B 61k/600k | 12m03s`)
 so long LLM matches stay observable; the token segment appears only for
 budget-metered runs.
 
@@ -139,7 +139,7 @@ in [usage semantics](https://github.com/keisuke70/laplacebench/blob/main/docs/us
 Match resource controls:
 
 - `--output-token-budget N`: per team/game, in-game reasoning-inclusive output
-  only; default `350000` for matches involving an LLM, with no budget for
+  only; default `600000` for matches involving an LLM, with no budget for
   baseline-only matches; an admitted turn may overshoot and still play its move;
 - `--turn-timeout-ms N`: one deadline shared by both attempts in a turn
   (default `1200000` for LLM matches — a hang backstop, not the fairness

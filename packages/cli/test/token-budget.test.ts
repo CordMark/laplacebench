@@ -48,7 +48,7 @@ test("isLlmSpec: token envelope applies to model-driven specs only", () => {
 });
 
 test("resolveMatchResources: canonical defaults for LLM matches, legacy for baselines, flags win", () => {
-  assert.equal(CANONICAL_OUTPUT_TOKEN_BUDGET, 350_000);
+  assert.equal(CANONICAL_OUTPUT_TOKEN_BUDGET, 600_000);
   const llm = resolveMatchResources({}, "claude-cli:haiku", "product-cpu:cpu-v4:level_3");
   assert.equal(llm.outputTokenBudget, CANONICAL_OUTPUT_TOKEN_BUDGET);
   assert.equal(llm.turnTimeoutMs, LLM_TURN_TIMEOUT_MS);
@@ -191,4 +191,21 @@ test("in-game ledger records only act-reply usage (postgame work has no usage ch
   assert.ok(endGameRan);
   const acts = result.teams.A.actCalls;
   assert.equal(result.teams.A.usage.outputTotalTokens, acts * 500);
+});
+
+test("CLI help derives the default budget from the canonical constant", () => {
+  // The help string interpolates CANONICAL_OUTPUT_TOKEN_BUDGET — a second
+  // literal would be a stale-default bug waiting for the next raise.
+  const source = fs.readFileSync(
+    path.join(__dirname, "..", "src", "cli.ts"),
+    "utf8"
+  );
+  assert.ok(
+    source.includes('default " + String(CANONICAL_OUTPUT_TOKEN_BUDGET) + "'),
+    "help must interpolate the canonical constant"
+  );
+  assert.ok(
+    !/default 350000|default 600000/.test(source),
+    "help must not carry a hardcoded default budget literal"
+  );
 });
