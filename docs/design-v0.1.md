@@ -381,13 +381,19 @@ the naming/interface spec prepared for that future import.
 
 ## 12. Decisions intentionally deferred
 
-- **harness engineering as a scored division** — fixing the model and scoring
-  author-supplied agent designs (memo formats, self-check passes,
-  candidate-move debate, prompt packs). The `persistent-agent` condition in
-  §3.4 and the adapter lifecycle in §11 already give it a submission surface,
-  and the learning-series probe confirmed a harness moves results, but the
-  scored comparison stays model-versus-model until this is reopened. Any
-  harness-varying run is a labeled side experiment, never a benchmark record;
+- **harness engineering inside Model Arena scores** — fixing the model and
+  scoring author-supplied agent designs (memo formats, self-check passes,
+  candidate-move debate, prompt packs) remains excluded from model records.
+  The `persistent-agent` condition in §3.4 and adapter lifecycle in §11 remain
+  interfaces for that work. The n=4 learning-series probe supplied preliminary
+  motivation and harness-design failure modes, but did not establish a harness
+  effect or its individual causes. A separate **Harness Lab** is now in
+  direction design, with its own future tab, harness × model identity, H0–H2
+  initial capability boundary, and unresolved submission/matchmaking model.
+  Each side may choose the same model for controlled comparison or a different
+  model for a system matchup; those claims and aggregates stay separate. See
+  [Harness Lab direction](harness-lab-direction-ja.md). A harness-varying run
+  is never a Model Arena record;
 - the public leaderboard's exact rating algorithm;
 - whether public dialogue uses natural language or a small intent vocabulary;
 - the provider list and model-specific tool-call integration;

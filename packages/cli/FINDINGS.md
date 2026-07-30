@@ -32,12 +32,13 @@ styles — now visible per-move in the replay viewer.
 
 ## Run 7 — learning-vs-cold (fable@low, 4 games): modest edge, rich failure modes
 
-> **Status (2026-07-27):** this is the project's only excursion into
-> harness-versus-harness territory, and that line is now parked. The benchmark
-> scores models, not agent designs — see [Scope in the
-> README](../../README.md#scope-this-is-a-model-benchmark). The run and its
-> lessons stay on the record; they are not a benchmark lane and never enter
-> model-versus-model results.
+> **Status (updated 2026-07-30):** this remains the project's only completed
+> excursion into harness-versus-harness territory. Model Arena scores models,
+> not agent designs, so the run never enters model-versus-model results. Its
+> lessons are now prior evidence for the separately scoped Harness Lab
+> direction; no public Harness Lab lane or competition exists yet. See [Scope
+> in the README](../../README.md#scope-this-is-a-model-benchmark) and [Harness
+> Lab direction](../../docs/harness-lab-direction-ja.md).
 
 `runs/fable-low-learn-vs-cold/`. Both sides claude-fable-5@low. The only
 variable: the learn side gets a post-game analysis pass (same model, same
