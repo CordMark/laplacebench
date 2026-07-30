@@ -2,6 +2,78 @@
 
 Running log of what the discrimination pilot has told us. Newest first.
 
+## Run 10 — bounded-memo vs persistent (gpt-5.6-sol@medium): 2-2 on a pure seat split, at 4.6x lower cost
+
+`runs/harnesslab-sol56m-persistent-vs-memo-20260731/` (tracked at
+`community/runs/keisuke70--harnesslab-sol56m-persistent-vs-memo-20260731/`).
+Second pre-registered Harness Lab ablation
+(plan `docs/plans/2026-07-31-bounded-memo-harness.md`), same protocol as
+Run 9 (4 games, seeds 42/1042/2042/3042, alternating seats, 350k envelope,
+clean-room). Same model and effort on both sides; the difference is the
+H0+H1 compound policy:
+
+- `codex-cli` — persistent thread (unbounded, invisible carryover);
+- `codex-cli-memo` — fresh context every turn; the ONLY carryover is a
+  1500-char, harness-formatted strategy memo the model rewrites each turn,
+  recorded per adapter call in `memo/<gameId>/<team>.jsonl` (memo-v1).
+
+**Score: 2-2 — and every single game was won by Team A, the first-moving
+side, by center occupation in 15-21 plies.** The W-L therefore carries no
+harness signal in this run: the dominant observed factor was the seat.
+(That is itself a game-dynamics observation for this pairing — both
+conditions raced the center and neither defended it well enough at medium —
+in sharp contrast to Run 9's 46-ply elimination wars against the reset
+arm.)
+
+**The cost result is the finding.** With identical W-L, zero illegal moves,
+zero format failures, and zero forfeited turns on BOTH sides:
+
+- output tokens: memo 64,847 vs persistent 300,545 over the same 34 turns
+  each — **4.6x lower**;
+- per-turn shape: memo stays flat (game means 1.1-2.3k/turn, max 5.4k)
+  while persistent's re-derivation curve is visible even in 15-21-ply
+  games (game means 5.0-13.2k/turn, max 23.6k and rising at game end);
+- latency: comparable (memo ~59s/turn vs persistent ~55s/turn);
+- the envelope never bound (games were short), so this run does NOT test
+  "efficiency wins when the budget bites" — it shows equal results at a
+  fraction of the spend.
+
+**Memo mechanics held up completely**: 34/34 transitions returned an
+in-cap, well-formed memo (`updated`; zero missing, zero over-cap), in
+seat-invariant language, strategically coherent to the end — the winning
+memo's final entry reads "Center occupation is complete, so we win
+immediately", with the lesson "preserving the staged one-step center entry
+through the intervening turns converted the positional advantage into an
+immediate win". The carryover is, for the first time, an auditable public
+artifact rather than hidden reasoning.
+
+Pre-registered observational reads against Run 9's reset arm (same
+opponent condition, same seeds, DIFFERENT run — persistent's actual moves
+diverge, so these are cross-run observations, not head-to-head claims):
+
+- cost: memo's flat curve sits at or below reset's (1.1-2.3k vs 2-4k/turn)
+  — the memo pays for itself; carrying a bounded plan costs no more than
+  carrying nothing;
+- reliability: memo made **zero** illegal moves where reset showed the
+  state-drift signature (0.036 illegal/turn, one forfeited turn) — the
+  memo's position-read section appears to remove the memory-loss cost of a
+  fresh context, though n=4 keeps this suggestive;
+- W-L vs the common opponent: reset went 3-1, memo 2-2 — but Run 9's
+  persistent losses were budget-forfeit driven in long games and Run 10's
+  games were short seat-decided center rushes, so no cross-run strength
+  ordering is claimed.
+
+Reading, within n=4 discipline: **a bounded, visible carryover matched the
+unbounded, invisible one at 4.6x lower cost, with perfect format
+compliance and no reliability regression.** This is the first concrete
+data point for the fixed-model division's thesis — under a finite
+envelope, what you choose to carry is an engineering variable worth
+competing on — while the seat-swept W-L is a reminder that per-move and
+telemetry metrics, not 4-game W-L, must carry these comparisons. Next
+ablations worth pre-registering: a pairing where the envelope binds
+(longer games or smaller budget), cap-size sweeps, and first-team
+advantage measurement for this ruleset at scale.
+
 ## Run 9 — first curated Harness Lab ablation (gpt-5.6-sol@medium, persistent vs turn-reset): reset 3-1; budget exhaustion is the dominant observed failure mode
 
 `runs/harnesslab-sol56m-persistent-vs-reset-20260730/` (also tracked at

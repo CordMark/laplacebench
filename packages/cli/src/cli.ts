@@ -177,6 +177,32 @@ export function resolveIsolationMode(
   };
 }
 
+/**
+ * Turn-scoped codex conditions (reset/memo) declare that nothing — or only
+ * the recorded memo — carries between turns. Ambient execution cannot
+ * guarantee that: without the clean-room suppression flags the model keeps
+ * shell access and a reused cwd, an unbounded, unrecorded carryover channel.
+ * Rather than silently weakening the declaration, these specs refuse to run
+ * ambient (fail-closed).
+ */
+export function assertTurnScopedCleanRoom(
+  mode: "clean-room" | "ambient" | null,
+  specA: string,
+  specB: string
+): void {
+  if (mode !== "ambient") return;
+  for (const spec of [specA, specB]) {
+    const kind = classifyRunnableAgentSpec(spec)?.kind;
+    if (kind === "codex-cli-reset" || kind === "codex-cli-memo") {
+      throw new MatchPreflightError(
+        `${spec}: turn-scoped 条件(${kind})は「持ち越しは宣言されたもののみ」という不変条件を ` +
+          `ambient 環境では保証できません(tool がファイル経由で状態を持ち越せるため)。` +
+          `--ambient-cli-env を外して clean-room で実行してください。`
+      );
+    }
+  }
+}
+
 /** Test seams for arena(): everything that would otherwise reach a real CLI. */
 export interface ArenaOverrides {
   cleanRoomDeps?: CleanRoomDeps;
@@ -235,6 +261,17 @@ async function makeAgent(
         model: parsed.model,
         effort: parsed.effort,
         contextPolicy: "turn-reset",
+        isolation,
+      });
+      break;
+    }
+    case "codex-cli-memo": {
+      const { codexCliAgent } = require("./agents/cli") as typeof import("./agents/cli");
+      const { MemoSession } = require("./agents/memo") as typeof import("./agents/memo");
+      agent = codexCliAgent({
+        model: parsed.model,
+        effort: parsed.effort,
+        memo: new MemoSession(ctx.runDir),
         isolation,
       });
       break;
@@ -425,6 +462,7 @@ export async function arena(
     specA,
     specB
   );
+  assertTurnScopedCleanRoom(isolationMode, specA, specB);
   const resolveVersion = overrides.resolveCommandVersion ?? commandVersion;
   const claudeVersion = cliProviders.includes("claude") ? resolveVersion("claude") : null;
   const codexVersion = cliProviders.includes("codex") ? resolveVersion("codex") : null;

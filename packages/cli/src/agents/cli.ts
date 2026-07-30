@@ -179,6 +179,22 @@ function assertEmptyCwd(cwd: string, agentName: string): void {
 export type CodexContextPolicy = "persistent" | "turn-reset";
 
 /**
+ * Pure user-text composition shared by every codex turn — the seam that lets
+ * tests assert exactly what reaches the model without launching a process.
+ */
+export function composeCodexUserText(parts: {
+  instructions?: string;
+  memoPrelude?: string;
+  turnText: string;
+}): string {
+  const chunks: string[] = [];
+  if (parts.instructions) chunks.push(parts.instructions);
+  if (parts.memoPrelude) chunks.push(parts.memoPrelude);
+  chunks.push(parts.turnText);
+  return chunks.join("\n\n---\n\n");
+}
+
+/**
  * The per-turn session decision for the codex adapter, pure so the
  * turn-reset contract is testable without launching codex: under
  * "turn-reset" no thread is ever resumed and the instructions are resent
@@ -345,12 +361,25 @@ export function codexCliAgent(opts: {
   /** "turn-reset" discards the whole context every turn (fresh exec, no
    * resume, instructions resent). Default "persistent". */
   contextPolicy?: CodexContextPolicy;
+  /** Bounded-memo carryover (agents/memo.ts). Implies turn-reset execution;
+   * the memo prelude is injected on every call and every reply (timeouts
+   * included) is recorded as a memo transition. */
+  memo?: import("./memo").MemoSession;
   /** Clean-room context (env/flags/cwd). Absent = ambient condition. */
   isolation?: CliIsolation;
+  /** Injectable subprocess runner (tests). Defaults to the real one. */
+  runner?: typeof run;
 }): Agent {
   const model = opts.model ?? "";
-  const policy: CodexContextPolicy = opts.contextPolicy ?? "persistent";
-  const specHead = policy === "turn-reset" ? "codex-cli-reset" : "codex-cli";
+  const policy: CodexContextPolicy = opts.memo
+    ? "turn-reset"
+    : opts.contextPolicy ?? "persistent";
+  const specHead = opts.memo
+    ? "codex-cli-memo"
+    : policy === "turn-reset"
+      ? "codex-cli-reset"
+      : "codex-cli";
+  const exec = opts.runner ?? run;
   const cwd = opts.isolation?.cwd ?? scratchDir("laplace-codex-");
   let threadId = "";
   let started = false;
@@ -362,21 +391,25 @@ export function codexCliAgent(opts: {
   return {
     name: `${specHead}:${model || "default"}${opts.effort ? `@${opts.effort}` : ""}`,
     usageProfile: { provider: "openai", source: "codex-cli" },
-    startGame(t: TeamId) {
+    startGame(t: TeamId, gameId?: string) {
       if (opts.isolation) assertEmptyCwd(cwd, specHead);
       team = t;
       threadId = "";
       started = false;
+      opts.memo?.startGame(t, gameId ?? "");
     },
     async act(input: TurnInput): Promise<AgentReply> {
       const obsJson = JSON.stringify(
         observationFromInput(input)
       );
       const plan = codexSessionPlan(policy, started, threadId);
-      let userText = turnMessage(obsJson, input.attempt, input.error?.code, input.ply);
-      if (plan.includeInstructions) {
-        userText = `${buildInstructions(team, { outputTokenBudget: input.outputTokenBudget })}\n\n---\n\n${userText}`;
-      }
+      const userText = composeCodexUserText({
+        instructions: plan.includeInstructions
+          ? buildInstructions(team, { outputTokenBudget: input.outputTokenBudget })
+          : undefined,
+        memoPrelude: opts.memo?.prelude(),
+        turnText: turnMessage(obsJson, input.attempt, input.error?.code, input.ply),
+      });
 
       const invocation = buildCodexInvocation({
         userText,
@@ -388,7 +421,7 @@ export function codexCliAgent(opts: {
       });
 
       const start = Date.now();
-      const { stdout, stderr, code, timedOut } = await run(
+      const { stdout, stderr, code, timedOut } = await exec(
         "codex",
         invocation.argv,
         invocation.cwd,
@@ -402,11 +435,15 @@ export function codexCliAgent(opts: {
         // move was discarded by the referee.
         threadId = "";
         started = false;
+        // A timeout is still a memo transition: no reply text, so the memo
+        // stays and the record says so.
+        const memoStatus = opts.memo?.record("", input.ply, input.attempt);
         return {
           move: null,
           raw: `TURN_TIMEOUT: stderr=${stderr.slice(0, 300)}`,
           latencyMs,
           timedOut: true,
+          ...(memoStatus ? { meta: { memo_status: memoStatus } } : {}),
         };
       }
 
@@ -435,10 +472,12 @@ export function codexCliAgent(opts: {
       );
 
       if (messages.length === 0) {
+        const memoStatus = opts.memo?.record("", input.ply, input.attempt);
         return {
           move: null,
           raw: `CLI_ERROR: exit=${code} failed=${JSON.stringify(failed ?? null).slice(0, 300)} stderr=${stderr.slice(0, 200)}`,
           latencyMs,
+          ...(memoStatus ? { meta: { memo_status: memoStatus } } : {}),
         };
       }
 
@@ -447,11 +486,13 @@ export function codexCliAgent(opts: {
       const text: string = messages.map((m: any) => m.item.text ?? "").join("\n");
       const usageEvent = events.find((e: any) => e.type === "turn.completed");
       const u = usageEvent?.usage ?? {};
+      const memoStatus = opts.memo?.record(text, input.ply, input.attempt);
       return {
         move: extractMove(text),
         raw: text,
         latencyMs,
         usage: normalizeOpenAIUsage(u, "codex-cli", userText, text),
+        ...(memoStatus ? { meta: { memo_status: memoStatus } } : {}),
       };
     },
     // dispose, not endGame — see claudeCliAgent.

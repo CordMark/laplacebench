@@ -186,6 +186,7 @@ export const RECOGNIZED_HARNESSES: readonly string[] = [
   "claude-cli-learn",
   "codex-cli",
   "codex-cli-reset",
+  "codex-cli-memo",
   "anthropic",
   "product-cpu",
 ];
@@ -201,6 +202,7 @@ export const LLM_HARNESSES: readonly string[] = [
   "claude-cli-learn",
   "codex-cli",
   "codex-cli-reset",
+  "codex-cli-memo",
   "anthropic",
 ];
 
@@ -268,7 +270,15 @@ export const HARNESS_CONDITIONS: Readonly<Record<string, HarnessConditions>> = {
     reasoning_retention: "discarded every turn (nothing carries over)",
     compaction: "n/a (no long-lived context to compact)",
     mechanism:
-      "fresh codex exec per turn; rulebook + full-state observation resent every turn",
+      "fresh codex exec per turn; rulebook + full-state observation resent every turn; clean-room execution required (ambient refused — a reused cwd with tools would be an undeclared carryover channel)",
+  },
+  "codex-cli-memo": {
+    context_lifetime: "turn-scoped + bounded public memo carryover",
+    reasoning_retention:
+      "discarded every turn; the only carryover is a public, capped memo the model rewrites each turn",
+    compaction: "n/a (context never grows; the memo cap is the bound)",
+    mechanism:
+      "fresh codex exec per turn; harness-injected memo (memo-v1, 1500-char cap) recorded per adapter call to memo/<gameId>/<team>.jsonl; clean-room execution required (ambient refused — the memo must be the ONLY carryover)",
   },
   anthropic: {
     context_lifetime: "persistent client-managed transcript (whole game)",

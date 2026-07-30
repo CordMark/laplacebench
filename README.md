@@ -77,8 +77,10 @@ Deliberately outside the **Model Arena** scope:
   direction — not proof of a harness effect or its individual causes ([Run 7
   in FINDINGS](packages/cli/FINDINGS.md)). The adapter still runs
   (`claude-cli-learn:<model>@<effort>`), and a turn-reset variant
-  (`codex-cli-reset:<model>@<effort>` — fresh context every turn) exists for
-  controlled context-lifetime ablations, but neither is a public lane: the
+  (`codex-cli-reset:<model>@<effort>` — fresh context every turn) and a
+  bounded-memo variant (`codex-cli-memo:<model>@<effort>` — fresh context every
+  turn plus a capped, public strategy memo as the only carryover, recorded per
+  call in the run) exist for controlled context-lifetime ablations, but neither is a public lane: the
   `PUBLIC_MATCHUP_HARNESSES` allowlist keeps every harness-conditioned match —
   same-model or cross-model — out of the default public matchups, so their
   games are never counted as model-versus-model results.
