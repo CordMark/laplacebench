@@ -2,6 +2,54 @@
 
 Running log of what the discrimination pilot has told us. Newest first.
 
+## Run 11 — persistent vs turn-reset again, now at 600k: the Run 9 result flips to persistent 3-1
+
+`runs/harnesslab-sol56m-persistent-vs-reset-600k-20260731/` (tracked at
+`community/runs/keisuke70--harnesslab-sol56m-persistent-vs-reset-600k-20260731/`).
+Third pre-registered Harness Lab ablation
+(plan `docs/plans/2026-07-31-budget-600k-and-run11.md`): the SAME pairing,
+seeds, seats, and protocol as Run 9, with one change — the canonical output
+budget raised from 350k to 600k, intended to keep budget exhaustion from
+deciding the games (600k = Run 9's measured 46-ply requirement of
+~470-510k plus ~20% headroom). Comparisons with Run 9 are cross-run observations under a
+different disclosed budget, not same-condition results.
+
+**Score: persistent 3W-1L — the mirror image of Run 9's reset 3-1.** With
+the cap out of the way in three of four games, the thread-carrying side won
+from both seats and by both victory routes (eliminations at 51 plies,
+center at 17 and at 42 plies). Zero illegal moves, zero format failures on
+the persistent side across 83 turns.
+
+**The one loss is the exception that restates the rule.** Game-001 ran 54
+plies — the longest game in the series so far — and even 600k ran out:
+the persistent side forfeited every turn from ply 47 (`token_budget`
+passes at 47/49/51/53) and lost by elimination, exactly the Run 9 failure
+mode one budget tier higher. Game-000 finished at 637k spent (the final
+winning turns overshot the ledger after admission) — a 51-ply win with
+almost nothing to spare.
+
+Cost: persistent 1,731,054 output tokens vs reset 272,515 over ~82 turns
+each — **6.4x** — with per-turn peaks near 50k late in long games. Reset
+kept its familiar profile: flat spend, one illegal-move blip
+(0.012/turn), and notably doubled latency this run (~102s/turn vs
+persistent's ~54s — rulebook re-reads plus whatever the provider was doing
+that hour; recorded, not interpreted).
+
+Reading, within n=4 discipline and the cross-run caveat: **when the budget
+does not bind, carrying your thinking forward wins** — directionally
+consistent with the ARC-AGI-3 retention report. But the carryover's cost
+grows with game length without bound, so ANY finite budget eventually
+becomes the opponent again: at 350k that happened at ply ~39, at 600k at
+ply ~47. Raising the cap moves the crossover point; it does not remove it.
+Across the three arms measured so far: full retention beat zero retention
+3-1 once the cap mostly stopped binding, at a bill that compounds with
+game length; zero retention stays cheap but error-prone; and the bounded
+memo (Run 10) established a flat cost profile with clean reliability —
+though its seat-dominated 2-2 resolves nothing about memo strength versus
+persistent. What a harness should carry — and when to compact it — is now
+measurably a design variable, which is the Harness Lab's reason to
+exist.
+
 ## Run 10 — bounded-memo vs persistent (gpt-5.6-sol@medium): 2-2 on a pure seat split, at 4.6x lower cost
 
 `runs/harnesslab-sol56m-persistent-vs-memo-20260731/` (tracked at
