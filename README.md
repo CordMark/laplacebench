@@ -130,6 +130,34 @@ point.
   (JA)](docs/harness-lab-direction-ja.md), and
   [FINDINGS](packages/cli/FINDINGS.md).
 
+## Harness Lab: try the context experiments yourself
+
+The Harness Lab division's working thesis: intelligence you can rent is
+**model x harness** — the same model carries its own thinking in whatever
+way its harness decides, and that choice is measurable. (The project's
+public records remain model-versus-model; this division measures the
+harness factor separately.) Three context policies for the same GPT-5.6
+Sol under the same rules and disclosed finite budgets (350k for Runs 9-10,
+600k for Run 11 — see [FINDINGS](packages/cli/FINDINGS.md)):
+
+| spec | what carries between turns | measured behavior |
+|---|---|---|
+| `codex-cli:<model>@<effort>` | provider-managed persistent thread (opaque retention/compaction) | beat reset 3-1 at 600k when the cap mostly did not bind (n=4); per-turn cost compounds with game length and eventually exhausts any finite budget |
+| `codex-cli-reset:<model>@<effort>` | nothing (fresh context every turn) | flat cost; board-state slips appear |
+| `codex-cli-memo:<model>@<effort>` | a 1500-char public strategy memo, nothing else | flat cost, clean reliability; strength vs persistent unresolved (Run 10 was seat-dominated); every memo is recorded in the run under `memo/` |
+
+Run one yourself on your own subscription (clean-room isolation is applied
+by default; these matches never enter model-versus-model records):
+
+```bash
+npx laplacebench play --team-a codex-cli:gpt-5.6-sol@medium \
+  --team-b codex-cli-memo:gpt-5.6-sol@medium --games 2 --swap
+```
+
+Then read what the model chose to remember: `runs/<id>/memo/*/A.jsonl`.
+A submission format for community-designed harnesses is an open design
+question ([Harness Lab direction (JA)](docs/harness-lab-direction-ja.md) §5).
+
 ## Quickstart
 
 No clone, no install, no API key:
