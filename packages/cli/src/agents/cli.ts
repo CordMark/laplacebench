@@ -3,6 +3,7 @@ import { execFile } from "node:child_process";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
+import type { CliIsolation } from "../cleanroom";
 import { buildInstructions, extractMove, observationFromInput, turnMessage } from "../prompt";
 import type { Agent, AgentReply, TeamId, TurnInput } from "../types";
 import { normalizeAnthropicUsage, normalizeOpenAIUsage } from "../usage";
@@ -66,6 +67,7 @@ function run(
   args: string[],
   cwd: string,
   timeoutMs: number,
+  env: NodeJS.ProcessEnv,
   input?: string
 ): Promise<Spawned> {
   return new Promise((resolve) => {
@@ -76,7 +78,7 @@ function run(
         cwd,
         timeout: Math.max(1, timeoutMs),
         maxBuffer: 64 * 1024 * 1024,
-        env: buildChildEnv(),
+        env,
       },
       (err, stdout, stderr) => {
         resolve({
@@ -105,6 +107,75 @@ function uuid(): string {
   return require("node:crypto").randomUUID();
 }
 
+export interface CliInvocation {
+  argv: string[];
+  env: NodeJS.ProcessEnv;
+  cwd: string;
+}
+
+/**
+ * Pure claude invocation builder — the ONE place a claude argv/env/cwd is
+ * assembled, shared by the match path, the learning analysis path, and the
+ * tests that pin the clean-room flag contract. `isolation` appends the
+ * clean-room suppression flags and swaps in the isolated env/cwd; without it
+ * the ambient-mode env (buildChildEnv) and the caller's scratch cwd apply.
+ */
+export function buildClaudeInvocation(opts: {
+  userText: string;
+  model: string;
+  effort?: string;
+  sessionArgs: string[];
+  ambientCwd: string;
+  isolation?: CliIsolation;
+}): CliInvocation {
+  const argv = [
+    "-p",
+    opts.userText,
+    "--output-format",
+    "json",
+    "--model",
+    opts.model,
+  ];
+  if (opts.effort) argv.push("--effort", opts.effort);
+  argv.push(...opts.sessionArgs);
+  if (opts.isolation) argv.push(...opts.isolation.extraArgs);
+  return {
+    argv,
+    env: opts.isolation ? opts.isolation.env : buildChildEnv(),
+    cwd: opts.isolation ? opts.isolation.cwd : opts.ambientCwd,
+  };
+}
+
+/** Pure codex invocation builder — same contract as buildClaudeInvocation. */
+export function buildCodexInvocation(opts: {
+  userText: string;
+  model: string;
+  effortArgs: string[];
+  resumeThreadId?: string;
+  ambientCwd: string;
+  isolation?: CliIsolation;
+}): CliInvocation {
+  const modelArgs = opts.model ? ["-m", opts.model] : [];
+  const isolationArgs = opts.isolation ? [...opts.isolation.extraArgs] : [];
+  const argv = opts.resumeThreadId
+    ? ["exec", "resume", opts.resumeThreadId, "--json", "--skip-git-repo-check", ...opts.effortArgs, ...modelArgs, ...isolationArgs, opts.userText]
+    : ["exec", "--json", "--skip-git-repo-check", ...opts.effortArgs, ...modelArgs, ...isolationArgs, opts.userText];
+  return {
+    argv,
+    env: opts.isolation ? opts.isolation.env : buildChildEnv(),
+    cwd: opts.isolation ? opts.isolation.cwd : opts.ambientCwd,
+  };
+}
+
+/** Clean-room contract: an agent's cwd must be empty when its game starts. */
+function assertEmptyCwd(cwd: string, agentName: string): void {
+  if (fs.readdirSync(cwd).length > 0) {
+    throw new Error(
+      `${agentName}: clean-room scratch cwd ${cwd} is not empty at game start`
+    );
+  }
+}
+
 /**
  * Subscription-driven adapter that drives the Claude Code CLI as a
  * subprocess. Persistent context is the CLI's own session: --session-id on
@@ -123,9 +194,11 @@ export function claudeCliAgent(opts: {
   name?: string;
   /** Called at startGame; returned text is appended after the rulebook in the first message. */
   preludeProvider?: () => string;
+  /** Clean-room context (env/flags/cwd). Absent = ambient condition. */
+  isolation?: CliIsolation;
 }): Agent {
   const model = opts.model ?? "sonnet";
-  const cwd = scratchDir("laplace-claude-");
+  const cwd = opts.isolation?.cwd ?? scratchDir("laplace-claude-");
   let sessionId = "";
   let started = false;
   let team: TeamId = "A";
@@ -135,6 +208,7 @@ export function claudeCliAgent(opts: {
     name: opts.name ?? `claude-cli:${model}${opts.effort ? `@${opts.effort}` : ""}`,
     usageProfile: { provider: "anthropic", source: "claude-cli" },
     startGame(t: TeamId) {
+      if (opts.isolation) assertEmptyCwd(cwd, "claude-cli");
       team = t;
       sessionId = uuid();
       started = false;
@@ -152,20 +226,24 @@ export function claudeCliAgent(opts: {
         userText = parts.join("\n\n---\n\n");
       }
 
-      const args = ["-p", userText, "--output-format", "json", "--model", model];
-      if (opts.effort) args.push("--effort", opts.effort);
-      if (!started) {
-        args.push("--session-id", sessionId, "--disallowedTools", DISALLOWED_CLAUDE_TOOLS);
-      } else {
-        args.push("--resume", sessionId);
-      }
+      const invocation = buildClaudeInvocation({
+        userText,
+        model,
+        effort: opts.effort,
+        sessionArgs: !started
+          ? ["--session-id", sessionId, "--disallowedTools", DISALLOWED_CLAUDE_TOOLS]
+          : ["--resume", sessionId],
+        ambientCwd: cwd,
+        isolation: opts.isolation,
+      });
 
       const start = Date.now();
       const { stdout, stderr, code, timedOut } = await run(
         "claude",
-        args,
-        cwd,
-        input.deadlineAtMs - Date.now()
+        invocation.argv,
+        invocation.cwd,
+        input.deadlineAtMs - Date.now(),
+        invocation.env
       );
       const latencyMs = Date.now() - start;
       started = true;
@@ -216,7 +294,10 @@ export function claudeCliAgent(opts: {
         ),
       };
     },
-    endGame() {
+    // The scratch cwd is released in dispose, NOT endGame: the learning
+    // wrapper runs its post-game analysis inside endGame, and the runner
+    // calls dispose on every exit path after endGame completes.
+    dispose() {
       try {
         fs.rmSync(cwd, { recursive: true, force: true });
       } catch {}
@@ -235,9 +316,14 @@ export function claudeCliAgent(opts: {
  * is rejected on ChatGPT-account auth). Same harness-system-prompt confound
  * as the Claude CLI track.
  */
-export function codexCliAgent(opts: { model?: string; effort?: string }): Agent {
+export function codexCliAgent(opts: {
+  model?: string;
+  effort?: string;
+  /** Clean-room context (env/flags/cwd). Absent = ambient condition. */
+  isolation?: CliIsolation;
+}): Agent {
   const model = opts.model ?? "";
-  const cwd = scratchDir("laplace-codex-");
+  const cwd = opts.isolation?.cwd ?? scratchDir("laplace-codex-");
   let threadId = "";
   let started = false;
   let team: TeamId = "A";
@@ -249,6 +335,7 @@ export function codexCliAgent(opts: { model?: string; effort?: string }): Agent 
     name: `codex-cli:${model || "default"}${opts.effort ? `@${opts.effort}` : ""}`,
     usageProfile: { provider: "openai", source: "codex-cli" },
     startGame(t: TeamId) {
+      if (opts.isolation) assertEmptyCwd(cwd, "codex-cli");
       team = t;
       threadId = "";
       started = false;
@@ -262,18 +349,22 @@ export function codexCliAgent(opts: { model?: string; effort?: string }): Agent 
         userText = `${buildInstructions(team, { outputTokenBudget: input.outputTokenBudget })}\n\n---\n\n${userText}`;
       }
 
-      const base = ["exec", "--json", "--skip-git-repo-check", ...effortArgs];
-      if (model) base.push("-m", model);
-      const args = started
-        ? ["exec", "resume", threadId, "--json", "--skip-git-repo-check", ...effortArgs, ...(model ? ["-m", model] : []), userText]
-        : [...base, userText];
+      const invocation = buildCodexInvocation({
+        userText,
+        model,
+        effortArgs,
+        resumeThreadId: started ? threadId : undefined,
+        ambientCwd: cwd,
+        isolation: opts.isolation,
+      });
 
       const start = Date.now();
       const { stdout, stderr, code, timedOut } = await run(
         "codex",
-        args,
-        cwd,
-        input.deadlineAtMs - Date.now()
+        invocation.argv,
+        invocation.cwd,
+        input.deadlineAtMs - Date.now(),
+        invocation.env
       );
       const latencyMs = Date.now() - start;
 
@@ -334,7 +425,8 @@ export function codexCliAgent(opts: { model?: string; effort?: string }): Agent 
         usage: normalizeOpenAIUsage(u, "codex-cli", userText, text),
       };
     },
-    endGame() {
+    // dispose, not endGame — see claudeCliAgent.
+    dispose() {
       try {
         fs.rmSync(cwd, { recursive: true, force: true });
       } catch {}

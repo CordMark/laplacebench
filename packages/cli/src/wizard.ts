@@ -65,7 +65,7 @@ const VALUE_FLAGS = [
  * interpreting values here would publish a run for someone who explicitly
  * wrote that they did not want it published.
  */
-const BOOLEAN_FLAGS = ["swap", "submit", "serial"] as const;
+const BOOLEAN_FLAGS = ["swap", "submit", "serial", "ambient-cli-env"] as const;
 
 const INTEGER_FLAGS = [
   "games", "seed", "max-plies", "output-token-budget", "turn-timeout-ms",
@@ -596,7 +596,7 @@ const PASSTHROUGH_FLAGS = [
 ] as const;
 
 /** Presence-only flags that pass straight through to the runner. */
-const PASSTHROUGH_BOOLEAN_FLAGS = ["serial"] as const;
+const PASSTHROUGH_BOOLEAN_FLAGS = ["serial", "ambient-cli-env"] as const;
 
 /**
  * The single entry point for running a match. Flags decide how much of it is

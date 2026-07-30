@@ -2,6 +2,7 @@ import "../env";
 import { execFile } from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import type { CliIsolation } from "../cleanroom";
 import { colorName, playerTeam } from "../engine";
 import { buildChildEnv } from "./cli";
 import type { Agent, EndGameInfo, TeamId } from "../types";
@@ -44,14 +45,24 @@ export function formatGameRecord(eventsPath: string, myTeam: TeamId): string {
   return lines.join("\n");
 }
 
-function runClaude(args: string[], timeoutMs = 600_000): Promise<string> {
+function runClaude(
+  args: string[],
+  isolation?: CliIsolation,
+  timeoutMs = 600_000
+): Promise<string> {
   return new Promise((resolve, reject) => {
     execFile(
       "claude",
       args,
-      // buildChildEnv: the postgame analysis is part of the labeled benchmark
-      // condition too — ambient CLAUDE_EFFORT must not change it either.
-      { timeout: timeoutMs, maxBuffer: 64 * 1024 * 1024, env: buildChildEnv() },
+      // The postgame analysis is part of the labeled benchmark condition too:
+      // clean-room isolation (env + cwd) applies to it exactly as to play
+      // calls; in ambient mode buildChildEnv keeps CLAUDE_EFFORT out.
+      {
+        timeout: timeoutMs,
+        maxBuffer: 64 * 1024 * 1024,
+        env: isolation ? isolation.env : buildChildEnv(),
+        ...(isolation ? { cwd: isolation.cwd } : {}),
+      },
       (err, stdout, stderr) => {
         if (err && !stdout) return reject(new Error(`${err.message} ${stderr.slice(0, 200)}`));
         resolve(stdout ?? "");
@@ -74,6 +85,8 @@ export function learningClaudeCliAgent(opts: {
   model?: string;
   effort?: string;
   runDir: string;
+  /** Clean-room context, applied to play AND analysis calls alike. */
+  isolation?: CliIsolation;
 }): Agent {
   const model = opts.model ?? "sonnet";
   const learnDir = path.join(opts.runDir, "learn");
@@ -82,6 +95,7 @@ export function learningClaudeCliAgent(opts: {
   const base = claudeCliAgent({
     model,
     effort: opts.effort,
+    isolation: opts.isolation,
     name: `claude-cli-learn:${model}${opts.effort ? `@${opts.effort}` : ""}`,
     preludeProvider: () => {
       if (!fs.existsSync(strategyPath)) return "";
@@ -115,17 +129,21 @@ export function learningClaudeCliAgent(opts: {
       ].join("\n\n");
 
       try {
-        const stdout = await runClaude([
-          "-p",
-          prompt,
-          "--output-format",
-          "json",
-          "--model",
-          model,
-          ...(opts.effort ? ["--effort", opts.effort] : []),
-          "--disallowedTools",
-          "Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch,Task,TodoWrite,NotebookEdit",
-        ]);
+        const stdout = await runClaude(
+          [
+            "-p",
+            prompt,
+            "--output-format",
+            "json",
+            "--model",
+            model,
+            ...(opts.effort ? ["--effort", opts.effort] : []),
+            "--disallowedTools",
+            "Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch,Task,TodoWrite,NotebookEdit",
+            ...(opts.isolation ? opts.isolation.extraArgs : []),
+          ],
+          opts.isolation
+        );
         const parsed = JSON.parse(stdout.trim());
         const text: unknown = parsed?.result;
         if (typeof text === "string" && text.trim().length > 200) {

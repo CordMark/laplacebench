@@ -18,6 +18,18 @@ import {
 import { PROMPT_REV } from "./prompt";
 import { MatchPreflightError } from "./playerrors";
 import { PRODUCT_CPU_POLICY, usageAgentSpecsLine } from "./catalog";
+import {
+  ambientManifest,
+  defaultCanaryCliDeps,
+  isolationManifest,
+  prepareCleanRoom,
+  runCanaryMatrix,
+  staticChecks,
+  type CanaryCliDeps,
+  type CleanRoomContext,
+  type CleanRoomDeps,
+  type CleanRoomProvider,
+} from "./cleanroom";
 import { classifyRunnableAgentSpec, type LatencyTelemetry } from "./publicgames";
 import type { Agent, AgentReply } from "./types";
 
@@ -126,13 +138,58 @@ export function enforceLatencyContract(
   };
 }
 
+/**
+ * Which clean-room provider a spec's agent talks to, or null for agents the
+ * isolation surface does not apply to (API, baselines, product CPU).
+ */
+export function cleanRoomProviderFor(spec: string): CleanRoomProvider | null {
+  if (spec.startsWith("claude-cli")) return "claude"; // includes claude-cli-learn
+  if (spec.startsWith("codex-cli")) return "codex";
+  return null;
+}
+
+/**
+ * Subscription-CLI matches run clean-room by default; `--ambient-cli-env` is
+ * the explicit opt-in to the legacy environment-copying condition, recorded
+ * as its own labeled mode. There is no silent fallback between the two.
+ */
+export function resolveIsolationMode(
+  ambientOptIn: boolean,
+  specA: string,
+  specB: string
+): { mode: "clean-room" | "ambient" | null; providers: CleanRoomProvider[] } {
+  const providers = [
+    ...new Set(
+      [specA, specB]
+        .map((spec) => cleanRoomProviderFor(spec))
+        .filter((p): p is CleanRoomProvider => p !== null)
+    ),
+  ];
+  return {
+    mode: providers.length === 0 ? null : ambientOptIn ? "ambient" : "clean-room",
+    providers,
+  };
+}
+
+/** Test seams for arena(): everything that would otherwise reach a real CLI. */
+export interface ArenaOverrides {
+  cleanRoomDeps?: CleanRoomDeps;
+  canaryCliDeps?: CanaryCliDeps;
+  resolveCommandVersion?: (cmd: string) => string | null;
+}
+
 async function makeAgent(
   spec: string,
   seed: number,
-  ctx: { runDir: string }
+  ctx: { runDir: string; cleanRoom: CleanRoomContext | null }
 ): Promise<Agent> {
   const parsed = classifyRunnableAgentSpec(spec);
   if (!parsed) throw new Error(`Unknown agent spec: ${spec}`);
+  const cleanRoomProvider = ctx.cleanRoom ? cleanRoomProviderFor(spec) : null;
+  const isolation =
+    ctx.cleanRoom && cleanRoomProvider
+      ? ctx.cleanRoom.agentIsolation(cleanRoomProvider)
+      : undefined;
   let agent: Agent;
   switch (parsed.kind) {
     case "product-cpu": {
@@ -153,17 +210,17 @@ async function makeAgent(
     }
     case "claude-cli-learn": {
       const { learningClaudeCliAgent } = require("./agents/learning") as typeof import("./agents/learning");
-      agent = learningClaudeCliAgent({ model: parsed.model, effort: parsed.effort, runDir: ctx.runDir });
+      agent = learningClaudeCliAgent({ model: parsed.model, effort: parsed.effort, runDir: ctx.runDir, isolation });
       break;
     }
     case "claude-cli": {
       const { claudeCliAgent } = require("./agents/cli") as typeof import("./agents/cli");
-      agent = claudeCliAgent({ model: parsed.model, effort: parsed.effort });
+      agent = claudeCliAgent({ model: parsed.model, effort: parsed.effort, isolation });
       break;
     }
     case "codex-cli": {
       const { codexCliAgent } = require("./agents/cli") as typeof import("./agents/cli");
-      agent = codexCliAgent({ model: parsed.model, effort: parsed.effort });
+      agent = codexCliAgent({ model: parsed.model, effort: parsed.effort, isolation });
       break;
     }
   }
@@ -317,7 +374,8 @@ export async function runGameSet<P extends { gameId: string }>(opts: {
 }
 
 export async function arena(
-  args: Record<string, string | boolean>
+  args: Record<string, string | boolean>,
+  overrides: ArenaOverrides = {}
 ): Promise<{ failedGames: number }> {
   const { specA, specB, games, swap, seed } = arenaDefaults(args);
   const maxPlies = resolveMaxPlies(args["max-plies"]);
@@ -345,6 +403,15 @@ export async function arena(
     new Date().toISOString().replace(/[:.]/g, "").slice(0, 15) + `-${specA}-vs-${specB}`.replace(/[^a-zA-Z0-9_-]/g, "_");
   // Runs live under the caller's working directory, not the package install.
   const runDir = path.resolve(process.cwd(), "runs", runId);
+
+  const { mode: isolationMode, providers: cliProviders } = resolveIsolationMode(
+    args["ambient-cli-env"] === true,
+    specA,
+    specB
+  );
+  const resolveVersion = overrides.resolveCommandVersion ?? commandVersion;
+  const claudeVersion = cliProviders.includes("claude") ? resolveVersion("claude") : null;
+  const codexVersion = cliProviders.includes("codex") ? resolveVersion("codex") : null;
 
   // Metadata-only preflight happens before the run directory exists.
   const productSpecs = [specA, specB].filter((s) => PRODUCT_CPU_SPEC.test(s));
@@ -383,8 +450,56 @@ export async function arena(
     }
   }
 
-  fs.mkdirSync(runDir, { recursive: true });
-  fs.writeFileSync(
+  // Fail-closed clean-room preflight, BEFORE the run directory exists: a run
+  // that cannot certify its isolation leaves no run.json behind.
+  let cleanRoom: CleanRoomContext | null = null;
+  let isolationRecord: object | null = null;
+  if (isolationMode === "clean-room") {
+    for (const provider of cliProviders) {
+      const version = provider === "claude" ? claudeVersion : codexVersion;
+      if (!version) {
+        throw new MatchPreflightError(
+          `${provider} CLI の version を解決できませんでした。clean-room 条件は CLI version の記録を要求します。` +
+            `従来条件で実行するには --ambient-cli-env を指定してください。`
+        );
+      }
+    }
+    cleanRoom = prepareCleanRoom(cliProviders, overrides.cleanRoomDeps);
+    try {
+      const staticResults = staticChecks(cleanRoom);
+      console.log("clean-room preflight: canary 検査を実行中…");
+      const canaryResults = await runCanaryMatrix(
+        cleanRoom,
+        overrides.canaryCliDeps ?? defaultCanaryCliDeps,
+        {
+          claudeCredentials: overrides.cleanRoomDeps?.claudeCredentials,
+          codexAuth: overrides.cleanRoomDeps?.codexAuth,
+        }
+      );
+      isolationRecord = isolationManifest(
+        cleanRoom,
+        {
+          ...(claudeVersion ? { claude: claudeVersion } : {}),
+          ...(codexVersion ? { codex: codexVersion } : {}),
+        },
+        staticResults,
+        canaryResults
+      );
+      console.log("clean-room preflight: 合格");
+    } catch (err) {
+      cleanRoom.cleanup();
+      throw err;
+    }
+  } else if (isolationMode === "ambient") {
+    console.log(
+      "--ambient-cli-env: 従来の環境コピー条件で実行します(run.json に ambient として記録)"
+    );
+    isolationRecord = ambientManifest();
+  }
+
+  try {
+    fs.mkdirSync(runDir, { recursive: true });
+    fs.writeFileSync(
     path.join(runDir, "run.json"),
     JSON.stringify(
       {
@@ -404,15 +519,10 @@ export async function arena(
         usage_schema: "laplace-model-usage-v1",
         usage_scope: "in-game act calls, including repair attempts; excludes post-game learning",
         cli_versions: {
-          claude:
-            specA.startsWith("claude-cli") || specB.startsWith("claude-cli")
-              ? commandVersion("claude")
-              : null,
-          codex:
-            specA.startsWith("codex-cli") || specB.startsWith("codex-cli")
-              ? commandVersion("codex")
-              : null,
+          claude: claudeVersion,
+          codex: codexVersion,
         },
+        isolation: isolationRecord,
         product_cpu: productProvenance,
         execution,
         started_at: new Date().toISOString(),
@@ -420,7 +530,13 @@ export async function arena(
       null,
       2
     )
-  );
+    );
+  } catch (err) {
+    // The preflight passed but the run could not be recorded: release the
+    // isolation resources here too — no exit path may leak them.
+    cleanRoom?.cleanup();
+    throw err;
+  }
 
   if (execution === "parallel") {
     console.log(`${games} 局を並列実行します(--serial で直列)`);
@@ -431,7 +547,7 @@ export async function arena(
   const makePair = async (g: number): Promise<ArenaGamePair> => {
     const swapped = swap && g % 2 === 1;
     const gameSeed = seed + g * 1000;
-    const ctx = { runDir };
+    const ctx = { runDir, cleanRoom };
     const first = await makeAgent(swapped ? specB : specA, gameSeed + 1, ctx);
     let second: Agent;
     try {
@@ -460,25 +576,33 @@ export async function arena(
     );
   };
 
-  const failedGames = await runGameSet({
-    games,
-    execution,
-    makePair,
-    runOne,
-    disposePair: async (pair) => {
-      try {
-        await pair.first.dispose?.();
-      } catch {}
-      try {
-        await pair.second.dispose?.();
-      } catch {}
-    },
-    reportFailure: (gameId, err) => {
-      console.error(
-        `[${gameId}] failed: ${err instanceof Error ? err.message : String(err)}`
-      );
-    },
-  });
+  let failedGames: number;
+  try {
+    failedGames = await runGameSet({
+      games,
+      execution,
+      makePair,
+      runOne,
+      disposePair: async (pair) => {
+        try {
+          await pair.first.dispose?.();
+        } catch {}
+        try {
+          await pair.second.dispose?.();
+        } catch {}
+      },
+      reportFailure: (gameId, err) => {
+        console.error(
+          `[${gameId}] failed: ${err instanceof Error ? err.message : String(err)}`
+        );
+      },
+    });
+  } finally {
+    // Run scope is the sole owner of the isolation homes: they are deleted
+    // only after every game (including failures) is finished, never by an
+    // individual agent whose sibling may still be mid-game.
+    cleanRoom?.cleanup();
+  }
 
   const summary = summarize(runDir);
   console.log("\n=== summary ===");
@@ -625,7 +749,7 @@ async function main(): Promise<void> {
     );
   } else {
     console.log(
-      "usage:\n  laplacebench play                                 (interactive: pick providers, models, effort)\n  laplacebench play --team-a <spec> --team-b <spec> [--games N] [--swap] [--serial] [--seed N] [--run-id <id>] [--submit] [--max-plies N] [--output-token-budget N] [--turn-timeout-ms N]\n                                                    (non-interactive: --team-a and --team-b are required; anything else supplied is not asked for)\n  laplacebench summarize <runDir>\n  laplacebench regret <runDir> [--oracle product-cpu:cpu-v4:level_5]  (offline per-move regret vs frozen product oracle)\n  laplacebench export-web <runDir> [--out <dir>]   (verify + local replay JSON)\n  laplacebench verify <runDir...>                  (deterministic replay verification)\n  laplacebench submit <runDir>                     (verify + publish to the community ledger; needs gh auth)\n  laplacebench standings <runDir...> [--out <md>] [--json-out <json>]  (temporary v2 compatibility output)\n  laplacebench public-arena <runDir...> --out <dir> --source-sha <sha> --generated-at <time>  (CI artifact generator)\n\nmatch resources:\n  --serial                 run multiple games sequentially (default: parallel when --games > 1; learning agents always run sequentially)\n  --output-token-budget N  per team/game, in-game output tokens; default 350000 for LLM matches (canonical envelope), none for baseline-only\n  --turn-timeout-ms N      shared across both attempts in a turn; default 1200000 for LLM matches (backstop), 300000 otherwise\n  --max-plies N            default 100 (canonical cap for laplace-8x8-v1 matches)\n\nproduct CPU (play + regret):\n  bundled in the package; Python 3.11+ is required (no product checkout or commit input)\n\n" +
+      "usage:\n  laplacebench play                                 (interactive: pick providers, models, effort)\n  laplacebench play --team-a <spec> --team-b <spec> [--games N] [--swap] [--serial] [--seed N] [--run-id <id>] [--submit] [--max-plies N] [--output-token-budget N] [--turn-timeout-ms N] [--ambient-cli-env]\n                                                    (non-interactive: --team-a and --team-b are required; anything else supplied is not asked for)\n  laplacebench summarize <runDir>\n  laplacebench regret <runDir> [--oracle product-cpu:cpu-v4:level_5]  (offline per-move regret vs frozen product oracle)\n  laplacebench export-web <runDir> [--out <dir>]   (verify + local replay JSON)\n  laplacebench verify <runDir...>                  (deterministic replay verification)\n  laplacebench submit <runDir>                     (verify + publish to the community ledger; needs gh auth)\n  laplacebench standings <runDir...> [--out <md>] [--json-out <json>]  (temporary v2 compatibility output)\n  laplacebench public-arena <runDir...> --out <dir> --source-sha <sha> --generated-at <time>  (CI artifact generator)\n\nmatch resources:\n  --serial                 run multiple games sequentially (default: parallel when --games > 1; learning agents always run sequentially)\n  --output-token-budget N  per team/game, in-game output tokens; default 350000 for LLM matches (canonical envelope), none for baseline-only\n  --turn-timeout-ms N      shared across both attempts in a turn; default 1200000 for LLM matches (backstop), 300000 otherwise\n  --max-plies N            default 100 (canonical cap for laplace-8x8-v1 matches)\n  --ambient-cli-env        opt out of the default clean-room isolation for subscription-CLI agents; the run is recorded as the ambient (environment-copying) condition\n\nproduct CPU (play + regret):\n  bundled in the package; Python 3.11+ is required (no product checkout or commit input)\n\n" +
         usageAgentSpecsLine() +
         "\n  (claude-cli/codex-cli run under your Claude/ChatGPT subscription — no API key)"
     );

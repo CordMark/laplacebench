@@ -292,7 +292,13 @@ verified run は fresh session と clean scratch cwd に加え、次を fail-clo
   hooks、MCP、agents、rules、fallback、tools、network、envのcanaryを検証する。
   隔離能力やversionを確認できなければ official 集計へ入れない。
 
-現状の `buildChildEnv` は ambient environment を複製して `CLAUDE_EFFORT` だけを
-削除し、CLI呼び出しにも上記 isolation flags がない。scratch cwd と tool制限だけでは
-personal config clean を証明できないため、現在のサブスク実行は self-serve / unverified
-provider-CLI condition と扱い、cleanup 完了前に「clean model run」と呼ばない。
+(2026-07-30 実装) サブスクCLI対局は clean-room が既定になった
+(`docs/plans/2026-07-30-clean-room-execution.md`): 認証ファイルだけを持ち込む隔離
+config home + 隔離OS HOME、env allowlist、抑止フラグ(Claude `--safe-mode
+--setting-sources "" --strict-mcp-config`、Codex `--ignore-user-config
+--ignore-rules --disable shell_tool` 等)、run dir 作成前の fail-closed preflight
+(managed policy検査・ホーム内容列挙・両方向 canary matrix)を実装し、結果を
+run.json の `isolation` manifest(`laplace-isolation-v1`)に記録する。ambient
+環境コピーは `--ambient-cli-env` の明示opt-in・別条件ラベルとしてのみ残る。
+clean-room は個人設定の隔離を証明する実行条件であり、それ自体は model identity の
+検証(official verified)ではない。

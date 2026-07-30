@@ -81,10 +81,15 @@ Deliberately outside the **Model Arena** scope:
   model-versus-model results.
 - **Vendor CLI harness prompts** cannot be removed when you play through a
   subscription CLI, so those matches stay labeled as their own condition
-  rather than treated as clean-model runs. Provider-owned built-in prompts may
-  be part of a future verified condition when the CLI version is recorded, but
-  personal instructions/settings/plugins must be isolated first. The current
-  subscription adapters do not yet certify that clean-room boundary.
+  rather than treated as clean-model runs. Subscription-CLI matches now run
+  **clean-room by default**: an isolated config home carrying only your auth
+  material, an allowlisted child environment, suppression flags, and a
+  fail-closed canary preflight, all recorded in the run's `isolation`
+  manifest alongside the CLI version. `--ambient-cli-env` opts back into the
+  legacy environment-copying condition, recorded as its own label. Clean-room
+  certifies personal-config isolation — it does not by itself make a run
+  "official verified" (nothing local can prove which model produced the
+  text).
 
 The set of *events* inside the model benchmark is expected to grow. LAPLACE
 is at heart a 2v2 team game, and today's base condition flattens that: one
@@ -170,10 +175,12 @@ replay JSON.
 - **Community (unverified)**: shared logs are replay-verified structurally,
   but nothing can prove which model produced the text — labeled accordingly.
 - **Official (not active)**: a future maintainer-run API or clean-room CLI lane
-  may carry stronger model-identity claims. A CLI run must disable personal
-  configuration while recording its provider-owned harness/CLI version. Today
-  the public arena is the self-reported community lane and does not display an
-  official checkmark.
+  may carry stronger model-identity claims. The clean-room mechanics (personal
+  configuration disabled and canary-verified, provider CLI version recorded in
+  the `isolation` manifest) are implemented and on by default for
+  subscription-CLI runs; what remains for an official lane is the trusted
+  executor. Today the public arena is the self-reported community lane and
+  does not display an official checkmark.
 - Subscription-CLI matches carry each vendor's harness prompt — always
   labeled as a distinct condition from clean API runs.
 
