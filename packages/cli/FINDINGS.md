@@ -2,6 +2,72 @@
 
 Running log of what the discrimination pilot has told us. Newest first.
 
+## Run 9 — first curated Harness Lab ablation (gpt-5.6-sol@medium, persistent vs turn-reset): reset 3-1; budget exhaustion is the dominant observed failure mode
+
+`runs/harnesslab-sol56m-persistent-vs-reset-20260730/` (also tracked at
+`community/runs/keisuke70--harnesslab-sol56m-persistent-vs-reset-20260730/`).
+The first pre-registered controlled ablation under the Harness Lab contract
+(plan `docs/plans/2026-07-30-harness-lab-contract.md` §5 fixed the exact
+command, 4 games, seeds 42/1042/2042/3042, alternating seats, canonical
+envelope, no early stop, before execution). Both sides are the SAME model at
+the SAME effort — `gpt-5.6-sol@medium` — through the same codex CLI under
+clean-room isolation; the only difference is the H0 context policy:
+
+- `codex-cli` — persistent thread for the whole game (`codex exec resume`),
+  provider-managed reasoning retention/compaction (opaque);
+- `codex-cli-reset` — fresh `codex exec` every turn, rulebook + full-state
+  observation resent, nothing carries over.
+
+Motivated by OpenAI's ARC-AGI-3 report that reasoning retention + compaction
+tripled their scores. This is NOT a replication of that result — the codex
+CLI exposes no independent retention/compaction toggles — it is the same H0
+axis (context lifetime) measured as a compound policy on this benchmark.
+
+**Score: turn-reset 3W-1L**, winning from both seats (eliminations at 46
+plies in games 000/001/003). Persistent's only win was the short game —
+a 31-ply center win in game-002.
+
+**The dominant observed terminal failure mode is budget exhaustion.** The
+persistent side's per-turn output (reasoning inclusive) grows with the
+thread: first-half mean ~5-10k tokens/turn, second-half mean ~15-30k,
+peaking around 40k/turn. In every 46-ply game it exhausted the 350k/team
+output envelope around ply 39-40 and then forfeited EVERY remaining turn
+(`token_budget` passes at plies 39-45; 11 forfeited turns across the run),
+after which the reset side converted by elimination against a paralyzed
+opponent. The reset side's cost profile stays flat (~2-4k/turn; 0 budget
+skips). Aggregate output: 1.22M tokens (persistent) vs 225k (reset) — 5.4x —
+for 85 vs 84 turns. What this run cannot separate is the counterfactual:
+whether the persistent side's pre-exhaustion play was building winning or
+losing positions before the forfeits decided the games — the W-L result
+compounds any strategic difference with the forfeit effect.
+
+On the narrower reliability metrics, persistent recorded zero illegal moves
+and zero format failures in 85 turns, while reset showed the familiar codex
+state-drift signature without context (0.036 illegal/turn, one fully
+forfeited turn at game-003 ply 4). Legality/format rates are not a measure
+of strategic quality. Latency: persistent ~63s/turn, reset ~81s/turn (it
+re-reads the rulebook every turn).
+
+Reading — and the honest limit of it: **under an equal, finite output
+envelope, context retention is not free.** Persistent Sol spends
+progressively more reasoning per turn as its thread grows, and in these
+games that exhausted its envelope while turn-reset's flat cost curve never
+approached it; the series result follows the forfeits. This is a retention
+x resource-envelope interaction observed at n=4 — not evidence that
+retention hurts (or helps) strategic play quality, which this run does not
+isolate. One model, one effort, one envelope; suggestive, not conclusive.
+The obvious next ablations (same pair at a larger envelope; a
+compaction-style middle condition) are noted in the Harness Lab direction
+doc, not run here.
+
+Contract notes: run.json records `matchup_kind:
+"same-model-harness-ablation"`, both sides' `harness_conditions`, and the
+clean-room `isolation` manifest (this was the first curated run executed
+under clean-room-by-default). The `PUBLIC_MATCHUP_HARNESSES` boundary keeps
+all 4 games out of the default public matchups — `standings` over this run
+reports 0 matchups by design — so nothing here enters model-versus-model
+records.
+
 ## Run 8 — flagship pair v2 (fable@medium vs gpt-5.6-sol@medium): 2-0 again
 
 `runs/flagship-fable-codex-v2/`. Rematch of the Run 3/4 pair, now with

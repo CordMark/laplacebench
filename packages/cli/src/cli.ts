@@ -17,7 +17,13 @@ import {
 } from "./runner";
 import { PROMPT_REV } from "./prompt";
 import { MatchPreflightError } from "./playerrors";
-import { PRODUCT_CPU_POLICY, usageAgentSpecsLine } from "./catalog";
+import {
+  HARNESS_CONDITIONS,
+  parseAgentSpec,
+  PRODUCT_CPU_POLICY,
+  usageAgentSpecsLine,
+} from "./catalog";
+import { matchupKind } from "./publicgames";
 import {
   ambientManifest,
   defaultCanaryCliDeps,
@@ -221,6 +227,16 @@ async function makeAgent(
     case "codex-cli": {
       const { codexCliAgent } = require("./agents/cli") as typeof import("./agents/cli");
       agent = codexCliAgent({ model: parsed.model, effort: parsed.effort, isolation });
+      break;
+    }
+    case "codex-cli-reset": {
+      const { codexCliAgent } = require("./agents/cli") as typeof import("./agents/cli");
+      agent = codexCliAgent({
+        model: parsed.model,
+        effort: parsed.effort,
+        contextPolicy: "turn-reset",
+        isolation,
+      });
       break;
     }
   }
@@ -523,6 +539,11 @@ export async function arena(
           codex: codexVersion,
         },
         isolation: isolationRecord,
+        matchup_kind: matchupKind(specA, specB),
+        harness_conditions: {
+          team_a: HARNESS_CONDITIONS[parseAgentSpec(specA).harness ?? ""] ?? null,
+          team_b: HARNESS_CONDITIONS[parseAgentSpec(specB).harness ?? ""] ?? null,
+        },
         product_cpu: productProvenance,
         execution,
         started_at: new Date().toISOString(),

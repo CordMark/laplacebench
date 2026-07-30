@@ -176,6 +176,29 @@ function assertEmptyCwd(cwd: string, agentName: string): void {
   }
 }
 
+export type CodexContextPolicy = "persistent" | "turn-reset";
+
+/**
+ * The per-turn session decision for the codex adapter, pure so the
+ * turn-reset contract is testable without launching codex: under
+ * "turn-reset" no thread is ever resumed and the instructions are resent
+ * with every turn; under "persistent" the first turn starts the thread and
+ * later turns resume it (docs/plans/2026-07-30-harness-lab-contract.md).
+ */
+export function codexSessionPlan(
+  policy: CodexContextPolicy,
+  started: boolean,
+  threadId: string
+): { resumeThreadId: string | undefined; includeInstructions: boolean } {
+  if (policy === "turn-reset") {
+    return { resumeThreadId: undefined, includeInstructions: true };
+  }
+  return {
+    resumeThreadId: started && threadId ? threadId : undefined,
+    includeInstructions: !started,
+  };
+}
+
 /**
  * Subscription-driven adapter that drives the Claude Code CLI as a
  * subprocess. Persistent context is the CLI's own session: --session-id on
@@ -319,10 +342,15 @@ export function claudeCliAgent(opts: {
 export function codexCliAgent(opts: {
   model?: string;
   effort?: string;
+  /** "turn-reset" discards the whole context every turn (fresh exec, no
+   * resume, instructions resent). Default "persistent". */
+  contextPolicy?: CodexContextPolicy;
   /** Clean-room context (env/flags/cwd). Absent = ambient condition. */
   isolation?: CliIsolation;
 }): Agent {
   const model = opts.model ?? "";
+  const policy: CodexContextPolicy = opts.contextPolicy ?? "persistent";
+  const specHead = policy === "turn-reset" ? "codex-cli-reset" : "codex-cli";
   const cwd = opts.isolation?.cwd ?? scratchDir("laplace-codex-");
   let threadId = "";
   let started = false;
@@ -332,10 +360,10 @@ export function codexCliAgent(opts: {
     : [];
 
   return {
-    name: `codex-cli:${model || "default"}${opts.effort ? `@${opts.effort}` : ""}`,
+    name: `${specHead}:${model || "default"}${opts.effort ? `@${opts.effort}` : ""}`,
     usageProfile: { provider: "openai", source: "codex-cli" },
     startGame(t: TeamId) {
-      if (opts.isolation) assertEmptyCwd(cwd, "codex-cli");
+      if (opts.isolation) assertEmptyCwd(cwd, specHead);
       team = t;
       threadId = "";
       started = false;
@@ -344,8 +372,9 @@ export function codexCliAgent(opts: {
       const obsJson = JSON.stringify(
         observationFromInput(input)
       );
+      const plan = codexSessionPlan(policy, started, threadId);
       let userText = turnMessage(obsJson, input.attempt, input.error?.code, input.ply);
-      if (!started) {
+      if (plan.includeInstructions) {
         userText = `${buildInstructions(team, { outputTokenBudget: input.outputTokenBudget })}\n\n---\n\n${userText}`;
       }
 
@@ -353,7 +382,7 @@ export function codexCliAgent(opts: {
         userText,
         model,
         effortArgs,
-        resumeThreadId: started ? threadId : undefined,
+        resumeThreadId: plan.resumeThreadId,
         ambientCwd: cwd,
         isolation: opts.isolation,
       });

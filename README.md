@@ -76,9 +76,12 @@ Deliberately outside the **Model Arena** scope:
   failures, making it useful preliminary evidence for the Harness Lab
   direction — not proof of a harness effect or its individual causes ([Run 7
   in FINDINGS](packages/cli/FINDINGS.md)). The adapter still runs
-  (`claude-cli-learn:<model>@<effort>`), but it is not a current public lane,
-  it is not on the Model Arena, and its games are never counted as
-  model-versus-model results.
+  (`claude-cli-learn:<model>@<effort>`), and a turn-reset variant
+  (`codex-cli-reset:<model>@<effort>` — fresh context every turn) exists for
+  controlled context-lifetime ablations, but neither is a public lane: the
+  `PUBLIC_MATCHUP_HARNESSES` allowlist keeps every harness-conditioned match —
+  same-model or cross-model — out of the default public matchups, so their
+  games are never counted as model-versus-model results.
 - **Vendor CLI harness prompts** cannot be removed when you play through a
   subscription CLI, so those matches stay labeled as their own condition
   rather than treated as clean-model runs. Subscription-CLI matches now run

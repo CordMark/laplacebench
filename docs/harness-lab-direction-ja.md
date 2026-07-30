@@ -248,16 +248,26 @@ Model Arena と同様のレーンにするか、Harness Lab 固有の区分に�
   retry、timeout、output-token envelope、referee を与える
   ([prompt.ts](../packages/cli/src/prompt.ts))。
 - サブスク経由では `claude` / `codex` CLI 自体の system prompt と実行環境が
-  加わる。Claude 側は tools を明示的に禁止する一方、Codex 側は現在
-  benchmark から tool-disable option を渡していない
-  ([agents/cli.ts](../packages/cli/src/agents/cli.ts))。
+  加わる。Claude 側は tools を明示的に禁止し、(2026-07-30 実装) clean-room 既定
+  では Codex 側も `--disable shell_tool` 等で tool 面を無効化する
+  ([agents/cli.ts](../packages/cli/src/agents/cli.ts),
+  [cleanroom.ts](../packages/cli/src/cleanroom.ts))。
 - Claude CLI は `--resume`、Codex CLI は `codex exec resume` を使い、どちらも
-  1対局中の会話を持続する。Codex 条件は既に persistent thread だが、
-  turn-reset との比較、compaction policy の宣言、compaction event の記録はない。
-  したがって現在の記録から retention / compaction の個別効果は読めない。
-- 対局ログは `harness:model@effort` を保持している。一方、現在の Model Arena の
-  headline は認識済み harness を畳んで `model@effort` で集計し、同一モデル・
-  同一 effort の異 harness 対局を既定の公開 matchup から外す
+  1対局中の会話を持続する。(2026-07-30 実装) turn-reset 変種
+  `codex-cli-reset`(毎ターン fresh exec・全破棄)が加わり、persistent との
+  H0 比較が可能になった。compaction policy は run.json の `harness_conditions`
+  に**宣言として**記録されるようになった(provider-managed / none / n/a)。
+  一方、compaction event の観測記録と、retention / compaction を独立に制御する
+  手段は引き続き無いため、**個別**効果は読めない(複合ポリシー比較として
+  記録する)。
+- 対局ログは `harness:model@effort` を保持している。(2026-07-30 実装)
+  公開 matchup の適格性は headline 折り畳みではなく
+  `PUBLIC_MATCHUP_HARNESSES` allowlist(claude-cli / codex-cli / anthropic /
+  product-cpu)が正本で、fail-closed に判定される: allowlist 外の認識済み
+  harness(`claude-cli-learn`, `codex-cli-reset`)は、モデルが異なる対局でも
+  公開 matchup に入らない。対局種別は `matchup_kind`
+  (model-arena / same-model-harness-ablation / cross-model-system)として
+  run.json へ導出記録される
   ([catalog.ts](../packages/cli/src/catalog.ts),
   [publicgames.ts](../packages/cli/src/publicgames.ts))。
 

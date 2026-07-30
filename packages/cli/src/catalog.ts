@@ -185,6 +185,7 @@ export const RECOGNIZED_HARNESSES: readonly string[] = [
   "claude-cli",
   "claude-cli-learn",
   "codex-cli",
+  "codex-cli-reset",
   "anthropic",
   "product-cpu",
 ];
@@ -199,8 +200,84 @@ export const LLM_HARNESSES: readonly string[] = [
   "claude-cli",
   "claude-cli-learn",
   "codex-cli",
+  "codex-cli-reset",
   "anthropic",
 ];
+
+/**
+ * The POSITIVE classification of harnesses whose games may enter the default
+ * public matchups — the code form of the Model Arena aggregate boundary
+ * (docs/plans/2026-07-30-harness-lab-contract.md). Headline folding is NOT the
+ * boundary's source of truth: it only removes same-identity pairs, so a
+ * harness-conditioned contender playing a DIFFERENT model (say
+ * `claude-cli-learn:claude-opus-5` vs `codex-cli:gpt-5.6-sol`) would otherwise
+ * publish as a model-versus-model record it is not.
+ *
+ * Membership is fail-closed: a harness added to RECOGNIZED_HARNESSES stays out
+ * of public matchups until it is deliberately added here. Opaque specs
+ * (random, takeshi:dN, …) parse to harness=null and remain eligible opponents;
+ * product-cpu is listed because the published ledger already carries its
+ * matches as legitimate opponents.
+ */
+export const PUBLIC_MATCHUP_HARNESSES: readonly string[] = [
+  "claude-cli",
+  "codex-cli",
+  "anthropic",
+  "product-cpu",
+];
+
+export interface HarnessConditions {
+  /** How long one side's private context lives. */
+  context_lifetime: string;
+  /** What happens to provider reasoning across the side's own turns. */
+  reasoning_retention: string;
+  /** Long-context handling policy. */
+  compaction: string;
+  /** The mechanism that implements the lifetime. */
+  mechanism: string;
+}
+
+/**
+ * The declared context contract of every recognized LLM harness, recorded per
+ * side into run.json. These are DECLARATIONS about the adapter mechanism;
+ * provider internals we cannot observe are written as provider-managed
+ * (opaque), never as verified facts.
+ */
+export const HARNESS_CONDITIONS: Readonly<Record<string, HarnessConditions>> = {
+  "claude-cli": {
+    context_lifetime: "persistent-session (whole game)",
+    reasoning_retention: "provider-managed (opaque)",
+    compaction: "provider-managed (opaque)",
+    mechanism: "claude --session-id / --resume",
+  },
+  "claude-cli-learn": {
+    context_lifetime:
+      "persistent-session (whole game) + cross-game learning lifecycle (strategy document rewritten after each game)",
+    reasoning_retention: "provider-managed (opaque)",
+    compaction: "provider-managed (opaque)",
+    mechanism: "claude --session-id / --resume + post-game analysis session",
+  },
+  "codex-cli": {
+    context_lifetime: "persistent-thread (whole game)",
+    reasoning_retention: "provider-managed (opaque)",
+    compaction: "provider-managed (opaque)",
+    mechanism: "codex exec / codex exec resume <thread>",
+  },
+  "codex-cli-reset": {
+    context_lifetime: "turn-reset (fresh context every turn)",
+    reasoning_retention: "discarded every turn (nothing carries over)",
+    compaction: "n/a (no long-lived context to compact)",
+    mechanism:
+      "fresh codex exec per turn; rulebook + full-state observation resent every turn",
+  },
+  anthropic: {
+    context_lifetime: "persistent client-managed transcript (whole game)",
+    reasoning_retention:
+      "returned assistant content including thinking blocks is replayed verbatim; provider-internal reasoning state is opaque",
+    compaction: "none implemented adapter-side (prompt caching is not compaction)",
+    mechanism: "append-only messages array resent on every API call",
+  },
+};
 
 export interface ParsedAgentSpec {
   /** Recognized harness, or null when the spec is opaque to us. */
