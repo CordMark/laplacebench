@@ -174,7 +174,17 @@ test("games from several runs of one contender pair accumulate into one record",
     const bytes = built.replays.get(game.replay);
     assert.ok(bytes, `${game.run}/${game.game_id} has no replay bytes`);
     assert.equal(createHash("sha256").update(bytes).digest("hex"), game.replay);
-    assert.equal(JSON.parse(bytes.toString("utf8")).schema, "laplace-bench-replay-v1");
+    const replayDoc = JSON.parse(bytes.toString("utf8"));
+    assert.equal(replayDoc.schema, "laplace-bench-replay-v1");
+
+    // played_at is the already-public game-end timestamp: RFC3339 with
+    // milliseconds, byte-equal to the replay's own bench.exported_at.
+    assert.match(
+      game.played_at,
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+      `${game.run}/${game.game_id} played_at must be UTC RFC3339 with milliseconds`
+    );
+    assert.equal(game.played_at, replayDoc.bench.exported_at);
 
     for (const [side, team] of [["left", leftTeam], ["right", rightTeam]] as const) {
       const recorded = fin.teams[team];

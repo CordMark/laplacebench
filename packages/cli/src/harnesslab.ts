@@ -100,6 +100,11 @@ export interface HarnesslabGame {
   winner: Side | null;
   reason: EndReason;
   plies: number;
+  /**
+   * Game-end timestamp (events `game_end.ts`) — the same already-public value
+   * the replay publishes as `bench.exported_at`.
+   */
+  played_at: string;
   /** sha256 of the replay bytes in the shared `replays/<digest>.json` space. */
   replay: string;
   per_side: { left: HarnesslabSide; right: HarnesslabSide };
@@ -508,6 +513,7 @@ export function buildHarnesslabCatalog(
         winner: artifact.winner === null ? null : artifact.winner === leftTeam ? "left" : "right",
         reason: artifact.reason,
         plies: artifact.plies,
+        played_at: artifact.playedAt,
         replay: artifact.digest,
         per_side: {
           left: sideColumns(
