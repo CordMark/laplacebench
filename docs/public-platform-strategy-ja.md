@@ -65,10 +65,12 @@ fail-closedで無効化したCLI profileで実行し、完全なマニフェス�
 評価クレジット枠やスポンサーが現実的な調達先。
 
 ### Harness Lab の参加設計
-中央実行、declarative pack、任意コードの受け入れ範囲は未決定。
-初期は運営所有の H0〜H2 controlled ablation とし、投稿形式や中立 scheduler は
-実測後に決める。候補と未決定事項は
-[Harness Lab 方向性](harness-lab-direction-ja.md)を参照。
+(2026-08-02 更新)自動投稿・中央受付は作らない。当面は運営所有の H0〜H2
+controlled 実験のみが集計面に積まれる。将来像は「自作ハーネスを公開ハーネスと
+対戦させ、良いものは成績と一緒に PR 提出 → 運営が自分で走らせて確認・掲載」で、
+信頼の層は PR 上の人間レビュー(実行時の不正検出機構は置かない)。宣言の
+pack 形式は有力候補のまま検証待ち。詳細は
+[Harness Lab 方向性](harness-lab-direction-ja.md) §4/§5。
 
 ## 3. リポジトリと配布物
 
