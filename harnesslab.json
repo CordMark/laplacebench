@@ -1,9 +1,9 @@
 {
   "schema": "laplace-bench-harnesslab-catalog-v1",
-  "source_sha": "4a72b0adb83bdcceec4c7e4898cd186b73ab67bf",
-  "generated_at": "2026-08-02T12:51:19.000Z",
-  "experiment_count": 4,
-  "game_count": 16,
+  "source_sha": "7d75e52027d0b8d95f5625deadf954070ce9279b",
+  "generated_at": "2026-08-02T13:07:15.000Z",
+  "experiment_count": 6,
+  "game_count": 24,
   "experiments": [
     {
       "run": "keisuke70--harnesslab-sol56m-uncapped-persistent-vs-reset-20260802",
@@ -28,9 +28,283 @@
       "run_id": "harnesslab-sol56h-uncapped-persistent-vs-reset-20260802",
       "description": "High-capability probe: persistent thread vs turn-reset (GPT-5.6 Sol high)",
       "plan": "docs/plans/2026-08-02-high-capability-probe.md"
+    },
+    {
+      "run": "keisuke70--harnesslab-sol56m-guided-vs-notes-20260802",
+      "run_id": "harnesslab-sol56m-guided-vs-notes-20260802",
+      "description": "Instruction effect: notes-guided (purpose+handoff prompt) vs notes-carry v1, same mechanism (GPT-5.6 Sol medium)",
+      "plan": "docs/plans/2026-08-02-notes-guided.md"
+    },
+    {
+      "run": "keisuke70--harnesslab-sol56m-guided-vs-persistent-20260802",
+      "run_id": "harnesslab-sol56m-guided-vs-persistent-20260802",
+      "description": "System comparison: notes-guided vs persistent thread (GPT-5.6 Sol medium)",
+      "plan": "docs/plans/2026-08-02-notes-guided.md"
     }
   ],
   "matchups": [
+    {
+      "id": "codex-cli-notes-guided:gpt-5.6-sol@medium vs codex-cli-notes:gpt-5.6-sol@medium",
+      "left_spec": "codex-cli-notes-guided:gpt-5.6-sol@medium",
+      "right_spec": "codex-cli-notes:gpt-5.6-sol@medium",
+      "matchup_kind": "same-model-harness-ablation",
+      "harness_conditions": {
+        "left": {
+          "context_lifetime": "turn-scoped + append-only public move-note carryover",
+          "reasoning_retention": "discarded except own past move notes (public, uncapped count, 2500 chars/note = spectator-record equality)",
+          "compaction": "n/a",
+          "mechanism": "fresh codex exec per turn; harness-injected journal (notes-guided-v1) of this side's own ADOPTED move notes, each the same value the events log publishes (prompt.ts recordedNote); identical mechanism to codex-cli-notes, differing ONLY in that the announcement directs the note's CONTENT (this move's purpose and what the next turn's self needs) with no writing-form and no game-tactic hint; clean-room execution required (ambient refused — the notes must be the ONLY carryover)"
+        },
+        "right": {
+          "context_lifetime": "turn-scoped + append-only public move-note carryover",
+          "reasoning_retention": "discarded except own past move notes (public, uncapped count, 2500 chars/note = spectator-record equality)",
+          "compaction": "n/a",
+          "mechanism": "fresh codex exec per turn; harness-injected journal (notes-v1) of this side's own ADOPTED move notes, each the same value the events log publishes (prompt.ts recordedNote); clean-room execution required (ambient refused — the notes must be the ONLY carryover)"
+        }
+      },
+      "wins_left": 1,
+      "wins_right": 3,
+      "draws": 0,
+      "games": [
+        {
+          "run": "keisuke70--harnesslab-sol56m-guided-vs-notes-20260802",
+          "game_id": "game-000",
+          "first_side": "left",
+          "winner": "right",
+          "reason": "center",
+          "plies": 28,
+          "replay": "8cf590c3c87f0f4ab9a4f205ad44febf45a8ca3f2f24f0bb322b33ae06c2b112",
+          "per_side": {
+            "left": {
+              "output_tokens": 14813,
+              "avg_latency_ms": 40715,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 26077,
+              "avg_latency_ms": 66973,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            }
+          }
+        },
+        {
+          "run": "keisuke70--harnesslab-sol56m-guided-vs-notes-20260802",
+          "game_id": "game-001",
+          "first_side": "right",
+          "winner": "right",
+          "reason": "center",
+          "plies": 11,
+          "replay": "1e749fe0c9960b986eb000e18b7575cba7a0ba81fe40b1b02f3fc80c758c1ed4",
+          "per_side": {
+            "left": {
+              "output_tokens": 7887,
+              "avg_latency_ms": 50814,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 3106,
+              "avg_latency_ms": 23251,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            }
+          }
+        },
+        {
+          "run": "keisuke70--harnesslab-sol56m-guided-vs-notes-20260802",
+          "game_id": "game-002",
+          "first_side": "left",
+          "winner": "right",
+          "reason": "center",
+          "plies": 50,
+          "replay": "bbf474e2f295f90ee3d3c7a27bd4afdce6dc7fb357907deaf3f3e5eaf36a7bd4",
+          "per_side": {
+            "left": {
+              "output_tokens": 41074,
+              "avg_latency_ms": 59069,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 29999,
+              "avg_latency_ms": 44824,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            }
+          }
+        },
+        {
+          "run": "keisuke70--harnesslab-sol56m-guided-vs-notes-20260802",
+          "game_id": "game-003",
+          "first_side": "right",
+          "winner": "left",
+          "reason": "elimination",
+          "plies": 32,
+          "replay": "c73d41435609b90be67464a18d94feae3bbb02f6f41f2dec47bf3e7731823140",
+          "per_side": {
+            "left": {
+              "output_tokens": 23888,
+              "avg_latency_ms": 53199,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 24751,
+              "avg_latency_ms": 54312,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "codex-cli-notes-guided:gpt-5.6-sol@medium vs codex-cli:gpt-5.6-sol@medium",
+      "left_spec": "codex-cli-notes-guided:gpt-5.6-sol@medium",
+      "right_spec": "codex-cli:gpt-5.6-sol@medium",
+      "matchup_kind": "same-model-harness-ablation",
+      "harness_conditions": {
+        "left": {
+          "context_lifetime": "turn-scoped + append-only public move-note carryover",
+          "reasoning_retention": "discarded except own past move notes (public, uncapped count, 2500 chars/note = spectator-record equality)",
+          "compaction": "n/a",
+          "mechanism": "fresh codex exec per turn; harness-injected journal (notes-guided-v1) of this side's own ADOPTED move notes, each the same value the events log publishes (prompt.ts recordedNote); identical mechanism to codex-cli-notes, differing ONLY in that the announcement directs the note's CONTENT (this move's purpose and what the next turn's self needs) with no writing-form and no game-tactic hint; clean-room execution required (ambient refused — the notes must be the ONLY carryover)"
+        },
+        "right": {
+          "context_lifetime": "persistent-thread (whole game)",
+          "reasoning_retention": "provider-managed (opaque)",
+          "compaction": "provider-managed (opaque)",
+          "mechanism": "codex exec / codex exec resume <thread>"
+        }
+      },
+      "wins_left": 2,
+      "wins_right": 2,
+      "draws": 0,
+      "games": [
+        {
+          "run": "keisuke70--harnesslab-sol56m-guided-vs-persistent-20260802",
+          "game_id": "game-000",
+          "first_side": "left",
+          "winner": "left",
+          "reason": "center",
+          "plies": 45,
+          "replay": "9a72a5fb8ffa61fb1e874658e3ee300ed422ea5a13ef45fe005c3f06e3e25e9e",
+          "per_side": {
+            "left": {
+              "output_tokens": 29976,
+              "avg_latency_ms": 41682,
+              "illegal_rate_per_turn": 0.13,
+              "failed_turns": 1,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 268343,
+              "avg_latency_ms": 40595,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": {
+                "count": 0,
+                "status": "ok"
+              }
+            }
+          }
+        },
+        {
+          "run": "keisuke70--harnesslab-sol56m-guided-vs-persistent-20260802",
+          "game_id": "game-001",
+          "first_side": "right",
+          "winner": "right",
+          "reason": "center",
+          "plies": 11,
+          "replay": "3c204441dd6f1b001dbc9b2ebc1375bb11c092b0f6d9257170034daeccb10fc1",
+          "per_side": {
+            "left": {
+              "output_tokens": 6125,
+              "avg_latency_ms": 47365,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 7681,
+              "avg_latency_ms": 14876,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": {
+                "count": 0,
+                "status": "ok"
+              }
+            }
+          }
+        },
+        {
+          "run": "keisuke70--harnesslab-sol56m-guided-vs-persistent-20260802",
+          "game_id": "game-002",
+          "first_side": "left",
+          "winner": "left",
+          "reason": "elimination",
+          "plies": 29,
+          "replay": "30a957c76bc49e1b64ba62905ccbff3432535c024713bee737bb284efbdfcf60",
+          "per_side": {
+            "left": {
+              "output_tokens": 13245,
+              "avg_latency_ms": 32804,
+              "illegal_rate_per_turn": 0.067,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 61457,
+              "avg_latency_ms": 29001,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": {
+                "count": 0,
+                "status": "ok"
+              }
+            }
+          }
+        },
+        {
+          "run": "keisuke70--harnesslab-sol56m-guided-vs-persistent-20260802",
+          "game_id": "game-003",
+          "first_side": "right",
+          "winner": "right",
+          "reason": "center",
+          "plies": 11,
+          "replay": "010a9ec04a170d1cb6a828daf7b0ea76b875583a24863c21114692b240bc87e6",
+          "per_side": {
+            "left": {
+              "output_tokens": 6186,
+              "avg_latency_ms": 46093,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 8243,
+              "avg_latency_ms": 18827,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": {
+                "count": 0,
+                "status": "ok"
+              }
+            }
+          }
+        }
+      ]
+    },
     {
       "id": "codex-cli-notes:gpt-5.6-sol@medium vs codex-cli-reset:gpt-5.6-sol@medium",
       "left_spec": "codex-cli-notes:gpt-5.6-sol@medium",
