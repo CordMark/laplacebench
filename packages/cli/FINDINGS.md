@@ -2,6 +2,97 @@
 
 Running log of what the discrimination pilot has told us. Newest first.
 
+## Run 16 — flagship at high effort (claude-opus-5@high vs gpt-5.6-sol@high): Opus sweeps 4-0; the token and clock columns point in opposite directions
+
+`runs/arena-opus5h-vs-sol56h-uncapped-20260802/` (verified 4/4, in the
+ledger; `matchup_kind: model-arena`, public-matchup eligible — this is a
+normal arena game, not a Harness Lab entry). Pre-registered alongside
+Run 15 in `docs/plans/2026-08-02-high-capability-probe.md`: both CLIs
+persistent, clean-room, uncapped, seeds 42-series, alternating seats.
+
+**Availability note (canary flake, documented as promised):** the first
+launch attempt died in preflight — the claude *positive* control failed
+once (the canary instruction was not echoed), so the fail-closed gate
+refused to start and no run record existed. A second attempt under the
+same run-id (permissible exactly because attempt one recorded nothing)
+passed preflight and produced this run. The retry of the surrounding
+plan is recorded here rather than in a separate availability file.
+
+**Opus 4W-0L**: center in 15 and 17 from the first seat, center in 50
+and elimination in 38 **from the second seat** — the sweep is not
+seat-driven. In the two long games Sol built an early center presence
+and Opus won the eviction war anyway (center captures 9-1 across the
+run, Sol's single one coming in the 50-ply game-001 — the same
+asymmetry that separated winners from losers in Runs 12-15).
+
+**Token and clock columns, reported descriptively.** Sol emitted
+811,938 output tokens to Opus's 628,174 (13.8k vs 10.3k per move);
+Sol's game-001 alone ran 444k output tokens at 17.8k/move. Per the
+usage schema's own comparability rule, **cross-provider token totals
+are descriptive only** (tokenizers and provider-injected CLI context
+differ), so this is not a cost ranking — the observation is simply
+that the losing side's token column is the larger one. The clock
+points the other way: Opus averaged 123s/move to Sol's 56s/move.
+Whatever normalization one adopts, a single-axis "cost" column would
+tell a different story than the pair does.
+
+**Second fully clean run**: zero illegal, zero format failures, zero
+failed turns, all eight sides. At high effort the reliability signal of
+the medium generation (illegal moves, failed turns) vanishes entirely.
+
+**Compaction: zero on both providers.** Codex threads peaked at 8-20%
+of the 258,400 window even in the 50-ply game; Claude's telemetry
+(`compact_boundary` counting) reports 0 compactions with status ok.
+Uncapped games still end long before either provider's compressor
+wakes up.
+
+## Run 15 — the same ablation at high effort: persistent 3-1, including an off-seat center win, at 4.0x cost and *lower* per-move latency
+
+`runs/harnesslab-sol56h-uncapped-persistent-vs-reset-20260802/` (verified
+4/4, in the ledger and on the Harness Lab surface). Pre-registered in
+`docs/plans/2026-08-02-high-capability-probe.md` to test the user's
+hypothesis that Run 12-14's noisy W-L and center-rush monoculture were
+artifacts of Sol@medium's capability, not properties of the game. Same
+pairing as Run 12 (persistent vs turn-reset), same seeds/seats/clean-room,
+only the effort knob moved: gpt-5.6-sol@high.
+
+**Persistent 3W-1L** — center 17 (first seat), center 34 (**second
+seat**), elimination 25; the loss an elimination at 23 as second seat. At
+medium this exact pairing went reset 3-1 (Run 12). At n=4 nothing is
+settled, but the direction of the flip is the one the capability
+hypothesis predicts: raise effort and the carryover arm stops losing.
+
+**The cost picture inverted on latency.** Persistent spent 497,155 output
+tokens to reset's 125,038 (**4.0x**, cheaper ratio than medium's 5.2x) —
+but persistent's per-move latency was 43-57s against reset's 69-105s.
+Mechanism: reset re-derives the whole game from a cold prompt every turn
+at high effort, while persistent's cached thread lets it think
+incrementally. At high effort the "expensive" harness is the faster one
+per move — the bill and the clock disagree about which arm is costly.
+
+**First fully clean run of the series**: zero illegal moves, zero format
+failures, zero failed turns on both arms across all four games.
+
+**Compaction still never fired** (`compaction_count: 0`; threads peaked at
+9-17% of the 258,400 window). Uncapped high-effort games still end long
+before context pressure begins.
+
+**Center defense, read honestly (and a detector correction).** The
+pre-registered post-hoc read asked whether the second mover physically
+contests the center. First pass said "no captures on center anywhere" —
+that was a parser bug (capture events are `{"at":[r,c],"owner"}` objects,
+not bare coordinates). Corrected: the center is contested in **all 16
+uncapped games** (Runs 12-15) — every losing team entered the center at
+least once, and center squares are captured regularly (medium: 34
+winner-side vs 14 loser-side center captures; high: 11 vs 5). What
+distinguishes winners is not that defenders never showed up but that
+winners win the eviction war roughly 2.2-2.4x over (34/14 at medium,
+11/5 at high). At high, center endings fell
+to 2/4 (from 8/12 at medium) and one of them was the second mover winning
+a 34-ply mutual-eviction fight — against the "center = first-mover
+artifact" reading, and consistent with capability raising the cost of a
+center rush without abolishing the route.
+
 ## Runs 12-14 — the uncapped three-arm set (persistent / notes-carry / reset): W-L is noisy, the cost column is not
 
 `runs/harnesslab-sol56m-uncapped-*-20260802/` (all three tracked in the

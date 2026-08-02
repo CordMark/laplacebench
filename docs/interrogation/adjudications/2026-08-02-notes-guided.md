@@ -106,3 +106,14 @@ notes-carry.test.ts 無編集 green = v1 byte 不変の証明。+13 テスト。
 あわせて bounded corrective 2件(c038092 が live データを読む2テストを陳腐化 —
 shipped list は schema 検証のみへ、arena golden は自文書の規則に従い同一コミットで
 再採取 882142ae…。G6 agent の独立実測と一致し builder 不変を証明)。305/305 green。
+
+## 実機 smoke (2026-08-02, orchestrator): `runs/smoke-guided-lowvsrandom-20260802`
+
+guided:gpt-5.6-sol@low vs random、1局 max-plies 4、clean-room 既定。完走
+(horizon_draw、4 plies)。guided 側 2 手とも note が記録され、両方が
+「目的 + 次手番への引き継ぎ」の形(ply0: center 足場の確立+Yellow 追加の
+準備を明示 / ply2: ply0 の脚本の継続を明示)。act() 経路の毎手注入自体は
+`test/notes-guided.test.ts` が injectable runner で直接証明済み(隔離
+CODEX_HOME は run 後に削除されるため rollout の事後 grep は不可 — smoke の
+役割は spec 受理〜記録の end-to-end 動作確認)。残作業: Run 17/18(Run 16
+完走後に直列)。

@@ -1,0 +1,258 @@
+{
+  "schema": "laplace-context-telemetry-v1",
+  "provider": "codex",
+  "harness": "codex-cli",
+  "ids": [
+    "019fc1fe-90e9-75c1-8d0e-98fcc6a25164"
+  ],
+  "unobserved_timeouts": 0,
+  "status": "ok",
+  "complete": true,
+  "model_context_window": 258400,
+  "compaction_count": 0,
+  "compactions": [],
+  "token_counts": [
+    {
+      "input": 13499,
+      "cached": 8960,
+      "output": 493,
+      "reasoning": 437
+    },
+    {
+      "input": 14164,
+      "cached": 13056,
+      "output": 2428,
+      "reasoning": 2361
+    },
+    {
+      "input": 16766,
+      "cached": 0,
+      "output": 274,
+      "reasoning": 208
+    },
+    {
+      "input": 17226,
+      "cached": 16128,
+      "output": 2059,
+      "reasoning": 1970
+    },
+    {
+      "input": 19460,
+      "cached": 16128,
+      "output": 1221,
+      "reasoning": 1147
+    },
+    {
+      "input": 20868,
+      "cached": 19200,
+      "output": 2134,
+      "reasoning": 2061
+    },
+    {
+      "input": 23177,
+      "cached": 20224,
+      "output": 724,
+      "reasoning": 655
+    },
+    {
+      "input": 24077,
+      "cached": 22272,
+      "output": 741,
+      "reasoning": 663
+    },
+    {
+      "input": 25004,
+      "cached": 23296,
+      "output": 2379,
+      "reasoning": 2303
+    },
+    {
+      "input": 27569,
+      "cached": 24320,
+      "output": 1891,
+      "reasoning": 1801
+    },
+    {
+      "input": 29635,
+      "cached": 27392,
+      "output": 1440,
+      "reasoning": 1361
+    },
+    {
+      "input": 31248,
+      "cached": 29440,
+      "output": 1879,
+      "reasoning": 1787
+    },
+    {
+      "input": 33301,
+      "cached": 30464,
+      "output": 1917,
+      "reasoning": 1827
+    },
+    {
+      "input": 35393,
+      "cached": 32512,
+      "output": 2400,
+      "reasoning": 2317
+    },
+    {
+      "input": 37966,
+      "cached": 34560,
+      "output": 1211,
+      "reasoning": 1125
+    },
+    {
+      "input": 39351,
+      "cached": 37632,
+      "output": 991,
+      "reasoning": 920
+    },
+    {
+      "input": 40530,
+      "cached": 38656,
+      "output": 507,
+      "reasoning": 430
+    },
+    {
+      "input": 41213,
+      "cached": 39680,
+      "output": 989,
+      "reasoning": 897
+    },
+    {
+      "input": 42377,
+      "cached": 40704,
+      "output": 1025,
+      "reasoning": 953
+    }
+  ],
+  "transcript_bytes": null,
+  "sources": [
+    {
+      "id": "019fc1fe-90e9-75c1-8d0e-98fcc6a25164",
+      "file": "/var/folders/k7/54s7lzzd3cn_l9md79cv_vmc0000gn/T/laplace-cleanroom-ZtzL0u/codex/sessions/2026/08/02/rollout-2026-08-02T19-21-53-019fc1fe-90e9-75c1-8d0e-98fcc6a25164.jsonl",
+      "skipped_lines": 0,
+      "compaction_count": 0,
+      "compactions": [],
+      "model_context_window": 258400,
+      "token_counts": [
+        {
+          "input": 13499,
+          "cached": 8960,
+          "output": 493,
+          "reasoning": 437
+        },
+        {
+          "input": 14164,
+          "cached": 13056,
+          "output": 2428,
+          "reasoning": 2361
+        },
+        {
+          "input": 16766,
+          "cached": 0,
+          "output": 274,
+          "reasoning": 208
+        },
+        {
+          "input": 17226,
+          "cached": 16128,
+          "output": 2059,
+          "reasoning": 1970
+        },
+        {
+          "input": 19460,
+          "cached": 16128,
+          "output": 1221,
+          "reasoning": 1147
+        },
+        {
+          "input": 20868,
+          "cached": 19200,
+          "output": 2134,
+          "reasoning": 2061
+        },
+        {
+          "input": 23177,
+          "cached": 20224,
+          "output": 724,
+          "reasoning": 655
+        },
+        {
+          "input": 24077,
+          "cached": 22272,
+          "output": 741,
+          "reasoning": 663
+        },
+        {
+          "input": 25004,
+          "cached": 23296,
+          "output": 2379,
+          "reasoning": 2303
+        },
+        {
+          "input": 27569,
+          "cached": 24320,
+          "output": 1891,
+          "reasoning": 1801
+        },
+        {
+          "input": 29635,
+          "cached": 27392,
+          "output": 1440,
+          "reasoning": 1361
+        },
+        {
+          "input": 31248,
+          "cached": 29440,
+          "output": 1879,
+          "reasoning": 1787
+        },
+        {
+          "input": 33301,
+          "cached": 30464,
+          "output": 1917,
+          "reasoning": 1827
+        },
+        {
+          "input": 35393,
+          "cached": 32512,
+          "output": 2400,
+          "reasoning": 2317
+        },
+        {
+          "input": 37966,
+          "cached": 34560,
+          "output": 1211,
+          "reasoning": 1125
+        },
+        {
+          "input": 39351,
+          "cached": 37632,
+          "output": 991,
+          "reasoning": 920
+        },
+        {
+          "input": 40530,
+          "cached": 38656,
+          "output": 507,
+          "reasoning": 430
+        },
+        {
+          "input": 41213,
+          "cached": 39680,
+          "output": 989,
+          "reasoning": 897
+        },
+        {
+          "input": 42377,
+          "cached": 40704,
+          "output": 1025,
+          "reasoning": 953
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

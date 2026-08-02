@@ -1,0 +1,98 @@
+{
+  "gameId": "game-001",
+  "ruleset": "laplace-8x8-v1",
+  "seed": 1042,
+  "winner": "B",
+  "reason": "center",
+  "plies": 50,
+  "losses": {
+    "Red": 5,
+    "Blue": 1,
+    "Yellow": 2,
+    "Green": 2
+  },
+  "teams": {
+    "A": {
+      "agent": "codex-cli:gpt-5.6-sol@high",
+      "turns": 25,
+      "moves": 25,
+      "actCalls": 25,
+      "formatFailures": 0,
+      "legalityFailures": 0,
+      "failedTurns": 0,
+      "forcedPasses": 0,
+      "timeoutSkips": 0,
+      "tokenBudgetSkips": 0,
+      "noteOmissions": 0,
+      "noteSuppressed": 0,
+      "inputTokens": 8182862,
+      "outputTokens": 444145,
+      "cacheReadTokens": 7200768,
+      "latencyMs": 1351302,
+      "usage": {
+        "schema": "laplace-model-usage-v1",
+        "adapterCalls": 25,
+        "reportedCalls": 25,
+        "unreportedCalls": 0,
+        "legacyUnversionedCalls": 0,
+        "providers": [
+          "openai"
+        ],
+        "sources": [
+          "codex-cli"
+        ],
+        "inputTotalTokens": 8182862,
+        "inputUncachedTokens": 982094,
+        "cacheReadTokens": 7200768,
+        "cacheWriteTokens": 0,
+        "cacheWriteReportedCalls": 0,
+        "outputTotalTokens": 444145,
+        "reasoningTokens": 419412,
+        "reasoningReportedCalls": 25,
+        "applicationInputBytes": 21142,
+        "applicationOutputBytes": 6424
+      }
+    },
+    "B": {
+      "agent": "claude-cli:claude-opus-5@high",
+      "turns": 25,
+      "moves": 25,
+      "actCalls": 25,
+      "formatFailures": 0,
+      "legalityFailures": 0,
+      "failedTurns": 0,
+      "forcedPasses": 0,
+      "timeoutSkips": 0,
+      "tokenBudgetSkips": 0,
+      "noteOmissions": 0,
+      "noteSuppressed": 0,
+      "inputTokens": 3952434,
+      "outputTokens": 280225,
+      "cacheReadTokens": 3651106,
+      "latencyMs": 3333872,
+      "usage": {
+        "schema": "laplace-model-usage-v1",
+        "adapterCalls": 25,
+        "reportedCalls": 25,
+        "unreportedCalls": 0,
+        "legacyUnversionedCalls": 0,
+        "providers": [
+          "anthropic"
+        ],
+        "sources": [
+          "claude-cli"
+        ],
+        "inputTotalTokens": 3952434,
+        "inputUncachedTokens": 301328,
+        "cacheReadTokens": 3651106,
+        "cacheWriteTokens": 301280,
+        "cacheWriteReportedCalls": 25,
+        "outputTotalTokens": 280225,
+        "reasoningTokens": 0,
+        "reasoningReportedCalls": 0,
+        "applicationInputBytes": 21239,
+        "applicationOutputBytes": 48888
+      }
+    }
+  }
+}

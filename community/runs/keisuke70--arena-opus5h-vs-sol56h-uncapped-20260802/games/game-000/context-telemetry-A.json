@@ -1,0 +1,27 @@
+{
+  "schema": "laplace-context-telemetry-v1",
+  "provider": "claude",
+  "harness": "claude-cli",
+  "ids": [
+    "b31c4d3b-c8ad-48ef-a5d9-9dad90e74928"
+  ],
+  "unobserved_timeouts": 0,
+  "status": "ok",
+  "complete": true,
+  "model_context_window": null,
+  "compaction_count": 0,
+  "compactions": [],
+  "token_counts": [],
+  "transcript_bytes": 237731,
+  "sources": [
+    {
+      "id": "b31c4d3b-c8ad-48ef-a5d9-9dad90e74928",
+      "file": "/var/folders/k7/54s7lzzd3cn_l9md79cv_vmc0000gn/T/laplace-cleanroom-ZtzL0u/claude/projects/-private-var-folders-k7-54s7lzzd3cn-l9md79cv-vmc0000gn-T-laplace-cleanroom-ZtzL0u-cwd-claude-0/b31c4d3b-c8ad-48ef-a5d9-9dad90e74928.jsonl",
+      "transcript_bytes": 237731,
+      "skipped_lines": 0,
+      "compaction_count": 0,
+      "compactions": [],
+      "status": "ok"
+    }
+  ]
+}

@@ -1,0 +1,174 @@
+{
+  "run_dir": "/Users/kei/projects/laplacebench/runs/arena-opus5h-vs-sol56h-uncapped-20260802",
+  "usage_schema": "laplace-model-usage-v1",
+  "usage_comparability": {
+    "token_totals": "directly comparable only within the same provider, model, adapter, effort, and harness version",
+    "cross_provider": "descriptive only: tokenizers and provider-injected CLI context differ",
+    "application_bytes": "tokenizer-neutral LaplaceBench logical-turn I/O only; excludes provider-injected context and hidden reasoning"
+  },
+  "games": 4,
+  "avg_plies": 30,
+  "results": [
+    {
+      "game": "game-000",
+      "team_a": "claude-cli:claude-opus-5@high",
+      "team_b": "codex-cli:gpt-5.6-sol@high",
+      "winner": "A",
+      "reason": "center",
+      "plies": 15
+    },
+    {
+      "game": "game-001",
+      "team_a": "codex-cli:gpt-5.6-sol@high",
+      "team_b": "claude-cli:claude-opus-5@high",
+      "winner": "B",
+      "reason": "center",
+      "plies": 50
+    },
+    {
+      "game": "game-002",
+      "team_a": "claude-cli:claude-opus-5@high",
+      "team_b": "codex-cli:gpt-5.6-sol@high",
+      "winner": "A",
+      "reason": "center",
+      "plies": 17
+    },
+    {
+      "game": "game-003",
+      "team_a": "codex-cli:gpt-5.6-sol@high",
+      "team_b": "claude-cli:claude-opus-5@high",
+      "winner": "B",
+      "reason": "elimination",
+      "plies": 38
+    }
+  ],
+  "agents": {
+    "claude-cli:claude-opus-5@high": {
+      "record": "4W-0D-0L",
+      "win_reasons": {
+        "center": 3,
+        "elimination": 1
+      },
+      "draw_reasons": {},
+      "draw_rate": 0,
+      "illegal_rate_per_turn": 0,
+      "format_failure_rate_per_turn": 0,
+      "failed_turns": 0,
+      "forced_passes": 0,
+      "timeout_skips": 0,
+      "token_budget_skips": 0,
+      "note_omissions": 0,
+      "note_omission_rate_per_move": 0,
+      "note_suppressed": 0,
+      "turns": 61,
+      "tokens_in": 7379886,
+      "tokens_out": 628174,
+      "tokens_cache_read": 6678894,
+      "usage": {
+        "schema": "laplace-model-usage-v1",
+        "status": "complete",
+        "adapter_calls": 61,
+        "reported_calls": 61,
+        "unreported_calls": 0,
+        "legacy_unversioned_calls": 0,
+        "providers": [
+          "anthropic"
+        ],
+        "sources": [
+          "claude-cli"
+        ],
+        "input_tokens_total": 7379886,
+        "input_tokens_uncached": 700992,
+        "cache_read_tokens": 6678894,
+        "cache_write_tokens": 700873,
+        "cache_write_reported_calls": 61,
+        "output_tokens_total": 628174,
+        "reasoning_tokens": null,
+        "reasoning_reported_calls": 0,
+        "total_tokens": 8008060,
+        "fresh_tokens": 1329166,
+        "application_input_bytes": 64645,
+        "application_output_bytes": 124172,
+        "averages": {
+          "per_reported_call": {
+            "total_tokens": 131280,
+            "fresh_tokens": 21790,
+            "application_input_bytes": 1060,
+            "application_output_bytes": 2036
+          },
+          "per_game": {
+            "total_tokens": 2002015,
+            "fresh_tokens": 332292
+          },
+          "per_turn": {
+            "total_tokens": 131280,
+            "fresh_tokens": 21790
+          }
+        }
+      },
+      "avg_latency_ms": 123615
+    },
+    "codex-cli:gpt-5.6-sol@high": {
+      "record": "0W-0D-4L",
+      "win_reasons": {},
+      "draw_reasons": {},
+      "draw_rate": 0,
+      "illegal_rate_per_turn": 0,
+      "format_failure_rate_per_turn": 0,
+      "failed_turns": 0,
+      "forced_passes": 0,
+      "timeout_skips": 0,
+      "token_budget_skips": 0,
+      "note_omissions": 0,
+      "note_omission_rate_per_move": 0,
+      "note_suppressed": 0,
+      "turns": 59,
+      "tokens_in": 13644824,
+      "tokens_out": 811938,
+      "tokens_cache_read": 11720192,
+      "usage": {
+        "schema": "laplace-model-usage-v1",
+        "status": "complete",
+        "adapter_calls": 59,
+        "reported_calls": 59,
+        "unreported_calls": 0,
+        "legacy_unversioned_calls": 0,
+        "providers": [
+          "openai"
+        ],
+        "sources": [
+          "codex-cli"
+        ],
+        "input_tokens_total": 13644824,
+        "input_tokens_uncached": 1924632,
+        "cache_read_tokens": 11720192,
+        "cache_write_tokens": null,
+        "cache_write_reported_calls": 0,
+        "output_tokens_total": 811938,
+        "reasoning_tokens": 768441,
+        "reasoning_reported_calls": 59,
+        "total_tokens": 14456762,
+        "fresh_tokens": 2736570,
+        "application_input_bytes": 63567,
+        "application_output_bytes": 15022,
+        "averages": {
+          "per_reported_call": {
+            "total_tokens": 245030,
+            "fresh_tokens": 46383,
+            "application_input_bytes": 1077,
+            "application_output_bytes": 255
+          },
+          "per_game": {
+            "total_tokens": 3614191,
+            "fresh_tokens": 684143
+          },
+          "per_turn": {
+            "total_tokens": 245030,
+            "fresh_tokens": 46383
+          }
+        }
+      },
+      "avg_latency_ms": 56216
+    }
+  }
+}
