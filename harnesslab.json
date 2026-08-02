@@ -1,7 +1,7 @@
 {
   "schema": "laplace-bench-harnesslab-catalog-v1",
-  "source_sha": "7d75e52027d0b8d95f5625deadf954070ce9279b",
-  "generated_at": "2026-08-02T13:07:15.000Z",
+  "source_sha": "6931a3e5cdfc7bdba2735674e8f8d90f4d96ee84",
+  "generated_at": "2026-08-02T16:02:00.000Z",
   "experiment_count": 6,
   "game_count": 24,
   "experiments": [
@@ -73,6 +73,7 @@
           "winner": "right",
           "reason": "center",
           "plies": 28,
+          "played_at": "2026-08-02T12:12:05.507Z",
           "replay": "8cf590c3c87f0f4ab9a4f205ad44febf45a8ca3f2f24f0bb322b33ae06c2b112",
           "per_side": {
             "left": {
@@ -98,6 +99,7 @@
           "winner": "right",
           "reason": "center",
           "plies": 11,
+          "played_at": "2026-08-02T11:53:31.434Z",
           "replay": "1e749fe0c9960b986eb000e18b7575cba7a0ba81fe40b1b02f3fc80c758c1ed4",
           "per_side": {
             "left": {
@@ -123,6 +125,7 @@
           "winner": "right",
           "reason": "center",
           "plies": 50,
+          "played_at": "2026-08-02T12:30:15.245Z",
           "replay": "bbf474e2f295f90ee3d3c7a27bd4afdce6dc7fb357907deaf3f3e5eaf36a7bd4",
           "per_side": {
             "left": {
@@ -148,6 +151,7 @@
           "winner": "left",
           "reason": "elimination",
           "plies": 32,
+          "played_at": "2026-08-02T12:15:38.246Z",
           "replay": "c73d41435609b90be67464a18d94feae3bbb02f6f41f2dec47bf3e7731823140",
           "per_side": {
             "left": {
@@ -198,6 +202,7 @@
           "winner": "left",
           "reason": "center",
           "plies": 45,
+          "played_at": "2026-08-02T13:03:24.273Z",
           "replay": "9a72a5fb8ffa61fb1e874658e3ee300ed422ea5a13ef45fe005c3f06e3e25e9e",
           "per_side": {
             "left": {
@@ -226,6 +231,7 @@
           "winner": "right",
           "reason": "center",
           "plies": 11,
+          "played_at": "2026-08-02T12:36:35.135Z",
           "replay": "3c204441dd6f1b001dbc9b2ebc1375bb11c092b0f6d9257170034daeccb10fc1",
           "per_side": {
             "left": {
@@ -254,6 +260,7 @@
           "winner": "left",
           "reason": "elimination",
           "plies": 29,
+          "played_at": "2026-08-02T12:46:39.949Z",
           "replay": "30a957c76bc49e1b64ba62905ccbff3432535c024713bee737bb284efbdfcf60",
           "per_side": {
             "left": {
@@ -282,6 +289,7 @@
           "winner": "right",
           "reason": "center",
           "plies": 11,
+          "played_at": "2026-08-02T12:36:52.472Z",
           "replay": "010a9ec04a170d1cb6a828daf7b0ea76b875583a24863c21114692b240bc87e6",
           "per_side": {
             "left": {
@@ -335,6 +343,7 @@
           "winner": "left",
           "reason": "center",
           "plies": 11,
+          "played_at": "2026-08-02T08:37:48.212Z",
           "replay": "5bd29b43a88fa653495d889e69586a6f84fdebd5b95069bf3c04d9e9332aba9d",
           "per_side": {
             "left": {
@@ -360,6 +369,7 @@
           "winner": "right",
           "reason": "center",
           "plies": 11,
+          "played_at": "2026-08-02T08:39:07.931Z",
           "replay": "a0df42650906bc803fa8fcbfc6a4948d3668a0b229c2e5c65566b44249fc8c0a",
           "per_side": {
             "left": {
@@ -385,6 +395,7 @@
           "winner": "right",
           "reason": "center",
           "plies": 32,
+          "played_at": "2026-08-02T09:00:41.700Z",
           "replay": "fb7ec4ed6d050720a7e11af5500970d8f31de3873d3b90c6f9cde75204d41d5c",
           "per_side": {
             "left": {
@@ -410,6 +421,7 @@
           "winner": "left",
           "reason": "elimination",
           "plies": 34,
+          "played_at": "2026-08-02T09:04:18.731Z",
           "replay": "5fd406911f115072cf4419b75305e1518b16676595d9a4a065c88410e03323b9",
           "per_side": {
             "left": {
@@ -460,6 +472,7 @@
           "winner": "right",
           "reason": "center",
           "plies": 11,
+          "played_at": "2026-08-02T07:58:55.981Z",
           "replay": "865bf35b1744ba81efff4ee587359fa703ce2a05d45a5a07b73e3a396e0731c5",
           "per_side": {
             "left": {
@@ -488,6 +501,7 @@
           "winner": "left",
           "reason": "elimination",
           "plies": 41,
+          "played_at": "2026-08-02T08:30:32.964Z",
           "replay": "5f20ddeb38d199759bb2710f0dd4af20e7f48dc3e2c824e0ea7bce3c38988c70",
           "per_side": {
             "left": {
@@ -516,6 +530,7 @@
           "winner": "right",
           "reason": "center",
           "plies": 19,
+          "played_at": "2026-08-02T08:09:36.547Z",
           "replay": "63fc714bc8e81222584e5f4cd606058c1a4153ce44b7ff3aa9df3fd3fc7cf107",
           "per_side": {
             "left": {
@@ -544,6 +559,7 @@
           "winner": "left",
           "reason": "elimination",
           "plies": 43,
+          "played_at": "2026-08-02T08:31:24.341Z",
           "replay": "4914db7e55aa3a50554a93367ab3502da1aecfa634059a8218122351d4727e6e",
           "per_side": {
             "left": {
@@ -597,6 +613,7 @@
           "winner": "right",
           "reason": "center",
           "plies": 17,
+          "played_at": "2026-08-02T09:54:11.044Z",
           "replay": "2c74fc5c9487a4c15d2a9fb893cee8e24f49574d6d3a36c0098e067ba07c62a0",
           "per_side": {
             "left": {
@@ -625,6 +642,7 @@
           "winner": "right",
           "reason": "center",
           "plies": 34,
+          "played_at": "2026-08-02T10:19:41.106Z",
           "replay": "1a62f5620f61dee389b6d48afcc742a29e27b9980623905034c5e958d83787c0",
           "per_side": {
             "left": {
@@ -653,6 +671,7 @@
           "winner": "right",
           "reason": "elimination",
           "plies": 25,
+          "played_at": "2026-08-02T10:00:50.901Z",
           "replay": "955937807010abdfb3e30c28f4f834c285a62c897dcd6bdb1139638720d8644e",
           "per_side": {
             "left": {
@@ -681,6 +700,7 @@
           "winner": "left",
           "reason": "elimination",
           "plies": 23,
+          "played_at": "2026-08-02T09:57:25.249Z",
           "replay": "84e3d51774d650e0cd9e5991d00789a7d9eb8d05e0ebc36192924bd12d335cfb",
           "per_side": {
             "left": {
@@ -734,6 +754,7 @@
           "winner": "left",
           "reason": "center",
           "plies": 30,
+          "played_at": "2026-08-02T07:51:58.878Z",
           "replay": "5266c27f8a5b2cd8ed3156b0bd345900ba91f15e3ee39f2787903973b4deb0ab",
           "per_side": {
             "left": {
@@ -762,6 +783,7 @@
           "winner": "left",
           "reason": "center",
           "plies": 9,
+          "played_at": "2026-08-02T07:32:35.130Z",
           "replay": "3ffd9e794a98e05f43b2e43c7d352189ac8739af8d8745c38f1b7dcf6c40068f",
           "per_side": {
             "left": {
@@ -790,6 +812,7 @@
           "winner": "right",
           "reason": "center",
           "plies": 25,
+          "played_at": "2026-08-02T07:45:18.679Z",
           "replay": "707b8ec6659f12d97b667a99b61bddd3fb31f88674d15fe4f1c68e327ddcd748",
           "per_side": {
             "left": {
@@ -818,6 +841,7 @@
           "winner": "left",
           "reason": "elimination",
           "plies": 25,
+          "played_at": "2026-08-02T07:47:40.719Z",
           "replay": "d3c8b37431a44b0ca6c633f2f3342189b9350bc900ac32b19013360fcad35820",
           "per_side": {
             "left": {
