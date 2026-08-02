@@ -133,3 +133,20 @@ Requirement source: G4 実装で発見(memo run の 3/4 局が公開不能)+ ユ
   }
 }
 ```
+
+## Plan review (codex-plan-review, session plan-publishable-note)
+
+- ラウンド1: NEEDS_CHANGES 4件(NotesSession の等式破れ、URI パターンの二重定義、
+  omission/suppression の排他、publish 適用点の曖昧さ)→ recordedNoteWithCause を
+  canonical に・COMMENTARY_URI_SOURCE 単一化・排他明記・buildPublicReplay 一点適用
+  へ改訂。ラウンド2: APPROVED (confidence 0.99)。
+
+## Implementation review (codex-impl-review, session impl-publishable-note)
+
+- 実装: Opus 5 サブエージェント(worktree、stale base を --ff-only で 1135e73 へ
+  前進させてから作業 — 申告済み)。G3 実行中のため main へのマージは G3 完走まで
+  保留(pre-registration 保護)。
+- ラウンド1: APPROVED (confidence 0.97)。申告逸脱3件を受理(worktree ff、
+  notes-carry drift-guard の置換対象文字列更新、`<!-- -->` の変換順序 artifact)。
+- 検証証跡: worktree で 292/292 green・台帳走査 URI note 0件(角括弧15件は全て
+  memo run = 救済対象)。G3 完走後に main へ適用し 292/292 green を再確認。

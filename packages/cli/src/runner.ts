@@ -10,7 +10,7 @@ import {
   repetitionKey,
   winReason,
 } from "./engine";
-import { PROMPT_REV, recordedNote } from "./prompt";
+import { PROMPT_REV, recordedNoteWithCause } from "./prompt";
 import type { Agent, RecentEvent, TeamId, UsageAggregate } from "./types";
 import { blankUsage, recordUsageCall } from "./usage";
 
@@ -32,6 +32,15 @@ export interface TeamStats {
    * costs the turn.
    */
   noteOmissions: number;
+  /**
+   * Adopted moves whose note was derived non-empty but still matched the
+   * publication URI pattern, and was therefore suppressed to empty. Counted
+   * separately from `noteOmissions` and never together with it: silence and
+   * an unpublishable note are different model behaviours, and collapsing them
+   * would make note compliance unreadable
+   * (docs/plans/2026-08-02-publishable-note.md).
+   */
+  noteSuppressed: number;
   inputTokens: number;
   outputTokens: number;
   cacheReadTokens: number;
@@ -146,6 +155,7 @@ function newTeamStats(agent: Agent): TeamStats {
     timeoutSkips: 0,
     tokenBudgetSkips: 0,
     noteOmissions: 0,
+    noteSuppressed: 0,
     inputTokens: 0,
     outputTokens: 0,
     cacheReadTokens: 0,
@@ -422,8 +432,13 @@ async function playGameInner(cfg: GameConfig): Promise<GameResult> {
 
       moved = true;
       st.moves++;
-      const note = recordedNote(reply.raw ?? "");
-      if (!note) st.noteOmissions++;
+      const { note, suppressed } = recordedNoteWithCause(reply.raw ?? "");
+      // Mutually exclusive by construction: suppression only happens to a note
+      // that WAS written (an empty note cannot match a URI), so the omission
+      // counter sees exactly the pre-suppression empties and the two counters
+      // never move on the same move.
+      if (suppressed) st.noteSuppressed++;
+      else if (!note) st.noteOmissions++;
       const last = res.state.lastMove;
       const captures = (last?.capturedPiecesMeta ?? []).map((c) => ({
         at: c.position,
@@ -459,11 +474,14 @@ async function playGameInner(cfg: GameConfig): Promise<GameResult> {
         // asked and wrote nothing.
         //
         // Bounded in Unicode scalars, not UTF-16 units, and to the SAME limit
-        // the public replay enforces (prompt.ts recordedNote owns both the
-        // extraction and the bound). A model that writes a very long note must
-        // not thereby make its own game unpublishable, and `raw` still holds
-        // the untruncated reply for audit.
+        // the public replay enforces (prompt.ts recordedNoteWithCause owns the
+        // extraction, the publishable rewrite and the bound). A model that
+        // writes a very long note must not thereby make its own game
+        // unpublishable, and `raw` still holds the untruncated reply for audit.
         note,
+        // Present only when a written note was suppressed, so its emptiness
+        // reads as "unpublishable, and here is why" rather than as silence.
+        ...(suppressed ? { note_suppressed: suppressed } : {}),
         // Agent-specific provenance (e.g. product CPU per-move seed).
         meta: reply.meta,
       });

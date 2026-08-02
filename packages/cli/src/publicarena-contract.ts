@@ -131,11 +131,24 @@ const HEX64 = /^[0-9a-f]{64}$/;
 const RFC3339_MS = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 const HEADLINE = /^[A-Za-z0-9][A-Za-z0-9._:@/+\-]{0,127}$/;
 const RAW_REF = /^[A-Za-z0-9][A-Za-z0-9._-]{0,95}\/[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
-// Keep file URIs out, but do not mistake ordinary prose such as
-// "back file: if I sit still" for one. Only whitespace/end after the colon is
-// prose-safe; any non-whitespace continuation stays fail-closed as URI-shaped.
-const UNSAFE_COMMENTARY =
-  /[<>]|\b(?:https?|ftp|data|javascript|mailto):|\bfile:(?=\S)/iu;
+/**
+ * The URI half of the commentary boundary, as a regex SOURCE string so the
+ * recording-time derivation (prompt.ts `recordedNoteWithCause`) can test the
+ * exact same pattern instead of keeping a second copy of it. Exporting the
+ * source rather than a compiled RegExp keeps `lastIndex` state impossible to
+ * share between the two call sites.
+ *
+ * Keep file URIs out, but do not mistake ordinary prose such as
+ * "back file: if I sit still" for one. Only whitespace/end after the colon is
+ * prose-safe; any non-whitespace continuation stays fail-closed as URI-shaped.
+ */
+export const COMMENTARY_URI_SOURCE =
+  String.raw`\b(?:https?|ftp|data|javascript|mailto):|\bfile:(?=\S)`;
+
+// Assembled from the same source plus the angle-bracket class: identical
+// pattern and flags to the literal this replaced, so validation semantics are
+// unchanged and only the constant's organization moved.
+const UNSAFE_COMMENTARY = new RegExp(`[<>]|${COMMENTARY_URI_SOURCE}`, "iu");
 
 export function assertHex40(value: string, field = "source_sha"): void {
   if (!HEX40.test(value)) throw new Error(`${field} must be 40 lowercase hex`);
@@ -191,6 +204,16 @@ export function assertText(value: string, field: string, maxScalars: number): vo
  */
 export const MAX_COMMENTARY_SCALARS = 2_500;
 
+/**
+ * The publication-side backstop, not the mechanism. Since
+ * docs/plans/2026-08-02-publishable-note.md the boundary is satisfied
+ * CONSTRUCTIVELY at recording time (`prompt.ts publishableNote` rewrites the
+ * angle brackets, and a note still matching the URI pattern is suppressed to
+ * empty), and the publish side re-applies the same idempotent rewrite. A throw
+ * from here therefore means the derivation or the suppression is broken, not
+ * that a model wrote something unusual — it must fail loud rather than be
+ * widened.
+ */
 export function assertCommentaryText(value: string, field: string): void {
   if (Array.from(value).length > MAX_COMMENTARY_SCALARS || UNSAFE_COMMENTARY.test(value)) {
     throw new Error(`${field} exceeds the commentary content boundary`);

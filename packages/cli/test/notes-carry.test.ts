@@ -152,8 +152,8 @@ test("the runner records its move note through recordedNote, with no truncation 
     "utf8"
   );
   assert.ok(
-    source.includes("recordedNote(reply.raw"),
-    "runner must derive the move note from the shared function"
+    source.includes("recordedNoteWithCause(reply.raw"),
+    "runner must derive the move note from the shared canonical derivation"
   );
   assert.ok(
     !source.includes("MAX_COMMENTARY_SCALARS"),

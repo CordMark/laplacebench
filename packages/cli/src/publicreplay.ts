@@ -3,6 +3,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { exportGame, moveCommentary } from "./exportweb";
 import { playerTeam } from "./engine";
+import { publishableNote } from "./prompt";
 import {
   PUBLIC_REPLAY_SCHEMA,
   REPLAY_MAX_BYTES,
@@ -139,7 +140,20 @@ export function buildPublicReplay(
   );
   const commentary = events.flatMap((event, index) => {
     if (event.t !== "move") return [];
-    const text = moveCommentary(event as { raw?: unknown; note?: unknown });
+    // The same idempotent rewrite the runner already applies at recording
+    // time. Applying it here too is what rescues runs recorded BEFORE the
+    // derivation existed: their arrow notes become publishable instead of
+    // making an otherwise valid game permanently unpublishable. Notes recorded
+    // by the current runner are unchanged by it (that is the idempotence).
+    //
+    // A historical note carrying a URI is deliberately NOT rescued: suppression
+    // is a recording-time rule, and blanking a stored note at publish time
+    // would be rewriting the record. assertCommentaryText below still fails
+    // loud on it. This is the single publish-side application point — arena and
+    // harnesslab both build their replays through here.
+    const text = publishableNote(
+      moveCommentary(event as { raw?: unknown; note?: unknown })
+    );
     if (!text) return [];
     const ply = advanceIndexes.get(event);
     if (ply === undefined) throw new Error(`${gameId}.events[${index}] is not an indexed move`);

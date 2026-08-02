@@ -1,7 +1,10 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { observation } from "./engine";
-import { MAX_COMMENTARY_SCALARS } from "./publicarena-contract";
+import {
+  COMMENTARY_URI_SOURCE,
+  MAX_COMMENTARY_SCALARS,
+} from "./publicarena-contract";
 import type { Move, TeamId, TurnInput } from "./types";
 
 /**
@@ -111,18 +114,81 @@ export function extractNote(text: string): string {
 }
 
 /**
- * The note EXACTLY as the spectator record keeps it: extractNote bounded in
- * Unicode scalars (not UTF-16 units) to the same limit the public replay
- * enforces, so a surrogate pair is never cut in half.
+ * The URI half of the publication commentary boundary, compiled from the
+ * validator's own source string. One pattern, two call sites — the recording
+ * side cannot drift from what publication rejects
+ * (docs/plans/2026-08-02-publishable-note.md).
+ */
+const COMMENTARY_URI = new RegExp(COMMENTARY_URI_SOURCE, "iu");
+
+/**
+ * Rewrite a note into the form publication accepts. Idempotent and
+ * deterministic:
+ *
+ * 1. `->` becomes `→` and `<-` becomes `←`. Models write board talk like
+ *    "(0,3)->(3,3)" constantly, and the arrow is what they MEANT; turning it
+ *    into the arrow character preserves the meaning rather than mangling it.
+ * 2. Every remaining `<` and `>` becomes `‹` / `›`, which also defuses
+ *    anything tag-shaped (`<a`, `</`, `<!`) without judging whether it was
+ *    markup.
+ *
+ * The output therefore can never contain `<` or `>`, and because neither
+ * character survives, no new `->` or `<-` can exist either: f(f(x)) === f(x).
+ *
+ * This is what makes "recorded implies publishable" constructive rather than a
+ * bet on models avoiding two ASCII characters. `raw` on the move event keeps
+ * the reply verbatim, so nothing is lost for audit — the note was always a
+ * derived field.
+ */
+export function publishableNote(text: string): string {
+  return text
+    .replace(/->/g, "→")
+    .replace(/<-/g, "←")
+    .replace(/</g, "‹")
+    .replace(/>/g, "›");
+}
+
+/**
+ * The recorded note together with WHY it is empty when it is empty.
+ *
+ * `suppressed: "uri"` means the model wrote a note that still matched the
+ * publication URI pattern after `publishableNote`, so the note was suppressed
+ * to empty and the cause recorded. This lives inside the canonical derivation
+ * on purpose: suppression IS part of what "the recorded note" means, so every
+ * consumer (the runner's event, the notes carryover, the public replay) gets
+ * the same answer without any of them re-deciding it. The note policy is
+ * unaffected — a bad note never costs the turn; the fail-loud signal is the
+ * recorded suppression event, not a lost move.
+ */
+export interface RecordedNote {
+  note: string;
+  suppressed: "uri" | null;
+}
+
+/**
+ * The note EXACTLY as the spectator record keeps it: extractNote made
+ * publishable, then bounded in Unicode scalars (not UTF-16 units) to the same
+ * limit the public replay enforces, so a surrogate pair is never cut in half.
  *
  * This is one function on purpose. The runner writes the move event's `note`
  * with it, and the notes-carry harness (agents/notes.ts) carries the same
  * value forward, which makes "what is carried between turns" equal to "what
  * the public record shows" by construction rather than by two truncation
- * sites agreeing today (docs/plans/2026-08-02-notes-carry.md).
+ * sites agreeing today (docs/plans/2026-08-02-notes-carry.md). Suppression
+ * needs no change there either: the derivation returns "", and an empty note
+ * is never committed to the carryover.
  */
+export function recordedNoteWithCause(raw: string): RecordedNote {
+  const note = [...publishableNote(extractNote(raw))]
+    .slice(0, MAX_COMMENTARY_SCALARS)
+    .join("");
+  if (COMMENTARY_URI.test(note)) return { note: "", suppressed: "uri" };
+  return { note, suppressed: null };
+}
+
+/** The recorded note alone — an alias for callers that need no cause. */
 export function recordedNote(raw: string): string {
-  return [...extractNote(raw)].slice(0, MAX_COMMENTARY_SCALARS).join("");
+  return recordedNoteWithCause(raw).note;
 }
 
 export function findMove(text: string): FoundMove | null {

@@ -27,6 +27,7 @@ interface AgentAgg {
   timeoutSkips: number;
   tokenBudgetSkips: number;
   noteOmissions: number;
+  noteSuppressed: number;
   usage: UsageAggregate;
   latencyMs: number;
   plies: number;
@@ -50,6 +51,7 @@ function blank(): AgentAgg {
     timeoutSkips: 0,
     tokenBudgetSkips: 0,
     noteOmissions: 0,
+    noteSuppressed: 0,
     usage: blankUsage(),
     latencyMs: 0,
     plies: 0,
@@ -88,6 +90,7 @@ export function summarize(runDir: string): object {
       agg.timeoutSkips += ts.timeoutSkips ?? 0;
       agg.tokenBudgetSkips += ts.tokenBudgetSkips ?? 0;
       agg.noteOmissions += ts.noteOmissions ?? 0;
+      agg.noteSuppressed += ts.noteSuppressed ?? 0;
       mergeUsage(
         agg.usage,
         isUsageAggregate(ts.usage) ? ts.usage : legacyUsageFromTeamStats(ts)
@@ -148,6 +151,13 @@ export function summarize(runDir: string): object {
           note_omissions: a.noteOmissions,
           note_omission_rate_per_move:
             a.moves > 0 ? +(a.noteOmissions / a.moves).toFixed(3) : 0,
+          // Adopted moves whose note WAS written but was suppressed to empty
+          // for still matching the publication URI pattern. Reported apart
+          // from the omissions above and never overlapping them: this is an
+          // unpublishable note, not silence, and the two say different things
+          // about the model. Runs recorded before the derivation existed
+          // report 0 here.
+          note_suppressed: a.noteSuppressed,
           turns: a.turns,
           // Backward-compatible aliases. `tokens_in` is now normalized total
           // input and includes cached input exactly once.
