@@ -2,6 +2,53 @@
 
 Running log of what the discrimination pilot has told us. Newest first.
 
+## Runs 12-14 — the uncapped three-arm set (persistent / notes-carry / reset): W-L is noisy, the cost column is not
+
+`runs/harnesslab-sol56m-uncapped-*-20260802/` (all three tracked in the
+ledger and, for the first time, published on the Harness Lab accumulating
+surface via `community/harnesslab-experiments.json`). Pre-registered as one
+fixed-order serial set (plan `docs/plans/2026-08-02-uncapped-three-arm.md`):
+same model/effort (gpt-5.6-sol@medium), seeds 42-series, alternating seats,
+clean-room, **no token budget** (the new default), context telemetry armed.
+Per-pairing n=4; no cross-run league aggregation (pre-committed).
+
+**Run 12, persistent vs reset: reset 3W-1L** (center 30/9, elim 25 vs
+persistent's center 25). Persistent spent 264,600 output tokens vs reset's
+51,316 (5.2x) for a losing record. Note the instability against history:
+the same pairing went reset 3-1 at 350k (budget-forfeit driven), persistent
+3-1 at 600k, and now reset 3-1 uncapped — at n=4, W-L for this pairing has
+not stabilized in any direction. No game exceeded 30 plies, so this run did
+not exercise genuinely long-thread behavior.
+
+**Run 13, persistent vs notes-carry: 2-2, every game won by the first
+mover** (pre-committed reading: no harness signal in W-L). The texture
+differed by arm: persistent's wins were 11/19-ply center rushes; notes'
+wins were 41/43-ply elimination wars. Persistent spent 651,163 output
+tokens vs notes' 87,112 — **7.5x** — for the same 2-2.
+
+**Run 14, notes-carry vs reset: 2-2 with both off-seat wins** (reset won
+from the second seat at 32 plies; notes won from the second seat at 34).
+Cost nearly identical (66,321 vs 51,985). Reliability cut against notes
+here: 0.068 illegal/turn and one fully failed turn vs reset's zero — the
+carried notes did not prevent (and at n=4 may even accompany) board-state
+errors, unlike memo's clean Run 10.
+
+**Compaction: still never observed.** All persistent-side telemetry files
+recorded `compaction_count: 0` (games peaked at 43 plies; threads never
+approached the 258,400 window). The instrument is armed and waiting for a
+genuinely long game.
+
+Reading, within the pre-registered discipline: across twelve uncapped
+games, **no carryover policy separated itself in W-L at n=4, while
+persistent cost 5.2x and 7.5x more than its two turn-scoped opponents
+(notes and reset were near-identical to each other)** — persistent pays a
+compounding bill for no measurable strength advantage at these game
+lengths, and the public-carryover arm (notes) matches everyone at flat
+cost without memo's reliability cleanliness. Seat continues to dominate
+short games (6 of 12 games were first-mover center wins). The honest
+headline for the accumulating surface is exactly its two columns: results
+and bills, side by side.
+
 ## Run 11 — persistent vs turn-reset again, now at 600k: the Run 9 result flips to persistent 3-1
 
 `runs/harnesslab-sol56m-persistent-vs-reset-600k-20260731/` (tracked at

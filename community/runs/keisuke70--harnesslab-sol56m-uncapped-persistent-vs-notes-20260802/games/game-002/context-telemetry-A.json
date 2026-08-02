@@ -1,0 +1,162 @@
+{
+  "schema": "laplace-context-telemetry-v1",
+  "provider": "codex",
+  "harness": "codex-cli",
+  "ids": [
+    "019fc176-16f0-7091-94eb-5b7021d1a397"
+  ],
+  "unobserved_timeouts": 0,
+  "status": "ok",
+  "complete": true,
+  "model_context_window": 258400,
+  "compaction_count": 0,
+  "compactions": [],
+  "token_counts": [
+    {
+      "input": 13492,
+      "cached": 8960,
+      "output": 234,
+      "reasoning": 178
+    },
+    {
+      "input": 13898,
+      "cached": 13056,
+      "output": 487,
+      "reasoning": 431
+    },
+    {
+      "input": 14560,
+      "cached": 13056,
+      "output": 697,
+      "reasoning": 634
+    },
+    {
+      "input": 15442,
+      "cached": 8960,
+      "output": 379,
+      "reasoning": 309
+    },
+    {
+      "input": 15942,
+      "cached": 15104,
+      "output": 309,
+      "reasoning": 243
+    },
+    {
+      "input": 16437,
+      "cached": 14080,
+      "output": 710,
+      "reasoning": 641
+    },
+    {
+      "input": 17321,
+      "cached": 16128,
+      "output": 1101,
+      "reasoning": 1014
+    },
+    {
+      "input": 18597,
+      "cached": 17152,
+      "output": 119,
+      "reasoning": 59
+    },
+    {
+      "input": 18892,
+      "cached": 18176,
+      "output": 655,
+      "reasoning": 588
+    },
+    {
+      "input": 19732,
+      "cached": 15104,
+      "output": 921,
+      "reasoning": 847
+    },
+    {
+      "input": 20826,
+      "cached": 19200,
+      "output": 110,
+      "reasoning": 56
+    }
+  ],
+  "transcript_bytes": null,
+  "sources": [
+    {
+      "id": "019fc176-16f0-7091-94eb-5b7021d1a397",
+      "file": "/var/folders/k7/54s7lzzd3cn_l9md79cv_vmc0000gn/T/laplace-cleanroom-QcGaJy/codex/sessions/2026/08/02/rollout-2026-08-02T16-52-49-019fc176-16f0-7091-94eb-5b7021d1a397.jsonl",
+      "skipped_lines": 0,
+      "compaction_count": 0,
+      "compactions": [],
+      "model_context_window": 258400,
+      "token_counts": [
+        {
+          "input": 13492,
+          "cached": 8960,
+          "output": 234,
+          "reasoning": 178
+        },
+        {
+          "input": 13898,
+          "cached": 13056,
+          "output": 487,
+          "reasoning": 431
+        },
+        {
+          "input": 14560,
+          "cached": 13056,
+          "output": 697,
+          "reasoning": 634
+        },
+        {
+          "input": 15442,
+          "cached": 8960,
+          "output": 379,
+          "reasoning": 309
+        },
+        {
+          "input": 15942,
+          "cached": 15104,
+          "output": 309,
+          "reasoning": 243
+        },
+        {
+          "input": 16437,
+          "cached": 14080,
+          "output": 710,
+          "reasoning": 641
+        },
+        {
+          "input": 17321,
+          "cached": 16128,
+          "output": 1101,
+          "reasoning": 1014
+        },
+        {
+          "input": 18597,
+          "cached": 17152,
+          "output": 119,
+          "reasoning": 59
+        },
+        {
+          "input": 18892,
+          "cached": 18176,
+          "output": 655,
+          "reasoning": 588
+        },
+        {
+          "input": 19732,
+          "cached": 15104,
+          "output": 921,
+          "reasoning": 847
+        },
+        {
+          "input": 20826,
+          "cached": 19200,
+          "output": 110,
+          "reasoning": 56
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

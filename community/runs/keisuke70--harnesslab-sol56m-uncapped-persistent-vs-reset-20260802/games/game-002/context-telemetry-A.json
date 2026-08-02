@@ -1,0 +1,186 @@
+{
+  "schema": "laplace-context-telemetry-v1",
+  "provider": "codex",
+  "harness": "codex-cli",
+  "ids": [
+    "019fc15f-8712-79a2-a924-f7a7ab34ff37"
+  ],
+  "unobserved_timeouts": 0,
+  "status": "ok",
+  "complete": true,
+  "model_context_window": 258400,
+  "compaction_count": 0,
+  "compactions": [],
+  "token_counts": [
+    {
+      "input": 13492,
+      "cached": 8960,
+      "output": 237,
+      "reasoning": 176
+    },
+    {
+      "input": 13899,
+      "cached": 13056,
+      "output": 337,
+      "reasoning": 266
+    },
+    {
+      "input": 14410,
+      "cached": 13056,
+      "output": 159,
+      "reasoning": 96
+    },
+    {
+      "input": 14755,
+      "cached": 14080,
+      "output": 230,
+      "reasoning": 158
+    },
+    {
+      "input": 15169,
+      "cached": 14080,
+      "output": 1341,
+      "reasoning": 1275
+    },
+    {
+      "input": 16686,
+      "cached": 14080,
+      "output": 1272,
+      "reasoning": 1196
+    },
+    {
+      "input": 18143,
+      "cached": 0,
+      "output": 976,
+      "reasoning": 897
+    },
+    {
+      "input": 19293,
+      "cached": 17152,
+      "output": 2462,
+      "reasoning": 2372
+    },
+    {
+      "input": 21931,
+      "cached": 18176,
+      "output": 215,
+      "reasoning": 139
+    },
+    {
+      "input": 22344,
+      "cached": 21248,
+      "output": 234,
+      "reasoning": 161
+    },
+    {
+      "input": 22769,
+      "cached": 16128,
+      "output": 1240,
+      "reasoning": 1159
+    },
+    {
+      "input": 24187,
+      "cached": 22272,
+      "output": 635,
+      "reasoning": 568
+    },
+    {
+      "input": 25000,
+      "cached": 23296,
+      "output": 113,
+      "reasoning": 44
+    }
+  ],
+  "transcript_bytes": null,
+  "sources": [
+    {
+      "id": "019fc15f-8712-79a2-a924-f7a7ab34ff37",
+      "file": "/var/folders/k7/54s7lzzd3cn_l9md79cv_vmc0000gn/T/laplace-cleanroom-BpjlFU/codex/sessions/2026/08/02/rollout-2026-08-02T16-28-11-019fc15f-8712-79a2-a924-f7a7ab34ff37.jsonl",
+      "skipped_lines": 0,
+      "compaction_count": 0,
+      "compactions": [],
+      "model_context_window": 258400,
+      "token_counts": [
+        {
+          "input": 13492,
+          "cached": 8960,
+          "output": 237,
+          "reasoning": 176
+        },
+        {
+          "input": 13899,
+          "cached": 13056,
+          "output": 337,
+          "reasoning": 266
+        },
+        {
+          "input": 14410,
+          "cached": 13056,
+          "output": 159,
+          "reasoning": 96
+        },
+        {
+          "input": 14755,
+          "cached": 14080,
+          "output": 230,
+          "reasoning": 158
+        },
+        {
+          "input": 15169,
+          "cached": 14080,
+          "output": 1341,
+          "reasoning": 1275
+        },
+        {
+          "input": 16686,
+          "cached": 14080,
+          "output": 1272,
+          "reasoning": 1196
+        },
+        {
+          "input": 18143,
+          "cached": 0,
+          "output": 976,
+          "reasoning": 897
+        },
+        {
+          "input": 19293,
+          "cached": 17152,
+          "output": 2462,
+          "reasoning": 2372
+        },
+        {
+          "input": 21931,
+          "cached": 18176,
+          "output": 215,
+          "reasoning": 139
+        },
+        {
+          "input": 22344,
+          "cached": 21248,
+          "output": 234,
+          "reasoning": 161
+        },
+        {
+          "input": 22769,
+          "cached": 16128,
+          "output": 1240,
+          "reasoning": 1159
+        },
+        {
+          "input": 24187,
+          "cached": 22272,
+          "output": 635,
+          "reasoning": 568
+        },
+        {
+          "input": 25000,
+          "cached": 23296,
+          "output": 113,
+          "reasoning": 44
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

@@ -1,4 +1,20 @@
 {
   "schema": "laplace-harnesslab-experiments-v1",
-  "experiments": []
+  "experiments": [
+    {
+      "run": "keisuke70--harnesslab-sol56m-uncapped-persistent-vs-reset-20260802",
+      "description": "Uncapped H0 ablation: persistent thread vs turn-reset (GPT-5.6 Sol medium)",
+      "plan": "docs/plans/2026-08-02-uncapped-three-arm.md"
+    },
+    {
+      "run": "keisuke70--harnesslab-sol56m-uncapped-persistent-vs-notes-20260802",
+      "description": "Uncapped private-vs-public carryover: persistent thread vs notes-carry (GPT-5.6 Sol medium)",
+      "plan": "docs/plans/2026-08-02-uncapped-three-arm.md"
+    },
+    {
+      "run": "keisuke70--harnesslab-sol56m-uncapped-notes-vs-reset-20260802",
+      "description": "Uncapped public-carryover effect: notes-carry vs turn-reset (GPT-5.6 Sol medium)",
+      "plan": "docs/plans/2026-08-02-uncapped-three-arm.md"
+    }
+  ]
 }

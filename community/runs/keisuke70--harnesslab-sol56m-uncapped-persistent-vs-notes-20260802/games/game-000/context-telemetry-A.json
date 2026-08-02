@@ -1,0 +1,102 @@
+{
+  "schema": "laplace-context-telemetry-v1",
+  "provider": "codex",
+  "harness": "codex-cli",
+  "ids": [
+    "019fc176-16e8-7780-801c-62ba1e9ee34d"
+  ],
+  "unobserved_timeouts": 0,
+  "status": "ok",
+  "complete": true,
+  "model_context_window": 258400,
+  "compaction_count": 0,
+  "compactions": [],
+  "token_counts": [
+    {
+      "input": 13492,
+      "cached": 0,
+      "output": 300,
+      "reasoning": 245
+    },
+    {
+      "input": 13962,
+      "cached": 13056,
+      "output": 700,
+      "reasoning": 635
+    },
+    {
+      "input": 14834,
+      "cached": 13056,
+      "output": 698,
+      "reasoning": 629
+    },
+    {
+      "input": 15717,
+      "cached": 14080,
+      "output": 126,
+      "reasoning": 55
+    },
+    {
+      "input": 16031,
+      "cached": 15104,
+      "output": 462,
+      "reasoning": 391
+    },
+    {
+      "input": 16669,
+      "cached": 15104,
+      "output": 150,
+      "reasoning": 93
+    }
+  ],
+  "transcript_bytes": null,
+  "sources": [
+    {
+      "id": "019fc176-16e8-7780-801c-62ba1e9ee34d",
+      "file": "/var/folders/k7/54s7lzzd3cn_l9md79cv_vmc0000gn/T/laplace-cleanroom-QcGaJy/codex/sessions/2026/08/02/rollout-2026-08-02T16-52-49-019fc176-16e8-7780-801c-62ba1e9ee34d.jsonl",
+      "skipped_lines": 0,
+      "compaction_count": 0,
+      "compactions": [],
+      "model_context_window": 258400,
+      "token_counts": [
+        {
+          "input": 13492,
+          "cached": 0,
+          "output": 300,
+          "reasoning": 245
+        },
+        {
+          "input": 13962,
+          "cached": 13056,
+          "output": 700,
+          "reasoning": 635
+        },
+        {
+          "input": 14834,
+          "cached": 13056,
+          "output": 698,
+          "reasoning": 629
+        },
+        {
+          "input": 15717,
+          "cached": 14080,
+          "output": 126,
+          "reasoning": 55
+        },
+        {
+          "input": 16031,
+          "cached": 15104,
+          "output": 462,
+          "reasoning": 391
+        },
+        {
+          "input": 16669,
+          "cached": 15104,
+          "output": 150,
+          "reasoning": 93
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}
