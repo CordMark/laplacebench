@@ -123,11 +123,16 @@ test("current ledger publishes deterministic content-addressed public games", ()
  * under community/runs legitimately changes, re-capture this value in the same
  * commit and say so — never "fix" it to make an unexplained diff go away.
  */
-// Re-captured 2026-08-02 in the same commit that admitted the three uncapped
-// three-arm runs into community/runs (a legitimate ledger change per the rule
-// above); the arena builder itself is unchanged.
+// Re-captured 2026-08-02 after d26fc32 admitted Run 15/16 into community/runs
+// (a legitimate ledger change per the rule above — the re-capture follows in
+// the next commit because the admission was already pushed before the full
+// suite was re-run; that ordering slip is documented in the adjudication log).
+// Constructively verified before re-capture: rebuilding from the ledger MINUS
+// the two new runs reproduces the previous golden 882142ae… byte-for-byte
+// (builder unchanged), and the only new public games are Run 16's four
+// (runs 11->13, games 35->43, public 7->11).
 const ARENA_GOLDEN_SHA256 =
-  "882142aed4256717fd663e13b293567bfd9b034176c6ed8eb97b51b146edd752";
+  "c4fd728035b8ab7b7963c935f78718be39e8893a1e320ba224b1a553a3a60ce3";
 
 test("arena.json bytes stay identical to the pre-harnesslab implementation", () => {
   const artifacts = buildArenaArtifacts(RUNS, SHA, GENERATED);

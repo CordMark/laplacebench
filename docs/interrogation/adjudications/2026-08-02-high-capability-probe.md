@@ -34,3 +34,11 @@ R1 NEEDS_CHANGES (0.99): 数値・台帳コピー・curated 追記・canary/検�
   裁定: accept。修正: 「roughly 2.2-2.4x (34/14, 11/5)」。
 
 R2: 2件 ACCEPT → **APPROVED (0.99)**。
+
+## Bounded corrective (impl-arena-golden-recapture): APPROVED (0.99)
+
+d26fc32 の台帳追加時に arena golden の再採取を同一コミットで行わず CI が
+fail(規則の文言違反 — push 前の全体スイート再実行を怠った工程ミス)。
+構成的検証(旧台帳で旧 golden をバイト再現・新公開局が Run 16 の4局のみ・
+カウント増分一致)の上で c4fd7280… へ再採取、レビュアーも独立再ビルドで一致を
+確認。教訓: 台帳へ run を admit するコミットは push 前に必ず全体スイートを回す。
