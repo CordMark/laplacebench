@@ -1,0 +1,571 @@
+{
+  "schema": "laplace-bench-harnesslab-catalog-v1",
+  "source_sha": "d26fc32b6dcab83753de446e66c879368a48ff82",
+  "generated_at": "2026-08-02T11:45:24.000Z",
+  "experiment_count": 4,
+  "game_count": 16,
+  "experiments": [
+    {
+      "run": "keisuke70--harnesslab-sol56m-uncapped-persistent-vs-reset-20260802",
+      "run_id": "harnesslab-sol56m-uncapped-persistent-vs-reset-20260802",
+      "description": "Uncapped H0 ablation: persistent thread vs turn-reset (GPT-5.6 Sol medium)",
+      "plan": "docs/plans/2026-08-02-uncapped-three-arm.md"
+    },
+    {
+      "run": "keisuke70--harnesslab-sol56m-uncapped-persistent-vs-notes-20260802",
+      "run_id": "harnesslab-sol56m-uncapped-persistent-vs-notes-20260802",
+      "description": "Uncapped private-vs-public carryover: persistent thread vs notes-carry (GPT-5.6 Sol medium)",
+      "plan": "docs/plans/2026-08-02-uncapped-three-arm.md"
+    },
+    {
+      "run": "keisuke70--harnesslab-sol56m-uncapped-notes-vs-reset-20260802",
+      "run_id": "harnesslab-sol56m-uncapped-notes-vs-reset-20260802",
+      "description": "Uncapped public-carryover effect: notes-carry vs turn-reset (GPT-5.6 Sol medium)",
+      "plan": "docs/plans/2026-08-02-uncapped-three-arm.md"
+    },
+    {
+      "run": "keisuke70--harnesslab-sol56h-uncapped-persistent-vs-reset-20260802",
+      "run_id": "harnesslab-sol56h-uncapped-persistent-vs-reset-20260802",
+      "description": "High-capability probe: persistent thread vs turn-reset (GPT-5.6 Sol high)",
+      "plan": "docs/plans/2026-08-02-high-capability-probe.md"
+    }
+  ],
+  "matchups": [
+    {
+      "id": "codex-cli-notes:gpt-5.6-sol@medium vs codex-cli-reset:gpt-5.6-sol@medium",
+      "left_spec": "codex-cli-notes:gpt-5.6-sol@medium",
+      "right_spec": "codex-cli-reset:gpt-5.6-sol@medium",
+      "matchup_kind": "same-model-harness-ablation",
+      "harness_conditions": {
+        "left": {
+          "context_lifetime": "turn-scoped + append-only public move-note carryover",
+          "reasoning_retention": "discarded except own past move notes (public, uncapped count, 2500 chars/note = spectator-record equality)",
+          "compaction": "n/a",
+          "mechanism": "fresh codex exec per turn; harness-injected journal (notes-v1) of this side's own ADOPTED move notes, each the same value the events log publishes (prompt.ts recordedNote); clean-room execution required (ambient refused — the notes must be the ONLY carryover)"
+        },
+        "right": {
+          "context_lifetime": "turn-reset (fresh context every turn)",
+          "reasoning_retention": "discarded every turn (nothing carries over)",
+          "compaction": "n/a (no long-lived context to compact)",
+          "mechanism": "fresh codex exec per turn; rulebook + full-state observation resent every turn; clean-room execution required (ambient refused — a reused cwd with tools would be an undeclared carryover channel)"
+        }
+      },
+      "wins_left": 2,
+      "wins_right": 2,
+      "draws": 0,
+      "games": [
+        {
+          "run": "keisuke70--harnesslab-sol56m-uncapped-notes-vs-reset-20260802",
+          "game_id": "game-000",
+          "first_side": "left",
+          "winner": "left",
+          "reason": "center",
+          "plies": 11,
+          "replay": "5bd29b43a88fa653495d889e69586a6f84fdebd5b95069bf3c04d9e9332aba9d",
+          "per_side": {
+            "left": {
+              "output_tokens": 2188,
+              "avg_latency_ms": 16504,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 6288,
+              "avg_latency_ms": 47704,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            }
+          }
+        },
+        {
+          "run": "keisuke70--harnesslab-sol56m-uncapped-notes-vs-reset-20260802",
+          "game_id": "game-001",
+          "first_side": "right",
+          "winner": "right",
+          "reason": "center",
+          "plies": 11,
+          "replay": "a0df42650906bc803fa8fcbfc6a4948d3668a0b229c2e5c65566b44249fc8c0a",
+          "per_side": {
+            "left": {
+              "output_tokens": 7400,
+              "avg_latency_ms": 58234,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 3082,
+              "avg_latency_ms": 21015,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            }
+          }
+        },
+        {
+          "run": "keisuke70--harnesslab-sol56m-uncapped-notes-vs-reset-20260802",
+          "game_id": "game-002",
+          "first_side": "left",
+          "winner": "right",
+          "reason": "center",
+          "plies": 32,
+          "replay": "fb7ec4ed6d050720a7e11af5500970d8f31de3873d3b90c6f9cde75204d41d5c",
+          "per_side": {
+            "left": {
+              "output_tokens": 25245,
+              "avg_latency_ms": 54816,
+              "illegal_rate_per_turn": 0.125,
+              "failed_turns": 1,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 21464,
+              "avg_latency_ms": 48694,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            }
+          }
+        },
+        {
+          "run": "keisuke70--harnesslab-sol56m-uncapped-notes-vs-reset-20260802",
+          "game_id": "game-003",
+          "first_side": "right",
+          "winner": "left",
+          "reason": "elimination",
+          "plies": 34,
+          "replay": "5fd406911f115072cf4419b75305e1518b16676595d9a4a065c88410e03323b9",
+          "per_side": {
+            "left": {
+              "output_tokens": 31488,
+              "avg_latency_ms": 62361,
+              "illegal_rate_per_turn": 0.059,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 21151,
+              "avg_latency_ms": 47382,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "codex-cli-notes:gpt-5.6-sol@medium vs codex-cli:gpt-5.6-sol@medium",
+      "left_spec": "codex-cli-notes:gpt-5.6-sol@medium",
+      "right_spec": "codex-cli:gpt-5.6-sol@medium",
+      "matchup_kind": "same-model-harness-ablation",
+      "harness_conditions": {
+        "left": {
+          "context_lifetime": "turn-scoped + append-only public move-note carryover",
+          "reasoning_retention": "discarded except own past move notes (public, uncapped count, 2500 chars/note = spectator-record equality)",
+          "compaction": "n/a",
+          "mechanism": "fresh codex exec per turn; harness-injected journal (notes-v1) of this side's own ADOPTED move notes, each the same value the events log publishes (prompt.ts recordedNote); clean-room execution required (ambient refused — the notes must be the ONLY carryover)"
+        },
+        "right": {
+          "context_lifetime": "persistent-thread (whole game)",
+          "reasoning_retention": "provider-managed (opaque)",
+          "compaction": "provider-managed (opaque)",
+          "mechanism": "codex exec / codex exec resume <thread>"
+        }
+      },
+      "wins_left": 2,
+      "wins_right": 2,
+      "draws": 0,
+      "games": [
+        {
+          "run": "keisuke70--harnesslab-sol56m-uncapped-persistent-vs-notes-20260802",
+          "game_id": "game-000",
+          "first_side": "right",
+          "winner": "right",
+          "reason": "center",
+          "plies": 11,
+          "replay": "865bf35b1744ba81efff4ee587359fa703ce2a05d45a5a07b73e3a396e0731c5",
+          "per_side": {
+            "left": {
+              "output_tokens": 5957,
+              "avg_latency_ms": 50391,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 9544,
+              "avg_latency_ms": 19071,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": {
+                "count": 0,
+                "status": "ok"
+              }
+            }
+          }
+        },
+        {
+          "run": "keisuke70--harnesslab-sol56m-uncapped-persistent-vs-notes-20260802",
+          "game_id": "game-001",
+          "first_side": "left",
+          "winner": "left",
+          "reason": "elimination",
+          "plies": 41,
+          "replay": "5f20ddeb38d199759bb2710f0dd4af20e7f48dc3e2c824e0ea7bce3c38988c70",
+          "per_side": {
+            "left": {
+              "output_tokens": 28972,
+              "avg_latency_ms": 48533,
+              "illegal_rate_per_turn": 0.048,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 292586,
+              "avg_latency_ms": 59778,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": {
+                "count": 0,
+                "status": "ok"
+              }
+            }
+          }
+        },
+        {
+          "run": "keisuke70--harnesslab-sol56m-uncapped-persistent-vs-notes-20260802",
+          "game_id": "game-002",
+          "first_side": "right",
+          "winner": "right",
+          "reason": "center",
+          "plies": 19,
+          "replay": "63fc714bc8e81222584e5f4cd606058c1a4153ce44b7ff3aa9df3fd3fc7cf107",
+          "per_side": {
+            "left": {
+              "output_tokens": 18753,
+              "avg_latency_ms": 85411,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 33070,
+              "avg_latency_ms": 21658,
+              "illegal_rate_per_turn": 0.1,
+              "failed_turns": 0,
+              "compaction": {
+                "count": 0,
+                "status": "ok"
+              }
+            }
+          }
+        },
+        {
+          "run": "keisuke70--harnesslab-sol56m-uncapped-persistent-vs-notes-20260802",
+          "game_id": "game-003",
+          "first_side": "left",
+          "winner": "left",
+          "reason": "elimination",
+          "plies": 43,
+          "replay": "4914db7e55aa3a50554a93367ab3502da1aecfa634059a8218122351d4727e6e",
+          "per_side": {
+            "left": {
+              "output_tokens": 33430,
+              "avg_latency_ms": 58652,
+              "illegal_rate_per_turn": 0.045,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 315963,
+              "avg_latency_ms": 45984,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": {
+                "count": 0,
+                "status": "ok"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "codex-cli-reset:gpt-5.6-sol@high vs codex-cli:gpt-5.6-sol@high",
+      "left_spec": "codex-cli-reset:gpt-5.6-sol@high",
+      "right_spec": "codex-cli:gpt-5.6-sol@high",
+      "matchup_kind": "same-model-harness-ablation",
+      "harness_conditions": {
+        "left": {
+          "context_lifetime": "turn-reset (fresh context every turn)",
+          "reasoning_retention": "discarded every turn (nothing carries over)",
+          "compaction": "n/a (no long-lived context to compact)",
+          "mechanism": "fresh codex exec per turn; rulebook + full-state observation resent every turn; clean-room execution required (ambient refused — a reused cwd with tools would be an undeclared carryover channel)"
+        },
+        "right": {
+          "context_lifetime": "persistent-thread (whole game)",
+          "reasoning_retention": "provider-managed (opaque)",
+          "compaction": "provider-managed (opaque)",
+          "mechanism": "codex exec / codex exec resume <thread>"
+        }
+      },
+      "wins_left": 1,
+      "wins_right": 3,
+      "draws": 0,
+      "games": [
+        {
+          "run": "keisuke70--harnesslab-sol56h-uncapped-persistent-vs-reset-20260802",
+          "game_id": "game-000",
+          "first_side": "right",
+          "winner": "right",
+          "reason": "center",
+          "plies": 17,
+          "replay": "2c74fc5c9487a4c15d2a9fb893cee8e24f49574d6d3a36c0098e067ba07c62a0",
+          "per_side": {
+            "left": {
+              "output_tokens": 22385,
+              "avg_latency_ms": 96184,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 57172,
+              "avg_latency_ms": 51648,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": {
+                "count": 0,
+                "status": "ok"
+              }
+            }
+          }
+        },
+        {
+          "run": "keisuke70--harnesslab-sol56h-uncapped-persistent-vs-reset-20260802",
+          "game_id": "game-001",
+          "first_side": "left",
+          "winner": "right",
+          "reason": "center",
+          "plies": 34,
+          "replay": "1a62f5620f61dee389b6d48afcc742a29e27b9980623905034c5e958d83787c0",
+          "per_side": {
+            "left": {
+              "output_tokens": 51284,
+              "avg_latency_ms": 105509,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 260804,
+              "avg_latency_ms": 57100,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": {
+                "count": 0,
+                "status": "ok"
+              }
+            }
+          }
+        },
+        {
+          "run": "keisuke70--harnesslab-sol56h-uncapped-persistent-vs-reset-20260802",
+          "game_id": "game-002",
+          "first_side": "right",
+          "winner": "right",
+          "reason": "elimination",
+          "plies": 25,
+          "replay": "955937807010abdfb3e30c28f4f834c285a62c897dcd6bdb1139638720d8644e",
+          "per_side": {
+            "left": {
+              "output_tokens": 28657,
+              "avg_latency_ms": 88954,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 94605,
+              "avg_latency_ms": 43593,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": {
+                "count": 0,
+                "status": "ok"
+              }
+            }
+          }
+        },
+        {
+          "run": "keisuke70--harnesslab-sol56h-uncapped-persistent-vs-reset-20260802",
+          "game_id": "game-003",
+          "first_side": "left",
+          "winner": "left",
+          "reason": "elimination",
+          "plies": 23,
+          "replay": "84e3d51774d650e0cd9e5991d00789a7d9eb8d05e0ebc36192924bd12d335cfb",
+          "per_side": {
+            "left": {
+              "output_tokens": 22712,
+              "avg_latency_ms": 69890,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 84574,
+              "avg_latency_ms": 53620,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": {
+                "count": 0,
+                "status": "ok"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "codex-cli-reset:gpt-5.6-sol@medium vs codex-cli:gpt-5.6-sol@medium",
+      "left_spec": "codex-cli-reset:gpt-5.6-sol@medium",
+      "right_spec": "codex-cli:gpt-5.6-sol@medium",
+      "matchup_kind": "same-model-harness-ablation",
+      "harness_conditions": {
+        "left": {
+          "context_lifetime": "turn-reset (fresh context every turn)",
+          "reasoning_retention": "discarded every turn (nothing carries over)",
+          "compaction": "n/a (no long-lived context to compact)",
+          "mechanism": "fresh codex exec per turn; rulebook + full-state observation resent every turn; clean-room execution required (ambient refused — a reused cwd with tools would be an undeclared carryover channel)"
+        },
+        "right": {
+          "context_lifetime": "persistent-thread (whole game)",
+          "reasoning_retention": "provider-managed (opaque)",
+          "compaction": "provider-managed (opaque)",
+          "mechanism": "codex exec / codex exec resume <thread>"
+        }
+      },
+      "wins_left": 3,
+      "wins_right": 1,
+      "draws": 0,
+      "games": [
+        {
+          "run": "keisuke70--harnesslab-sol56m-uncapped-persistent-vs-reset-20260802",
+          "game_id": "game-000",
+          "first_side": "right",
+          "winner": "left",
+          "reason": "center",
+          "plies": 30,
+          "replay": "5266c27f8a5b2cd8ed3156b0bd345900ba91f15e3ee39f2787903973b4deb0ab",
+          "per_side": {
+            "left": {
+              "output_tokens": 17383,
+              "avg_latency_ms": 46574,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 120281,
+              "avg_latency_ms": 45578,
+              "illegal_rate_per_turn": 0.067,
+              "failed_turns": 0,
+              "compaction": {
+                "count": 0,
+                "status": "ok"
+              }
+            }
+          }
+        },
+        {
+          "run": "keisuke70--harnesslab-sol56m-uncapped-persistent-vs-reset-20260802",
+          "game_id": "game-001",
+          "first_side": "left",
+          "winner": "left",
+          "reason": "center",
+          "plies": 9,
+          "replay": "3ffd9e794a98e05f43b2e43c7d352189ac8739af8d8745c38f1b7dcf6c40068f",
+          "per_side": {
+            "left": {
+              "output_tokens": 2357,
+              "avg_latency_ms": 20753,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 8780,
+              "avg_latency_ms": 40101,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": {
+                "count": 0,
+                "status": "ok"
+              }
+            }
+          }
+        },
+        {
+          "run": "keisuke70--harnesslab-sol56m-uncapped-persistent-vs-reset-20260802",
+          "game_id": "game-002",
+          "first_side": "right",
+          "winner": "right",
+          "reason": "center",
+          "plies": 25,
+          "replay": "707b8ec6659f12d97b667a99b61bddd3fb31f88674d15fe4f1c68e327ddcd748",
+          "per_side": {
+            "left": {
+              "output_tokens": 15957,
+              "avg_latency_ms": 51439,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 62137,
+              "avg_latency_ms": 31570,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": {
+                "count": 0,
+                "status": "ok"
+              }
+            }
+          }
+        },
+        {
+          "run": "keisuke70--harnesslab-sol56m-uncapped-persistent-vs-reset-20260802",
+          "game_id": "game-003",
+          "first_side": "left",
+          "winner": "left",
+          "reason": "elimination",
+          "plies": 25,
+          "replay": "d3c8b37431a44b0ca6c633f2f3342189b9350bc900ac32b19013360fcad35820",
+          "per_side": {
+            "left": {
+              "output_tokens": 15619,
+              "avg_latency_ms": 47555,
+              "illegal_rate_per_turn": 0.077,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 73402,
+              "avg_latency_ms": 41997,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": {
+                "count": 0,
+                "status": "ok"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

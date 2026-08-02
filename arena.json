@@ -2,13 +2,343 @@
   "schema": "laplace-bench-arena-v1",
   "ruleset": "laplace-8x8-v1",
   "lane": "community",
-  "source_sha": "9303af4ba8263d5298396713c1601b1dec3ec228",
-  "generated_at": "2026-07-29T07:04:24.000Z",
-  "verified_run_count": 5,
-  "verified_game_count": 11,
+  "source_sha": "d26fc32b6dcab83753de446e66c879368a48ff82",
+  "generated_at": "2026-08-02T11:45:24.000Z",
+  "verified_run_count": 13,
+  "verified_game_count": 43,
   "public_agent_count": 6,
-  "public_game_count": 7,
+  "public_game_count": 11,
   "matchups": [
+    {
+      "id": "8de39e8fd5cc39161a53a0747ba5b1f1bd9aa95e89482712c3fb1d6244f9e6f7",
+      "left": {
+        "id": "claude-opus-5@high",
+        "label": "Opus 5 (high)",
+        "kind": "llm"
+      },
+      "right": {
+        "id": "gpt-5.6-sol@high",
+        "label": "GPT-5.6 Sol (high)",
+        "kind": "llm"
+      },
+      "game_count": 6,
+      "left_wins": 6,
+      "right_wins": 0,
+      "draws": 0,
+      "last_played_at": "2026-08-02T11:39:59.051Z",
+      "conditions": [
+        {
+          "left_agent": "claude-cli:claude-opus-5@high",
+          "right_agent": "codex-cli:gpt-5.6-sol@high",
+          "game_count": 6,
+          "left_wins": 6,
+          "right_wins": 0,
+          "draws": 0
+        }
+      ],
+      "games": [
+        {
+          "raw_ref": "keisuke70--arena-opus5h-vs-sol56h-uncapped-20260802/game-001",
+          "played_at": "2026-08-02T11:39:59.051Z",
+          "duration_ms": 4685348,
+          "team_a": {
+            "agent": "codex-cli:gpt-5.6-sol@high",
+            "headline_id": "gpt-5.6-sol@high"
+          },
+          "team_b": {
+            "agent": "claude-cli:claude-opus-5@high",
+            "headline_id": "claude-opus-5@high"
+          },
+          "left_side": "B",
+          "winner": "B",
+          "reason": "center",
+          "plies": 50,
+          "failures": {
+            "A": {
+              "format": 0,
+              "legality": 0,
+              "timeout": 0,
+              "token_budget": 0
+            },
+            "B": {
+              "format": 0,
+              "legality": 0,
+              "timeout": 0,
+              "token_budget": 0
+            }
+          },
+          "team_tokens": {
+            "A": {
+              "output": 444145,
+              "total": 8627007
+            },
+            "B": {
+              "output": 280225,
+              "total": 4232659
+            }
+          },
+          "team_latency_ms": {
+            "A": 54052,
+            "B": 133355
+          },
+          "replay": {
+            "id": "5434b7dfe47aedc04866e336f4219f177c430c85c3a3ee45b802822addb851e0",
+            "bytes": 225261,
+            "schema": "laplace-bench-replay-v1"
+          }
+        },
+        {
+          "raw_ref": "keisuke70--arena-opus5h-vs-sol56h-uncapped-20260802/game-003",
+          "played_at": "2026-08-02T11:24:00.212Z",
+          "duration_ms": 3726508,
+          "team_a": {
+            "agent": "codex-cli:gpt-5.6-sol@high",
+            "headline_id": "gpt-5.6-sol@high"
+          },
+          "team_b": {
+            "agent": "claude-cli:claude-opus-5@high",
+            "headline_id": "claude-opus-5@high"
+          },
+          "left_side": "B",
+          "winner": "B",
+          "reason": "elimination",
+          "plies": 38,
+          "failures": {
+            "A": {
+              "format": 0,
+              "legality": 0,
+              "timeout": 0,
+              "token_budget": 0
+            },
+            "B": {
+              "format": 0,
+              "legality": 0,
+              "timeout": 0,
+              "token_budget": 0
+            }
+          },
+          "team_tokens": {
+            "A": {
+              "output": 272601,
+              "total": 4625474
+            },
+            "B": {
+              "output": 207548,
+              "total": 2635757
+            }
+          },
+          "team_latency_ms": {
+            "A": 66007,
+            "B": 130120
+          },
+          "replay": {
+            "id": "19d9af6b83e8862d5c821cc216be30a519a6cc35c0614a31cad6bbc130d6b961",
+            "bytes": 185787,
+            "schema": "laplace-bench-replay-v1"
+          }
+        },
+        {
+          "raw_ref": "keisuke70--arena-opus5h-vs-sol56h-uncapped-20260802/game-002",
+          "played_at": "2026-08-02T10:45:21.622Z",
+          "duration_ms": 1407919,
+          "team_a": {
+            "agent": "claude-cli:claude-opus-5@high",
+            "headline_id": "claude-opus-5@high"
+          },
+          "team_b": {
+            "agent": "codex-cli:gpt-5.6-sol@high",
+            "headline_id": "gpt-5.6-sol@high"
+          },
+          "left_side": "A",
+          "winner": "A",
+          "reason": "center",
+          "plies": 17,
+          "failures": {
+            "A": {
+              "format": 0,
+              "legality": 0,
+              "timeout": 0,
+              "token_budget": 0
+            },
+            "B": {
+              "format": 0,
+              "legality": 0,
+              "timeout": 0,
+              "token_budget": 0
+            }
+          },
+          "team_tokens": {
+            "A": {
+              "output": 78970,
+              "total": 612913
+            },
+            "B": {
+              "output": 65956,
+              "total": 736416
+            }
+          },
+          "team_latency_ms": {
+            "A": 107153,
+            "B": 55437
+          },
+          "replay": {
+            "id": "93f22240e747e7a156b2ecdd563e1056ea34d64b9cddd7bfea2b7e2935887cb1",
+            "bytes": 83576,
+            "schema": "laplace-bench-replay-v1"
+          }
+        },
+        {
+          "raw_ref": "keisuke70--arena-opus5h-vs-sol56h-uncapped-20260802/game-000",
+          "played_at": "2026-08-02T10:39:11.533Z",
+          "duration_ms": 1037830,
+          "team_a": {
+            "agent": "claude-cli:claude-opus-5@high",
+            "headline_id": "claude-opus-5@high"
+          },
+          "team_b": {
+            "agent": "codex-cli:gpt-5.6-sol@high",
+            "headline_id": "gpt-5.6-sol@high"
+          },
+          "left_side": "A",
+          "winner": "A",
+          "reason": "center",
+          "plies": 15,
+          "failures": {
+            "A": {
+              "format": 0,
+              "legality": 0,
+              "timeout": 0,
+              "token_budget": 0
+            },
+            "B": {
+              "format": 0,
+              "legality": 0,
+              "timeout": 0,
+              "token_budget": 0
+            }
+          },
+          "team_tokens": {
+            "A": {
+              "output": 61431,
+              "total": 526731
+            },
+            "B": {
+              "output": 29236,
+              "total": 467865
+            }
+          },
+          "team_latency_ms": {
+            "A": 96246,
+            "B": 38260
+          },
+          "replay": {
+            "id": "b0a6face3e444eeea2dc20210217b2c7a7c2ca84e2c91572b6d74eed26e37cf6",
+            "bytes": 75776,
+            "schema": "laplace-bench-replay-v1"
+          }
+        },
+        {
+          "raw_ref": "keisuke70--20260725-sol56h-vs-opus5h/game-001",
+          "played_at": "2026-07-25T13:06:18.013Z",
+          "duration_ms": 3088587,
+          "team_a": {
+            "agent": "claude-cli:claude-opus-5@high",
+            "headline_id": "claude-opus-5@high"
+          },
+          "team_b": {
+            "agent": "codex-cli:gpt-5.6-sol@high",
+            "headline_id": "gpt-5.6-sol@high"
+          },
+          "left_side": "A",
+          "winner": "A",
+          "reason": "center",
+          "plies": 37,
+          "failures": {
+            "A": {
+              "format": 0,
+              "legality": 0,
+              "timeout": 0,
+              "token_budget": 0
+            },
+            "B": {
+              "format": 0,
+              "legality": 0,
+              "timeout": 0,
+              "token_budget": 2
+            }
+          },
+          "team_tokens": {
+            "A": {
+              "output": 159038,
+              "total": 2510986
+            },
+            "B": {
+              "output": 283682,
+              "total": 4384917
+            }
+          },
+          "team_latency_ms": {
+            "A": 104578,
+            "B": 68843
+          },
+          "replay": {
+            "id": "8fbce0a8913f28336892871868428c5f74808a84d0fe8ad43aa0609e7b12fc7a",
+            "bytes": 159168,
+            "schema": "laplace-bench-replay-v1"
+          }
+        },
+        {
+          "raw_ref": "keisuke70--20260725-sol56h-vs-opus5h/game-000",
+          "played_at": "2026-07-25T12:14:49.421Z",
+          "duration_ms": 3328615,
+          "team_a": {
+            "agent": "codex-cli:gpt-5.6-sol@high",
+            "headline_id": "gpt-5.6-sol@high"
+          },
+          "team_b": {
+            "agent": "claude-cli:claude-opus-5@high",
+            "headline_id": "claude-opus-5@high"
+          },
+          "left_side": "B",
+          "winner": "B",
+          "reason": "elimination",
+          "plies": 41,
+          "failures": {
+            "A": {
+              "format": 0,
+              "legality": 0,
+              "timeout": 0,
+              "token_budget": 3
+            },
+            "B": {
+              "format": 0,
+              "legality": 0,
+              "timeout": 0,
+              "token_budget": 0
+            }
+          },
+          "team_tokens": {
+            "A": {
+              "output": 254272,
+              "total": 5430385
+            },
+            "B": {
+              "output": 183502,
+              "total": 2407073
+            }
+          },
+          "team_latency_ms": {
+            "A": 60883,
+            "B": 111629
+          },
+          "replay": {
+            "id": "056cf6e6394c5657ca94e026361a49f1fad7326ff93e2435a255c9f9bca87788",
+            "bytes": 173852,
+            "schema": "laplace-bench-replay-v1"
+          }
+        }
+      ]
+    },
     {
       "id": "c60910d0cd46d6ae440c1cae81055914a6bb2e8e3ae8d0a8eea3b7d5d4b0d288",
       "left": {
@@ -338,136 +668,6 @@
           "replay": {
             "id": "39c16546b208b58b0b1e837bc75249384ca451a8eec9c0dea5511b23aac96b8d",
             "bytes": 47117,
-            "schema": "laplace-bench-replay-v1"
-          }
-        }
-      ]
-    },
-    {
-      "id": "8de39e8fd5cc39161a53a0747ba5b1f1bd9aa95e89482712c3fb1d6244f9e6f7",
-      "left": {
-        "id": "claude-opus-5@high",
-        "label": "Opus 5 (high)",
-        "kind": "llm"
-      },
-      "right": {
-        "id": "gpt-5.6-sol@high",
-        "label": "GPT-5.6 Sol (high)",
-        "kind": "llm"
-      },
-      "game_count": 2,
-      "left_wins": 2,
-      "right_wins": 0,
-      "draws": 0,
-      "last_played_at": "2026-07-25T13:06:18.013Z",
-      "conditions": [
-        {
-          "left_agent": "claude-cli:claude-opus-5@high",
-          "right_agent": "codex-cli:gpt-5.6-sol@high",
-          "game_count": 2,
-          "left_wins": 2,
-          "right_wins": 0,
-          "draws": 0
-        }
-      ],
-      "games": [
-        {
-          "raw_ref": "keisuke70--20260725-sol56h-vs-opus5h/game-001",
-          "played_at": "2026-07-25T13:06:18.013Z",
-          "duration_ms": 3088587,
-          "team_a": {
-            "agent": "claude-cli:claude-opus-5@high",
-            "headline_id": "claude-opus-5@high"
-          },
-          "team_b": {
-            "agent": "codex-cli:gpt-5.6-sol@high",
-            "headline_id": "gpt-5.6-sol@high"
-          },
-          "left_side": "A",
-          "winner": "A",
-          "reason": "center",
-          "plies": 37,
-          "failures": {
-            "A": {
-              "format": 0,
-              "legality": 0,
-              "timeout": 0,
-              "token_budget": 0
-            },
-            "B": {
-              "format": 0,
-              "legality": 0,
-              "timeout": 0,
-              "token_budget": 2
-            }
-          },
-          "team_tokens": {
-            "A": {
-              "output": 159038,
-              "total": 2510986
-            },
-            "B": {
-              "output": 283682,
-              "total": 4384917
-            }
-          },
-          "team_latency_ms": {
-            "A": 104578,
-            "B": 68843
-          },
-          "replay": {
-            "id": "8fbce0a8913f28336892871868428c5f74808a84d0fe8ad43aa0609e7b12fc7a",
-            "bytes": 159168,
-            "schema": "laplace-bench-replay-v1"
-          }
-        },
-        {
-          "raw_ref": "keisuke70--20260725-sol56h-vs-opus5h/game-000",
-          "played_at": "2026-07-25T12:14:49.421Z",
-          "duration_ms": 3328615,
-          "team_a": {
-            "agent": "codex-cli:gpt-5.6-sol@high",
-            "headline_id": "gpt-5.6-sol@high"
-          },
-          "team_b": {
-            "agent": "claude-cli:claude-opus-5@high",
-            "headline_id": "claude-opus-5@high"
-          },
-          "left_side": "B",
-          "winner": "B",
-          "reason": "elimination",
-          "plies": 41,
-          "failures": {
-            "A": {
-              "format": 0,
-              "legality": 0,
-              "timeout": 0,
-              "token_budget": 3
-            },
-            "B": {
-              "format": 0,
-              "legality": 0,
-              "timeout": 0,
-              "token_budget": 0
-            }
-          },
-          "team_tokens": {
-            "A": {
-              "output": 254272,
-              "total": 5430385
-            },
-            "B": {
-              "output": 183502,
-              "total": 2407073
-            }
-          },
-          "team_latency_ms": {
-            "A": 60883,
-            "B": 111629
-          },
-          "replay": {
-            "id": "056cf6e6394c5657ca94e026361a49f1fad7326ff93e2435a255c9f9bca87788",
-            "bytes": 173852,
             "schema": "laplace-bench-replay-v1"
           }
         }

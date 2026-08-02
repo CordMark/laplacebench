@@ -1,10 +1,38 @@
 {
   "schema": "laplace-bench-standings-v2",
   "lane": "community",
-  "game_count": 11,
-  "run_count": 5,
+  "game_count": 43,
+  "run_count": 13,
   "matchup_count": 4,
   "matchups": [
+    {
+      "headline": {
+        "left": "claude-opus-5@high",
+        "right": "gpt-5.6-sol@high"
+      },
+      "games": 6,
+      "left_wins": 6,
+      "right_wins": 0,
+      "draws": 0,
+      "last_played": "2026-08-02T10:21:53.615Z",
+      "last_game": "keisuke70--arena-opus5h-vs-sol56h-uncapped-20260802/game-003",
+      "breakdown": [
+        {
+          "left_agent": "claude-cli:claude-opus-5@high",
+          "right_agent": "codex-cli:gpt-5.6-sol@high",
+          "games": 6,
+          "left_wins": 6,
+          "right_wins": 0,
+          "draws": 0,
+          "center_wins": 4,
+          "elim_wins": 2,
+          "horizon_draws": 0,
+          "repetition_draws": 0,
+          "left_err_per_turn": 0,
+          "right_err_per_turn": 0
+        }
+      ]
+    },
     {
       "headline": {
         "left": "cpu-v6:level_5",
@@ -63,34 +91,6 @@
     },
     {
       "headline": {
-        "left": "claude-opus-5@high",
-        "right": "gpt-5.6-sol@high"
-      },
-      "games": 2,
-      "left_wins": 2,
-      "right_wins": 0,
-      "draws": 0,
-      "last_played": "2026-07-25T11:19:20.658Z",
-      "last_game": "keisuke70--20260725-sol56h-vs-opus5h/game-001",
-      "breakdown": [
-        {
-          "left_agent": "claude-cli:claude-opus-5@high",
-          "right_agent": "codex-cli:gpt-5.6-sol@high",
-          "games": 2,
-          "left_wins": 2,
-          "right_wins": 0,
-          "draws": 0,
-          "center_wins": 1,
-          "elim_wins": 1,
-          "horizon_draws": 0,
-          "repetition_draws": 0,
-          "left_err_per_turn": 0,
-          "right_err_per_turn": 0
-        }
-      ]
-    },
-    {
-      "headline": {
         "left": "gpt-5.6-sol@high",
         "right": "gpt-5.6-sol@medium"
       },
@@ -131,7 +131,7 @@
     },
     {
       "agent": "claude-cli:claude-opus-5@high",
-      "games": 2,
+      "games": 6,
       "err_per_turn": 0
     },
     {
@@ -140,14 +140,34 @@
       "err_per_turn": 0
     },
     {
+      "agent": "codex-cli-memo:gpt-5.6-sol@medium",
+      "games": 4,
+      "err_per_turn": 0
+    },
+    {
+      "agent": "codex-cli-notes:gpt-5.6-sol@medium",
+      "games": 8,
+      "err_per_turn": 0.05
+    },
+    {
+      "agent": "codex-cli-reset:gpt-5.6-sol@high",
+      "games": 4,
+      "err_per_turn": 0
+    },
+    {
+      "agent": "codex-cli-reset:gpt-5.6-sol@medium",
+      "games": 16,
+      "err_per_turn": 0.02
+    },
+    {
       "agent": "codex-cli:gpt-5.6-sol@high",
-      "games": 5,
+      "games": 13,
       "err_per_turn": 0
     },
     {
       "agent": "codex-cli:gpt-5.6-sol@medium",
-      "games": 1,
-      "err_per_turn": 0
+      "games": 21,
+      "err_per_turn": 0.006
     },
     {
       "agent": "product-cpu:cpu-v6:level_5",
