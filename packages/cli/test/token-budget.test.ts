@@ -10,11 +10,7 @@ import {
   observationFromInput,
   PROMPT_REV,
 } from "../src/prompt";
-import {
-  CANONICAL_OUTPUT_TOKEN_BUDGET,
-  LLM_TURN_TIMEOUT_MS,
-  playGame,
-} from "../src/runner";
+import { LLM_TURN_TIMEOUT_MS, playGame } from "../src/runner";
 import { newGame } from "../src/engine";
 import {
   MODEL_USAGE_SCHEMA,
@@ -47,10 +43,9 @@ test("isLlmSpec: token envelope applies to model-driven specs only", () => {
   }
 });
 
-test("resolveMatchResources: canonical defaults for LLM matches, legacy for baselines, flags win", () => {
-  assert.equal(CANONICAL_OUTPUT_TOKEN_BUDGET, 600_000);
+test("resolveMatchResources: no default budget for any match, timeouts unchanged, flags win", () => {
   const llm = resolveMatchResources({}, "claude-cli:haiku", "product-cpu:cpu-v4:level_3");
-  assert.equal(llm.outputTokenBudget, CANONICAL_OUTPUT_TOKEN_BUDGET);
+  assert.equal(llm.outputTokenBudget, undefined);
   assert.equal(llm.turnTimeoutMs, LLM_TURN_TIMEOUT_MS);
 
   const baseline = resolveMatchResources({}, "random", "takeshi:d2");
@@ -193,19 +188,20 @@ test("in-game ledger records only act-reply usage (postgame work has no usage ch
   assert.equal(result.teams.A.usage.outputTotalTokens, acts * 500);
 });
 
-test("CLI help derives the default budget from the canonical constant", () => {
-  // The help string interpolates CANONICAL_OUTPUT_TOKEN_BUDGET — a second
-  // literal would be a stale-default bug waiting for the next raise.
+test("CLI help states that there is no default budget", () => {
+  // Since 2026-08-02 no default cap exists; any budget literal in the help
+  // would be a resurrected default, not a stale one.
   const source = fs.readFileSync(
     path.join(__dirname, "..", "src", "cli.ts"),
     "utf8"
   );
+  const from = source.indexOf("--output-token-budget N  ");
+  const to = source.indexOf("--turn-timeout-ms N", from);
+  assert.ok(from > 0 && to > from, "help must document --output-token-budget");
+  const budgetHelp = source.slice(from, to);
   assert.ok(
-    source.includes('default " + String(CANONICAL_OUTPUT_TOKEN_BUDGET) + "'),
-    "help must interpolate the canonical constant"
-  );
-  assert.ok(
-    !/default 350000|default 600000/.test(source),
+    !/default \d{5,}/.test(budgetHelp),
     "help must not carry a hardcoded default budget literal"
   );
+  assert.match(budgetHelp, /no default/);
 });

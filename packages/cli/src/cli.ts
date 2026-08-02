@@ -9,7 +9,6 @@ import { randomAgent } from "./agents/random";
 import { takeshiAgent } from "./agents/takeshi";
 import { summarize } from "./metrics";
 import {
-  CANONICAL_OUTPUT_TOKEN_BUDGET,
   LLM_TURN_TIMEOUT_MS,
   playGame,
   resolveMaxPlies,
@@ -98,8 +97,9 @@ export function isLlmSpec(spec: string): boolean {
 
 /**
  * Match resource defaults (docs/match-conduct doc): matches with LLM agents
- * get the canonical token envelope and the backstop timeout; baseline-only
- * matches keep the old defaults (no tokens to meter). Explicit flags win.
+ * get the backstop timeout, baselines the old one. Since 2026-08-02 there is
+ * no default token budget for any match — cost is a recorded column, not a
+ * rule — so a budget exists only when `--output-token-budget` asks for one.
  */
 export function resolveMatchResources(
   args: Record<string, string | boolean>,
@@ -117,9 +117,7 @@ export function resolveMatchResources(
   const outputTokenBudget =
     args["output-token-budget"] !== undefined
       ? parseInt(String(args["output-token-budget"]), 10)
-      : llmMatch
-        ? CANONICAL_OUTPUT_TOKEN_BUDGET
-        : undefined;
+      : undefined;
   return { turnTimeoutMs, outputTokenBudget };
 }
 
@@ -808,7 +806,7 @@ async function main(): Promise<void> {
     );
   } else {
     console.log(
-      "usage:\n  laplacebench play                                 (interactive: pick providers, models, effort)\n  laplacebench play --team-a <spec> --team-b <spec> [--games N] [--swap] [--serial] [--seed N] [--run-id <id>] [--submit] [--max-plies N] [--output-token-budget N] [--turn-timeout-ms N] [--ambient-cli-env]\n                                                    (non-interactive: --team-a and --team-b are required; anything else supplied is not asked for)\n  laplacebench summarize <runDir>\n  laplacebench regret <runDir> [--oracle product-cpu:cpu-v4:level_5]  (offline per-move regret vs frozen product oracle)\n  laplacebench export-web <runDir> [--out <dir>]   (verify + local replay JSON)\n  laplacebench verify <runDir...>                  (deterministic replay verification)\n  laplacebench submit <runDir>                     (verify + publish to the community ledger; needs gh auth)\n  laplacebench standings <runDir...> [--out <md>] [--json-out <json>]  (temporary v2 compatibility output)\n  laplacebench public-arena <runDir...> --out <dir> --source-sha <sha> --generated-at <time>  (CI artifact generator)\n\nmatch resources:\n  --serial                 run multiple games sequentially (default: parallel when --games > 1; learning agents always run sequentially)\n  --output-token-budget N  per team/game, in-game output tokens; default " + String(CANONICAL_OUTPUT_TOKEN_BUDGET) + " for LLM matches (canonical envelope), none for baseline-only\n  --turn-timeout-ms N      shared across both attempts in a turn; default 1200000 for LLM matches (backstop), 300000 otherwise\n  --max-plies N            default 100 (canonical cap for laplace-8x8-v1 matches)\n  --ambient-cli-env        opt out of the default clean-room isolation for subscription-CLI agents; the run is recorded as the ambient (environment-copying) condition\n\nproduct CPU (play + regret):\n  bundled in the package; Python 3.11+ is required (no product checkout or commit input)\n\n" +
+      "usage:\n  laplacebench play                                 (interactive: pick providers, models, effort)\n  laplacebench play --team-a <spec> --team-b <spec> [--games N] [--swap] [--serial] [--seed N] [--run-id <id>] [--submit] [--max-plies N] [--output-token-budget N] [--turn-timeout-ms N] [--ambient-cli-env]\n                                                    (non-interactive: --team-a and --team-b are required; anything else supplied is not asked for)\n  laplacebench summarize <runDir>\n  laplacebench regret <runDir> [--oracle product-cpu:cpu-v4:level_5]  (offline per-move regret vs frozen product oracle)\n  laplacebench export-web <runDir> [--out <dir>]   (verify + local replay JSON)\n  laplacebench verify <runDir...>                  (deterministic replay verification)\n  laplacebench submit <runDir>                     (verify + publish to the community ledger; needs gh auth)\n  laplacebench standings <runDir...> [--out <md>] [--json-out <json>]  (temporary v2 compatibility output)\n  laplacebench public-arena <runDir...> --out <dir> --source-sha <sha> --generated-at <time>  (CI artifact generator)\n\nmatch resources:\n  --serial                 run multiple games sequentially (default: parallel when --games > 1; learning agents always run sequentially)\n  --output-token-budget N  per team/game, in-game output tokens; optional cap with no default for any match (token cost is recorded and displayed, not capped)\n  --turn-timeout-ms N      shared across both attempts in a turn; default 1200000 for LLM matches (backstop), 300000 otherwise\n  --max-plies N            default 100 (canonical cap for laplace-8x8-v1 matches)\n  --ambient-cli-env        opt out of the default clean-room isolation for subscription-CLI agents; the run is recorded as the ambient (environment-copying) condition\n\nproduct CPU (play + regret):\n  bundled in the package; Python 3.11+ is required (no product checkout or commit input)\n\n" +
         usageAgentSpecsLine() +
         "\n  (claude-cli/codex-cli run under your Claude/ChatGPT subscription — no API key)"
     );

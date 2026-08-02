@@ -63,7 +63,15 @@ direction trace: `docs/interrogation/adjudications/freeze-draw-rules.md`)。
   現行世代 `p3-move-note`（着手ノート必須化。`p2-token-budget` はその前の世代で、
   過去ランはその条件で測られている）を run.json / game_start に記録し、正準ラン比較は
   同世代内に限定する。
-- **現行値(2026-07-31、Run 11 以後)**: 600,000 output tokens/チーム/局。
+- **現行値(2026-08-02〜)**: 既定なし(上限を置かない)。トークン消費は
+  ルールではなく強さの隣に記録・表示する**列**であり、上限は測定目的では
+  ないというユーザー裁定による(design-v0.1 §3.3、プラン
+  2026-08-02-uncapped-default)。`--output-token-budget N` の明示指定時の
+  enforcement(手番前 admission、超過後の自動パス、`token_budget` 理由、
+  モデルへの開示)は不変で、任意のチーム/局あたり上限として使える。
+  暴走防止は turn timeout と max-plies が引き続き担う。過去 run に記録された
+  予算値は不変で、遡及変更しない(比較境界は run 記録値)。
+- **旧値(2026-07-31 〜 2026-08-02、Run 11)**: 600,000 output tokens/チーム/局。
   同日中の移行は run.json に記録された予算値が正であり、日付ではなく
   記録値で条件を区別する(Run 10 までは 350k)。
   根拠実測(Run 9, 2026-07-30): persistent 条件の GPT-5.6 Sol medium は

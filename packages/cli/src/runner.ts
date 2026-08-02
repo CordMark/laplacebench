@@ -100,12 +100,6 @@ export const CANONICAL_MAX_PLIES = 100;
 /** Third occurrence of the same game-relevant state ends the game as a draw. */
 export const REPETITION_DRAW_OCCURRENCES = 3;
 
-/**
- * Canonical fairness envelope for matches involving LLM agents. The wall
- * clock is demoted to an anti-hang backstop; tokens are the instrument.
- */
-export const CANONICAL_OUTPUT_TOKEN_BUDGET = 600_000;
-
 /** Backstop turn timeout for LLM matches (latency is recorded, not decisive). */
 export const LLM_TURN_TIMEOUT_MS = 1_200_000;
 
