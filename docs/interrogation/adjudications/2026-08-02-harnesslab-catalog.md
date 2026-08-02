@@ -101,3 +101,24 @@ Requirement source: ユーザー裁定 2026-08-02「運営者として実験し�
   }
 }
 ```
+
+## Plan review (codex-plan-review, session plan-harnesslab-catalog)
+
+- ラウンド1: NEEDS_CHANGES 6件(公開 workflow の第2出力破棄、writer 原子性、
+  schema 精密化、telemetry status 正直さ、arena byte 不変の oracle、list パス
+  解決)→ 全件 ACCEPT し改訂。
+- ラウンド2: NEEDS_CHANGES 1件(writer 原子性 regression のテスト明記)→ 追記。
+- ラウンド3: APPROVED (confidence 0.99)。
+
+## Implementation review (codex-impl-review, session impl-harnesslab-catalog)
+
+- 実装: Opus 5 サブエージェント(main tree)。golden hash
+  (17392795dae6aba1…)を実装前の未変更実装から採取し byte 不変を証明。
+- 自己検出バグ2件を修正済み(harness_conditions を ledger 側でなく spec で
+  join — swap 対局の条件誤帰属を防止 / illegalRatePerTurn の pure 化)。
+- ラウンド1: APPROVED (confidence 0.94)。申告judgment call 7件を受理
+  (import cycle は関数本体内使用のため初期化安全、本スライスでは rehome 不要)。
+- 発見リスク(別裁定へ委譲): buildPublicReplay の UNSAFE_COMMENTARY が
+  note 内の "->" 等を拒否するため、矢印を含む run は curated list 追加時に
+  replay 構築で fail-loud する(memo run で実証)。公開境界の変更は別スライス。
+- 検証証跡: orchestrator 独立再検証 typecheck clean・278/278 green。

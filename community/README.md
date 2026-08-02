@@ -67,6 +67,8 @@ immutable artifact commit containing:
 
 - `arena.json` (`laplace-bench-arena-v1`): model matchups, conditions, every
   public game, and its replay digest;
+- `harnesslab.json` (`laplace-bench-harnesslab-catalog-v1`): the curated harness
+  experiments, their contender-pair records, and the same replay digests;
 - `replays/<sha256>.json` (`laplace-bench-replay-v1`): deterministic,
   replay-verified spectator payloads;
 - `publication-status.json` (`laplace-bench-publication-v1`): explicit
@@ -100,12 +102,25 @@ Two things about headlines are worth stating plainly:
   generation that alias meant that day — it groups under that ambiguous name
   rather than being assigned to a model we did not observe.
 
+## Harness Lab experiments
+
+`harnesslab.json` is a second, separate surface: harness experiments, where a
+contender is the full spec (`harness:model@effort`) rather than a model
+headline, and no result is ever combined with the arena's. What appears there is
+decided by one curated list, `community/harnesslab-experiments.json` — being
+published **is** being appended to that list (`run` = the ledger directory name,
+plus a one-line `description` and the pre-registered `plan` path). Curation
+chooses; the generator only verifies: a listed run whose recorded budget is not
+null, whose matchup is a model-arena one, or which did not run clean-room fails
+the build with the reason instead of being dropped from the catalog.
+
 ## Reproducing the aggregate locally
 
 ```bash
 # v1 catalog + deterministic content-addressed replays
 npx laplacebench public-arena community/runs/* --out ./arena \
-  --source-sha <40-lowercase-hex> --generated-at <source-commit-rfc3339>
+  --source-sha <40-lowercase-hex> --generated-at <source-commit-rfc3339> \
+  --harness-experiments community/harnesslab-experiments.json
 
 # temporary v2 compatibility outputs
 npx laplacebench standings community/runs/* --out MATCHUPS.md --json-out standings.json

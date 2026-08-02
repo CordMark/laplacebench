@@ -1,5 +1,5 @@
 ---
-status: approved
+status: implemented
 direction: direction-harnesslab-catalog
 owner: bench
 risk_tier: standard

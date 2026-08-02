@@ -28,6 +28,12 @@ import {
   type SideTokens,
   type Team,
 } from "./publicarena-contract";
+import {
+  buildHarnesslabCatalog,
+  emptyExperimentsList,
+  readExperimentsList,
+  type HarnesslabCatalog,
+} from "./harnesslab";
 import { headlineKind, ordinal, publicPair, reportsLatency } from "./publicgames";
 import { buildPublicReplay } from "./publicreplay";
 
@@ -42,6 +48,15 @@ export interface ArenaArtifacts {
   catalog: ArenaCatalog;
   catalogBytes: Buffer;
   replays: Map<string, Buffer>;
+}
+
+/**
+ * One publication generation: the arena catalog, the harness lab catalog, and
+ * the single `replays/<digest>.json` namespace both of them address.
+ */
+export interface PublicationArtifacts extends ArenaArtifacts {
+  harnesslab: HarnesslabCatalog;
+  harnesslabBytes: Buffer;
 }
 
 const sha256 = (value: string | Buffer): string =>
@@ -261,10 +276,58 @@ export function buildArenaArtifacts(
   return { catalog, catalogBytes, replays };
 }
 
+/**
+ * Build every artifact of one generation in memory. `harnessExperimentsPath` is
+ * the curated Harness Lab list; null means "no list was named", which still
+ * produces an EMPTY harness catalog rather than skipping the artifact, so
+ * "nothing was curated" stays distinguishable from "nothing was generated".
+ */
+export function buildPublicationArtifacts(
+  runDirs: string[],
+  sourceSha: string,
+  generatedAt: string,
+  harnessExperimentsPath: string | null = null
+): PublicationArtifacts {
+  const arena = buildArenaArtifacts(runDirs, sourceSha, generatedAt);
+  const list = harnessExperimentsPath === null
+    ? emptyExperimentsList()
+    : readExperimentsList(harnessExperimentsPath);
+  const harness = buildHarnesslabCatalog(list, runDirs, sourceSha, generatedAt);
+
+  // Both lanes address one content-addressed namespace. Equal digests mean
+  // equal bytes, so sharing is free; unequal bytes under one digest would mean
+  // one lane's replay silently overwriting the other's and must never be
+  // written.
+  const replays = new Map(arena.replays);
+  for (const [digest, bytes] of harness.replays) {
+    const existing = replays.get(digest);
+    if (existing !== undefined && !existing.equals(bytes)) {
+      throw new Error(`replay digest collision: ${digest}`);
+    }
+    replays.set(digest, bytes);
+  }
+  return {
+    catalog: arena.catalog,
+    catalogBytes: arena.catalogBytes,
+    replays,
+    harnesslab: harness.catalog,
+    harnesslabBytes: harness.catalogBytes,
+  };
+}
+
 export function writeArenaArtifacts(
-  outputDir: string, runDirs: string[], sourceSha: string, generatedAt: string
-): ArenaArtifacts {
-  const artifacts = buildArenaArtifacts(runDirs, sourceSha, generatedAt);
+  outputDir: string,
+  runDirs: string[],
+  sourceSha: string,
+  generatedAt: string,
+  harnessExperimentsPath: string | null = null
+): PublicationArtifacts {
+  // Prepare all, then swap: every builder and verifier — including the harness
+  // lab's — has already thrown or succeeded before the first byte is written,
+  // so a rejected generation never touches the target or leaves a temp dir.
+  const artifacts = buildPublicationArtifacts(
+    runDirs, sourceSha, generatedAt, harnessExperimentsPath
+  );
   const target = path.resolve(outputDir);
   const parent = path.dirname(target);
   fs.mkdirSync(parent, { recursive: true });
@@ -272,6 +335,7 @@ export function writeArenaArtifacts(
   const replayDir = path.join(temp, "replays");
   fs.mkdirSync(replayDir);
   fs.writeFileSync(path.join(temp, "arena.json"), artifacts.catalogBytes);
+  fs.writeFileSync(path.join(temp, "harnesslab.json"), artifacts.harnesslabBytes);
   for (const [digest, bytes] of artifacts.replays) {
     fs.writeFileSync(path.join(replayDir, `${digest}.json`), bytes);
   }

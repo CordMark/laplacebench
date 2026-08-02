@@ -94,6 +94,12 @@ model×harness(@effort)で、試合が溜まっていく。実験(run)単位の�
 既定上限ありで測った Run 9-11 は FINDINGS の歴史として残し、新しい面には
 混ぜない(上限なし既定の実装後の対局から積み直す)。
 
+**(2026-08-02 実装)** この蓄積面のデータ artifact は
+`laplace-bench-harnesslab-catalog-v1`(`harnesslab.json`)として実装済み。収載は
+curated list `community/harnesslab-experiments.json` への追記のみで、budget
+null・非 model-arena・clean-room の3条件は検証子として fail-loud に働く
+(docs/plans/2026-08-02-harnesslab-catalog.md)。UI はまだない。
+
 比較は次の3種を混ぜない。
 
 1. **Controlled ablation** — 同一モデルで、事前に宣言したハーネス要素だけを

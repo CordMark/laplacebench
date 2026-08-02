@@ -115,6 +115,26 @@ test("current ledger publishes deterministic content-addressed public games", ()
   }
 });
 
+/**
+ * Byte-level oracle for the arena artifact, captured from the implementation as
+ * it stood BEFORE the harnesslab catalog was added (2026-08-02, current ledger,
+ * fixed source_sha/generated_at). A determinism self-comparison cannot catch a
+ * second output silently perturbing the first; this golden can. If the ledger
+ * under community/runs legitimately changes, re-capture this value in the same
+ * commit and say so — never "fix" it to make an unexplained diff go away.
+ */
+const ARENA_GOLDEN_SHA256 =
+  "17392795dae6aba13b2b6bc9a75adad1935f2897b1c6b49ecbdaf2a81f05e25f";
+
+test("arena.json bytes stay identical to the pre-harnesslab implementation", () => {
+  const artifacts = buildArenaArtifacts(RUNS, SHA, GENERATED);
+  assert.equal(
+    createHash("sha256").update(artifacts.catalogBytes).digest("hex"),
+    ARENA_GOLDEN_SHA256,
+    "adding artifacts must not change one byte of the published arena catalog"
+  );
+});
+
 test("atomic writer emits only the accepted catalog and digest paths", () => {
   const base = fs.mkdtempSync(path.join(os.tmpdir(), "laplace-public-arena-"));
   const target = path.join(base, "arena");

@@ -121,7 +121,8 @@ jobs:
           node packages/cli/dist/cli.js standings community/runs/*/ \
             --out out/MATCHUPS.md --json-out out/standings.json
           node packages/cli/dist/cli.js public-arena community/runs/*/ \
-            --out out/arena --source-sha "$SOURCE_SHA" --generated-at "$GENERATED_AT"
+            --out out/arena --source-sha "$SOURCE_SHA" --generated-at "$GENERATED_AT" \
+            --harness-experiments community/harnesslab-experiments.json
 
       - name: Publish immutable artifacts and ready pointer
         if: steps.prepare.outputs.active == 'true'
@@ -131,7 +132,8 @@ jobs:
           set -euo pipefail
           echo publish_failed > /tmp/publication_failure_code
           expected_remote=$(git -C ../standings rev-parse HEAD)
-          cp out/MATCHUPS.md out/standings.json out/arena/arena.json ../standings/
+          cp out/MATCHUPS.md out/standings.json out/arena/arena.json \
+            out/arena/harnesslab.json ../standings/
           rm -rf ../standings/replays
           cp -R out/arena/replays ../standings/replays
           git -C ../standings add -A

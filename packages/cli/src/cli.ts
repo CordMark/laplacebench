@@ -814,14 +814,27 @@ async function main(): Promise<void> {
     if (!out || !sourceSha || !generatedAt) {
       throw new Error("public-arena needs --out, --source-sha, and --generated-at");
     }
-    const result = writeArenaArtifacts(path.resolve(out), dirs, sourceSha, generatedAt);
+    // The curated Harness Lab list is named explicitly — no implicit repo-root
+    // lookup. Omitting it writes an EMPTY harnesslab.json (never skips it), so
+    // "no experiment is curated" and "the artifact was not generated" stay
+    // different observable states.
+    const harnessArg = args["harness-experiments"];
+    if (harnessArg !== undefined && (typeof harnessArg !== "string" || harnessArg === "")) {
+      throw new Error("--harness-experiments needs a path to the curated list");
+    }
+    const harnessExperiments = harnessArg === undefined ? null : path.resolve(harnessArg);
+    const result = writeArenaArtifacts(
+      path.resolve(out), dirs, sourceSha, generatedAt, harnessExperiments
+    );
     console.log(
       `public arena written: ${out} (${result.catalog.public_game_count} public / ` +
-      `${result.catalog.verified_game_count} verified games)`
+      `${result.catalog.verified_game_count} verified games; harness lab: ` +
+      `${result.harnesslab.experiment_count} experiments / ` +
+      `${result.harnesslab.game_count} games)`
     );
   } else {
     console.log(
-      "usage:\n  laplacebench play                                 (interactive: pick providers, models, effort)\n  laplacebench play --team-a <spec> --team-b <spec> [--games N] [--swap] [--serial] [--seed N] [--run-id <id>] [--submit] [--max-plies N] [--output-token-budget N] [--turn-timeout-ms N] [--ambient-cli-env]\n                                                    (non-interactive: --team-a and --team-b are required; anything else supplied is not asked for)\n  laplacebench summarize <runDir>\n  laplacebench regret <runDir> [--oracle product-cpu:cpu-v4:level_5]  (offline per-move regret vs frozen product oracle)\n  laplacebench export-web <runDir> [--out <dir>]   (verify + local replay JSON)\n  laplacebench verify <runDir...>                  (deterministic replay verification)\n  laplacebench submit <runDir>                     (verify + publish to the community ledger; needs gh auth)\n  laplacebench standings <runDir...> [--out <md>] [--json-out <json>]  (temporary v2 compatibility output)\n  laplacebench public-arena <runDir...> --out <dir> --source-sha <sha> --generated-at <time>  (CI artifact generator)\n\nmatch resources:\n  --serial                 run multiple games sequentially (default: parallel when --games > 1; learning agents always run sequentially)\n  --output-token-budget N  per team/game, in-game output tokens; optional cap with no default for any match (token cost is recorded and displayed, not capped)\n  --turn-timeout-ms N      shared across both attempts in a turn; default 1200000 for LLM matches (backstop), 300000 otherwise\n  --max-plies N            default 100 (canonical cap for laplace-8x8-v1 matches)\n  --ambient-cli-env        opt out of the default clean-room isolation for subscription-CLI agents; the run is recorded as the ambient (environment-copying) condition\n\nproduct CPU (play + regret):\n  bundled in the package; Python 3.11+ is required (no product checkout or commit input)\n\n" +
+      "usage:\n  laplacebench play                                 (interactive: pick providers, models, effort)\n  laplacebench play --team-a <spec> --team-b <spec> [--games N] [--swap] [--serial] [--seed N] [--run-id <id>] [--submit] [--max-plies N] [--output-token-budget N] [--turn-timeout-ms N] [--ambient-cli-env]\n                                                    (non-interactive: --team-a and --team-b are required; anything else supplied is not asked for)\n  laplacebench summarize <runDir>\n  laplacebench regret <runDir> [--oracle product-cpu:cpu-v4:level_5]  (offline per-move regret vs frozen product oracle)\n  laplacebench export-web <runDir> [--out <dir>]   (verify + local replay JSON)\n  laplacebench verify <runDir...>                  (deterministic replay verification)\n  laplacebench submit <runDir>                     (verify + publish to the community ledger; needs gh auth)\n  laplacebench standings <runDir...> [--out <md>] [--json-out <json>]  (temporary v2 compatibility output)\n  laplacebench public-arena <runDir...> --out <dir> --source-sha <sha> --generated-at <time> [--harness-experiments <path>]  (CI artifact generator)\n\nmatch resources:\n  --serial                 run multiple games sequentially (default: parallel when --games > 1; learning agents always run sequentially)\n  --output-token-budget N  per team/game, in-game output tokens; optional cap with no default for any match (token cost is recorded and displayed, not capped)\n  --turn-timeout-ms N      shared across both attempts in a turn; default 1200000 for LLM matches (backstop), 300000 otherwise\n  --max-plies N            default 100 (canonical cap for laplace-8x8-v1 matches)\n  --ambient-cli-env        opt out of the default clean-room isolation for subscription-CLI agents; the run is recorded as the ambient (environment-copying) condition\n\nproduct CPU (play + regret):\n  bundled in the package; Python 3.11+ is required (no product checkout or commit input)\n\n" +
         usageAgentSpecsLine() +
         "\n  (claude-cli/codex-cli run under your Claude/ChatGPT subscription — no API key)"
     );
