@@ -8,7 +8,7 @@ export type RunnableAgentSpec =
   | { kind: "product-cpu"; policy: string; level: string; latency: "measured" }
   | { kind: "random" | "greedy" | "center-greedy" | "chaos" | "takeshi"; latency: "none"; parameter?: number }
   | { kind: "anthropic"; model: string; latency: "measured" }
-  | { kind: "claude-cli-learn" | "claude-cli" | "codex-cli" | "codex-cli-reset" | "codex-cli-memo"; model?: string; effort?: string; latency: "measured" };
+  | { kind: "claude-cli-learn" | "claude-cli" | "codex-cli" | "codex-cli-reset" | "codex-cli-memo" | "codex-cli-notes"; model?: string; effort?: string; latency: "measured" };
 
 export interface PublicPair {
   leftId: string;
@@ -122,7 +122,7 @@ export function classifyRunnableAgentSpec(spec: string): RunnableAgentSpec | nul
   if (anthropic) return { kind: "anthropic", model: anthropic[1], latency: "measured" };
   // Order matters: longer prefixes first, so codex-cli-reset never parses as
   // codex-cli with a model of "-reset...".
-  for (const kind of ["claude-cli-learn", "claude-cli", "codex-cli-reset", "codex-cli-memo", "codex-cli"] as const) {
+  for (const kind of ["claude-cli-learn", "claude-cli", "codex-cli-reset", "codex-cli-memo", "codex-cli-notes", "codex-cli"] as const) {
     const match = spec.match(new RegExp(`^${kind}(?::(.+))?$`));
     if (match) return { kind, ...modelEffort(match[1]), latency: "measured" };
   }

@@ -176,12 +176,12 @@ export function resolveIsolationMode(
 }
 
 /**
- * Turn-scoped codex conditions (reset/memo) declare that nothing — or only
- * the recorded memo — carries between turns. Ambient execution cannot
- * guarantee that: without the clean-room suppression flags the model keeps
- * shell access and a reused cwd, an unbounded, unrecorded carryover channel.
- * Rather than silently weakening the declaration, these specs refuse to run
- * ambient (fail-closed).
+ * Turn-scoped codex conditions (reset/memo/notes) declare that nothing — or
+ * only the recorded memo, or only the model's own past move notes — carries
+ * between turns. Ambient execution cannot guarantee that: without the
+ * clean-room suppression flags the model keeps shell access and a reused cwd,
+ * an unbounded, unrecorded carryover channel. Rather than silently weakening
+ * the declaration, these specs refuse to run ambient (fail-closed).
  */
 export function assertTurnScopedCleanRoom(
   mode: "clean-room" | "ambient" | null,
@@ -191,7 +191,11 @@ export function assertTurnScopedCleanRoom(
   if (mode !== "ambient") return;
   for (const spec of [specA, specB]) {
     const kind = classifyRunnableAgentSpec(spec)?.kind;
-    if (kind === "codex-cli-reset" || kind === "codex-cli-memo") {
+    if (
+      kind === "codex-cli-reset" ||
+      kind === "codex-cli-memo" ||
+      kind === "codex-cli-notes"
+    ) {
       throw new MatchPreflightError(
         `${spec}: turn-scoped 条件(${kind})は「持ち越しは宣言されたもののみ」という不変条件を ` +
           `ambient 環境では保証できません(tool がファイル経由で状態を持ち越せるため)。` +
@@ -270,6 +274,17 @@ async function makeAgent(
         model: parsed.model,
         effort: parsed.effort,
         memo: new MemoSession(ctx.runDir),
+        isolation,
+      });
+      break;
+    }
+    case "codex-cli-notes": {
+      const { codexCliAgent } = require("./agents/cli") as typeof import("./agents/cli");
+      const { NotesSession } = require("./agents/notes") as typeof import("./agents/notes");
+      agent = codexCliAgent({
+        model: parsed.model,
+        effort: parsed.effort,
+        notes: new NotesSession(),
         isolation,
       });
       break;

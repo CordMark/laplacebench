@@ -188,12 +188,14 @@ export type CodexContextPolicy = "persistent" | "turn-reset";
  */
 export function composeCodexUserText(parts: {
   instructions?: string;
-  memoPrelude?: string;
+  /** The declared carryover block of a turn-scoped harness (memo or notes) —
+   * at most one is ever configured, so they share this one slot. */
+  carryoverPrelude?: string;
   turnText: string;
 }): string {
   const chunks: string[] = [];
   if (parts.instructions) chunks.push(parts.instructions);
-  if (parts.memoPrelude) chunks.push(parts.memoPrelude);
+  if (parts.carryoverPrelude) chunks.push(parts.carryoverPrelude);
   chunks.push(parts.turnText);
   return chunks.join("\n\n---\n\n");
 }
@@ -383,6 +385,22 @@ export function claudeCliAgent(opts: {
 }
 
 /**
+ * The reply `meta` a codex turn carries, or nothing at all. Every return path
+ * of the adapter goes through here so a harness's per-turn provenance cannot
+ * be present on one path and silently missing on another.
+ */
+function metaOf(
+  memoStatus: import("./memo").MemoStatus | undefined,
+  notesMeta: { notes_carried: number } | undefined
+): { meta?: Record<string, unknown> } {
+  const meta = {
+    ...(memoStatus ? { memo_status: memoStatus } : {}),
+    ...(notesMeta ?? {}),
+  };
+  return Object.keys(meta).length > 0 ? { meta } : {};
+}
+
+/**
  * Subscription-driven adapter for the Codex CLI (`codex exec`). Persistent
  * context via `codex exec resume <thread_id>`. Output is a JSONL event
  * stream; we read the thread id from thread.started, the answer from the last
@@ -403,20 +421,32 @@ export function codexCliAgent(opts: {
    * the memo prelude is injected on every call and every reply (timeouts
    * included) is recorded as a memo transition. */
   memo?: import("./memo").MemoSession;
+  /** Append-only public note carryover (agents/notes.ts). Implies turn-reset
+   * execution; the model's own past move notes are injected on every call and
+   * every reply's note is staged for referee resolution. */
+  notes?: import("./notes").NotesSession;
   /** Clean-room context (env/flags/cwd). Absent = ambient condition. */
   isolation?: CliIsolation;
   /** Injectable subprocess runner (tests). Defaults to the real one. */
   runner?: typeof run;
 }): Agent {
+  // Two carryover contracts at once would be a condition no label describes,
+  // and both claim the same prelude slot. Fail at construction, not at play.
+  if (opts.memo && opts.notes) {
+    throw new Error(
+      "codexCliAgent: memo and notes are mutually exclusive carryover contracts"
+    );
+  }
   const model = opts.model ?? "";
-  const policy: CodexContextPolicy = opts.memo
-    ? "turn-reset"
-    : opts.contextPolicy ?? "persistent";
+  const policy: CodexContextPolicy =
+    opts.memo || opts.notes ? "turn-reset" : opts.contextPolicy ?? "persistent";
   const specHead = opts.memo
     ? "codex-cli-memo"
-    : policy === "turn-reset"
-      ? "codex-cli-reset"
-      : "codex-cli";
+    : opts.notes
+      ? "codex-cli-notes"
+      : policy === "turn-reset"
+        ? "codex-cli-reset"
+        : "codex-cli";
   const exec = opts.runner ?? run;
   const cwd = opts.isolation?.cwd ?? scratchDir("laplace-codex-");
   let threadId = "";
@@ -442,19 +472,29 @@ export function codexCliAgent(opts: {
       unobservedTimeouts = 0;
       started = false;
       opts.memo?.startGame(t, gameId ?? "");
+      opts.notes?.startGame(t, gameId ?? "");
     },
     async act(input: TurnInput): Promise<AgentReply> {
       const obsJson = JSON.stringify(
         observationFromInput(input)
       );
+      // The referee's verdict on the previous staged note arrives with this
+      // turn's events, so resolution happens before the prelude is built.
+      opts.notes?.resolve(input.recent);
+      const carriedNotes = opts.notes?.prelude();
       const plan = codexSessionPlan(policy, started, threadId);
       const userText = composeCodexUserText({
         instructions: plan.includeInstructions
           ? buildInstructions(team, { outputTokenBudget: input.outputTokenBudget })
           : undefined,
-        memoPrelude: opts.memo?.prelude(),
+        carryoverPrelude: opts.memo?.prelude() ?? carriedNotes?.text,
         turnText: turnMessage(obsJson, input.attempt, input.error?.code, input.ply),
       });
+      // The count injected into THIS call (before the reply is staged) — not
+      // the journal size afterwards.
+      const notesMeta = carriedNotes
+        ? { notes_carried: carriedNotes.count }
+        : undefined;
 
       const invocation = buildCodexInvocation({
         userText,
@@ -495,12 +535,16 @@ export function codexCliAgent(opts: {
         // A timeout is still a memo transition: no reply text, so the memo
         // stays and the record says so.
         const memoStatus = opts.memo?.record("", input.ply, input.attempt);
+        const raw = `TURN_TIMEOUT: stderr=${stderr.slice(0, 300)}`;
+        // Staged like any other reply — the ply resolves as a pass, so the
+        // diagnostic never reaches the journal.
+        opts.notes?.stage(raw, input.ply);
         return {
           move: null,
-          raw: `TURN_TIMEOUT: stderr=${stderr.slice(0, 300)}`,
+          raw,
           latencyMs,
           timedOut: true,
-          ...(memoStatus ? { meta: { memo_status: memoStatus } } : {}),
+          ...metaOf(memoStatus, notesMeta),
         };
       }
 
@@ -533,11 +577,13 @@ export function codexCliAgent(opts: {
 
       if (messages.length === 0) {
         const memoStatus = opts.memo?.record("", input.ply, input.attempt);
+        const raw = `CLI_ERROR: exit=${code} failed=${JSON.stringify(failed ?? null).slice(0, 300)} stderr=${stderr.slice(0, 200)}`;
+        opts.notes?.stage(raw, input.ply);
         return {
           move: null,
-          raw: `CLI_ERROR: exit=${code} failed=${JSON.stringify(failed ?? null).slice(0, 300)} stderr=${stderr.slice(0, 200)}`,
+          raw,
           latencyMs,
-          ...(memoStatus ? { meta: { memo_status: memoStatus } } : {}),
+          ...metaOf(memoStatus, notesMeta),
         };
       }
 
@@ -547,12 +593,13 @@ export function codexCliAgent(opts: {
       const usageEvent = events.find((e: any) => e.type === "turn.completed");
       const u = usageEvent?.usage ?? {};
       const memoStatus = opts.memo?.record(text, input.ply, input.attempt);
+      opts.notes?.stage(text, input.ply);
       return {
         move: extractMove(text),
         raw: text,
         latencyMs,
         usage: normalizeOpenAIUsage(u, "codex-cli", userText, text),
-        ...(memoStatus ? { meta: { memo_status: memoStatus } } : {}),
+        ...metaOf(memoStatus, notesMeta),
       };
     },
     endGame(info) {

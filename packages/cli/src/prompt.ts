@@ -1,6 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { observation } from "./engine";
+import { MAX_COMMENTARY_SCALARS } from "./publicarena-contract";
 import type { Move, TeamId, TurnInput } from "./types";
 
 /**
@@ -107,6 +108,21 @@ export function extractNote(text: string): string {
   // Removing the move leaves the surrounding prose adjacent; one newline joins
   // it without inventing the blank lines the JSON used to occupy.
   return before && after ? `${before}\n${after}` : before || after;
+}
+
+/**
+ * The note EXACTLY as the spectator record keeps it: extractNote bounded in
+ * Unicode scalars (not UTF-16 units) to the same limit the public replay
+ * enforces, so a surrogate pair is never cut in half.
+ *
+ * This is one function on purpose. The runner writes the move event's `note`
+ * with it, and the notes-carry harness (agents/notes.ts) carries the same
+ * value forward, which makes "what is carried between turns" equal to "what
+ * the public record shows" by construction rather than by two truncation
+ * sites agreeing today (docs/plans/2026-08-02-notes-carry.md).
+ */
+export function recordedNote(raw: string): string {
+  return [...extractNote(raw)].slice(0, MAX_COMMENTARY_SCALARS).join("");
 }
 
 export function findMove(text: string): FoundMove | null {

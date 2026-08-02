@@ -187,6 +187,7 @@ export const RECOGNIZED_HARNESSES: readonly string[] = [
   "codex-cli",
   "codex-cli-reset",
   "codex-cli-memo",
+  "codex-cli-notes",
   "anthropic",
   "product-cpu",
 ];
@@ -203,6 +204,7 @@ export const LLM_HARNESSES: readonly string[] = [
   "codex-cli",
   "codex-cli-reset",
   "codex-cli-memo",
+  "codex-cli-notes",
   "anthropic",
 ];
 
@@ -279,6 +281,14 @@ export const HARNESS_CONDITIONS: Readonly<Record<string, HarnessConditions>> = {
     compaction: "n/a (context never grows; the memo cap is the bound)",
     mechanism:
       "fresh codex exec per turn; harness-injected memo (memo-v1, 1500-char cap) recorded per adapter call to memo/<gameId>/<team>.jsonl; clean-room execution required (ambient refused — the memo must be the ONLY carryover)",
+  },
+  "codex-cli-notes": {
+    context_lifetime: "turn-scoped + append-only public move-note carryover",
+    reasoning_retention:
+      "discarded except own past move notes (public, uncapped count, 2500 chars/note = spectator-record equality)",
+    compaction: "n/a",
+    mechanism:
+      "fresh codex exec per turn; harness-injected journal (notes-v1) of this side's own ADOPTED move notes, each the same value the events log publishes (prompt.ts recordedNote); clean-room execution required (ambient refused — the notes must be the ONLY carryover)",
   },
   anthropic: {
     context_lifetime: "persistent client-managed transcript (whole game)",

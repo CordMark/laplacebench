@@ -203,3 +203,23 @@ note は中央値200-300字で、告知なしでは「効かない」と「運�
   }
 }
 ```
+
+## Plan review (codex-plan-review, session plan-notes-carry)
+
+- ラウンド1: NEEDS_CHANGES 3件(公開記録との等式不成立、notes_carried 意味論、
+  denylist 不明示)→ direction correction(採用ノートのみ)+ recordedNote 共有
+  関数 + pre-stage count + 明示 denylist へ改訂。
+- ラウンド2-4: staging の空置換規則・実装節の旧設計残存・stale 文言を順次修正し
+  APPROVED (confidence 0.99)。
+
+## Implementation review (codex-impl-review, session impl-notes-carry)
+
+- 実装: Opus 5 サブエージェント(worktree、base 32ecbf7 — 生成時 stale だったため
+  agent が 32ecbf7 へ hard-reset してから作業、申告済み)。orchestrator が patch を
+  main(a39ba7a)へ適用。
+- ラウンド1: APPROVED (confidence 0.98)。申告逸脱2件を受理
+  (composeCodexUserText の param 改名 memoPrelude→carryoverPrelude、README
+  ハーネス表への行追加は plan スコープ外として見送り)。
+- 検証証跡: orchestrator 独立検証で typecheck clean・267/267 green(baseline 253
+  +新14)・boundary/conditions drift guard 無編集で自動カバー・実機 smoke で
+  notes_carried 0→1→2 の持ち越し・budget null(上限なし既定の実動作)を確認。

@@ -10,8 +10,7 @@ import {
   repetitionKey,
   winReason,
 } from "./engine";
-import { PROMPT_REV, extractNote } from "./prompt";
-import { MAX_COMMENTARY_SCALARS } from "./publicarena-contract";
+import { PROMPT_REV, recordedNote } from "./prompt";
 import type { Agent, RecentEvent, TeamId, UsageAggregate } from "./types";
 import { blankUsage, recordUsageCall } from "./usage";
 
@@ -423,7 +422,7 @@ async function playGameInner(cfg: GameConfig): Promise<GameResult> {
 
       moved = true;
       st.moves++;
-      const note = extractNote(reply.raw ?? "");
+      const note = recordedNote(reply.raw ?? "");
       if (!note) st.noteOmissions++;
       const last = res.state.lastMove;
       const captures = (last?.capturedPiecesMeta ?? []).map((c) => ({
@@ -460,10 +459,11 @@ async function playGameInner(cfg: GameConfig): Promise<GameResult> {
         // asked and wrote nothing.
         //
         // Bounded in Unicode scalars, not UTF-16 units, and to the SAME limit
-        // the public replay enforces. A model that writes a very long note must
+        // the public replay enforces (prompt.ts recordedNote owns both the
+        // extraction and the bound). A model that writes a very long note must
         // not thereby make its own game unpublishable, and `raw` still holds
         // the untruncated reply for audit.
-        note: [...note].slice(0, MAX_COMMENTARY_SCALARS).join(""),
+        note,
         // Agent-specific provenance (e.g. product CPU per-move seed).
         meta: reply.meta,
       });
