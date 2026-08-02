@@ -4,6 +4,10 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import type { CliIsolation } from "../cleanroom";
+import {
+  harvestContextTelemetry,
+  writeContextTelemetry,
+} from "../contexttelemetry";
 import { buildInstructions, extractMove, observationFromInput, turnMessage } from "../prompt";
 import type { Agent, AgentReply, TeamId, TurnInput } from "../types";
 import { normalizeAnthropicUsage, normalizeOpenAIUsage } from "../usage";
@@ -235,10 +239,16 @@ export function claudeCliAgent(opts: {
   preludeProvider?: () => string;
   /** Clean-room context (env/flags/cwd). Absent = ambient condition. */
   isolation?: CliIsolation;
+  /** Injectable subprocess runner (tests). Defaults to the real one. */
+  runner?: typeof run;
 }): Agent {
   const model = opts.model ?? "sonnet";
+  const exec = opts.runner ?? run;
   const cwd = opts.isolation?.cwd ?? scratchDir("laplace-claude-");
   let sessionId = "";
+  // Client-generated, so every session this game used is known by
+  // construction (unlike codex thread ids) — context-telemetry harvest.
+  let sessionIds: string[] = [];
   let started = false;
   let team: TeamId = "A";
   let prelude = "";
@@ -249,11 +259,18 @@ export function claudeCliAgent(opts: {
     startGame(t: TeamId) {
       if (opts.isolation) assertEmptyCwd(cwd, "claude-cli");
       team = t;
-      sessionId = uuid();
+      // Session ids are allocated lazily at invocation time so the telemetry
+      // id list only ever contains sessions that actually ran.
+      sessionId = "";
+      sessionIds = [];
       started = false;
       prelude = opts.preludeProvider?.() ?? "";
     },
     async act(input: TurnInput): Promise<AgentReply> {
+      if (!sessionId) {
+        sessionId = uuid();
+        sessionIds.push(sessionId);
+      }
       const obsJson = JSON.stringify(
         observationFromInput(input)
       );
@@ -277,7 +294,7 @@ export function claudeCliAgent(opts: {
       });
 
       const start = Date.now();
-      const { stdout, stderr, code, timedOut } = await run(
+      const { stdout, stderr, code, timedOut } = await exec(
         "claude",
         invocation.argv,
         invocation.cwd,
@@ -289,8 +306,9 @@ export function claudeCliAgent(opts: {
 
       if (timedOut || Date.now() >= input.deadlineAtMs) {
         // The killed session may contain a dangling user turn or partial
-        // assistant output. Restart from the next full-state observation.
-        sessionId = uuid();
+        // assistant output. Restart from the next full-state observation;
+        // the replacement id is allocated only when that invocation happens.
+        sessionId = "";
         started = false;
         return {
           move: null,
@@ -332,6 +350,26 @@ export function claudeCliAgent(opts: {
           text
         ),
       };
+    },
+    endGame(info) {
+      // Context telemetry (clean-room persistent sessions only): harvest
+      // compaction markers from this game's own transcripts. Failure never
+      // affects the game result.
+      const configDir = opts.isolation?.env.CLAUDE_CONFIG_DIR;
+      if (!info || !configDir) return;
+      try {
+        writeContextTelemetry(
+          info.eventsPath,
+          info.team,
+          harvestContextTelemetry({
+            provider: "claude",
+            harness: opts.name?.split(":")[0] ?? "claude-cli",
+            home: configDir,
+            ids: sessionIds,
+            unobservedTimeouts: 0,
+          })
+        );
+      } catch {}
     },
     // The scratch cwd is released in dispose, NOT endGame: the learning
     // wrapper runs its post-game analysis inside endGame, and the runner
@@ -382,6 +420,11 @@ export function codexCliAgent(opts: {
   const exec = opts.runner ?? run;
   const cwd = opts.isolation?.cwd ?? scratchDir("laplace-codex-");
   let threadId = "";
+  // Every OBSERVED thread id this game used (timeout restarts create new
+  // threads); a timed-out call whose stdout never carried thread.started is
+  // counted, never guessed at — context-telemetry harvest.
+  let threadIds: string[] = [];
+  let unobservedTimeouts = 0;
   let started = false;
   let team: TeamId = "A";
   const effortArgs = opts.effort
@@ -395,6 +438,8 @@ export function codexCliAgent(opts: {
       if (opts.isolation) assertEmptyCwd(cwd, specHead);
       team = t;
       threadId = "";
+      threadIds = [];
+      unobservedTimeouts = 0;
       started = false;
       opts.memo?.startGame(t, gameId ?? "");
     },
@@ -431,6 +476,18 @@ export function codexCliAgent(opts: {
       const latencyMs = Date.now() - start;
 
       if (timedOut || Date.now() >= input.deadlineAtMs) {
+        // Even a killed call usually flushed thread.started — record the id
+        // for context telemetry before discarding the thread; when it never
+        // appeared, count the gap honestly instead of guessing.
+        const killedThread = stdout
+          .split("\n")
+          .map((l) => { try { return JSON.parse(l.trim()); } catch { return null; } })
+          .find((e: any) => e?.type === "thread.started");
+        if (killedThread?.thread_id) {
+          if (!threadIds.includes(killedThread.thread_id)) threadIds.push(killedThread.thread_id);
+        } else if (policy === "persistent") {
+          unobservedTimeouts++;
+        }
         // Do not resume a thread whose last turn was interrupted and whose
         // move was discarded by the referee.
         threadId = "";
@@ -461,7 +518,10 @@ export function codexCliAgent(opts: {
         .filter(Boolean);
 
       const threadStarted = events.find((e: any) => e.type === "thread.started");
-      if (threadStarted) threadId = threadStarted.thread_id;
+      if (threadStarted) {
+        threadId = threadStarted.thread_id;
+        if (!threadIds.includes(threadId)) threadIds.push(threadId);
+      }
       started = true;
 
       const failed = events.find(
@@ -494,6 +554,26 @@ export function codexCliAgent(opts: {
         usage: normalizeOpenAIUsage(u, "codex-cli", userText, text),
         ...(memoStatus ? { meta: { memo_status: memoStatus } } : {}),
       };
+    },
+    endGame(info) {
+      // Context telemetry: persistent clean-room threads only (turn-scoped
+      // policies have no long-lived context to compact). Failure never
+      // affects the game result.
+      const home = opts.isolation?.env.CODEX_HOME;
+      if (!info || !home || policy !== "persistent") return;
+      try {
+        writeContextTelemetry(
+          info.eventsPath,
+          info.team,
+          harvestContextTelemetry({
+            provider: "codex",
+            harness: specHead,
+            home,
+            ids: threadIds,
+            unobservedTimeouts,
+          })
+        );
+      } catch {}
     },
     // dispose, not endGame — see claudeCliAgent.
     dispose() {

@@ -102,6 +102,9 @@ Harness Lab の対戦者はハーネス単体ではなく、次の組である�
 - reasoning 込み出力トークン/手、latency/手、model call/手
 - illegal move、format failure、timeout、token-budget skip
 - 序盤/中盤/終盤の推移と、圧縮イベントの発生点
+  ((2026-08-02 実装) clean-room persistent 対局は provider 圧縮の発火
+  回数・window・コール毎トークン系列を games/<id>/context-telemetry-*.json
+  に記録する)
 - レフェリーで再検証できる生ログと盤面リプレイ
 
 公開の着手ノートとテレメトリは見せるが、private chain-of-thought は
