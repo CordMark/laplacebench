@@ -123,8 +123,11 @@ test("current ledger publishes deterministic content-addressed public games", ()
  * under community/runs legitimately changes, re-capture this value in the same
  * commit and say so — never "fix" it to make an unexplained diff go away.
  */
+// Re-captured 2026-08-02 in the same commit that admitted the three uncapped
+// three-arm runs into community/runs (a legitimate ledger change per the rule
+// above); the arena builder itself is unchanged.
 const ARENA_GOLDEN_SHA256 =
-  "17392795dae6aba13b2b6bc9a75adad1935f2897b1c6b49ecbdaf2a81f05e25f";
+  "882142aed4256717fd663e13b293567bfd9b034176c6ed8eb97b51b146edd752";
 
 test("arena.json bytes stay identical to the pre-harnesslab implementation", () => {
   const artifacts = buildArenaArtifacts(RUNS, SHA, GENERATED);

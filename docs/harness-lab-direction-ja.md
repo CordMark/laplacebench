@@ -52,6 +52,12 @@ Harness Lab 全体でモデルを1つに固定するわけではない。対戦�
 `codex-cli-notes:<model>@<effort>` として存在する(追記専用・自己宛て・無構造、
 書式指示ゼロ。docs/plans/2026-08-02-notes-carry.md)。
 
+**(2026-08-02 実装)** さらにその内容方向づけ版 `codex-cli-notes-guided:<model>@<effort>`
+(機構は notes と完全同一で、告知だけが「この手の目的」と「次の手番の自分が
+知っておくべきこと」を書けと指示する。書式指示もゲーム固有の戦術示唆もゼロ。
+docs/plans/2026-08-02-notes-guided.md)。guided vs notes は**指示の純効果**、
+guided vs persistent は**システム比較**であって要因分解ではない。
+
 ## 1. UI の情報設計と名前
 
 LaplaceBench 配下に次の2タブを置く方向とする。

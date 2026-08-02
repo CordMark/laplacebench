@@ -84,10 +84,11 @@ test("no curated experiment yields an empty catalog rather than a failure", () =
   assert.deepEqual(built.catalog.experiments, []);
   assert.deepEqual(built.catalog.matchups, []);
   assert.equal(built.replays.size, 0);
-  // The shipped list is the empty one, and it must parse as such.
-  assert.deepEqual(
-    readExperimentsList(path.join(ROOT, "community/harnesslab-experiments.json")),
-    emptyExperimentsList()
+  // The shipped list is living curated data (3 experiments as of 2026-08-02);
+  // assert only that it stays schema-valid, never its contents.
+  assert.ok(
+    readExperimentsList(path.join(ROOT, "community/harnesslab-experiments.json"))
+      .experiments.length >= 0
   );
 });
 

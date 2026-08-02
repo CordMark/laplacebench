@@ -97,3 +97,12 @@ primed-persistent は**名前付きの次セット本命**(能力プローブ後
   }
 }
 ```
+
+## Plan review (plan-notes-guided): 3ラウンド(variant API 後方互換の穴を検出→
+NOTES_V1 既定引数+alias で解決)→ APPROVED (0.99)。
+
+## Impl review (impl-notes-guided): APPROVED (0.98)。Opus worktree 実装、
+notes-carry.test.ts 無編集 green = v1 byte 不変の証明。+13 テスト。
+あわせて bounded corrective 2件(c038092 が live データを読む2テストを陳腐化 —
+shipped list は schema 検証のみへ、arena golden は自文書の規則に従い同一コミットで
+再採取 882142ae…。G6 agent の独立実測と一致し builder 不変を証明)。305/305 green。

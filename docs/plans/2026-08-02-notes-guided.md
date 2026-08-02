@@ -1,5 +1,5 @@
 ---
-status: approved
+status: implemented
 direction: direction-notes-guided
 owner: bench
 risk_tier: standard

@@ -423,7 +423,9 @@ export function codexCliAgent(opts: {
   memo?: import("./memo").MemoSession;
   /** Append-only public note carryover (agents/notes.ts). Implies turn-reset
    * execution; the model's own past move notes are injected on every call and
-   * every reply's note is staged for referee resolution. */
+   * every reply's note is staged for referee resolution. The session's variant
+   * carries the announcement and the spec head — the adapter never branches on
+   * which notes harness this is. */
   notes?: import("./notes").NotesSession;
   /** Clean-room context (env/flags/cwd). Absent = ambient condition. */
   isolation?: CliIsolation;
@@ -440,10 +442,12 @@ export function codexCliAgent(opts: {
   const model = opts.model ?? "";
   const policy: CodexContextPolicy =
     opts.memo || opts.notes ? "turn-reset" : opts.contextPolicy ?? "persistent";
+  // A notes variant names itself: the adapter reads the spec head off the
+  // session's variant rather than growing a branch per notes harness.
   const specHead = opts.memo
     ? "codex-cli-memo"
     : opts.notes
-      ? "codex-cli-notes"
+      ? opts.notes.variant.specHead
       : policy === "turn-reset"
         ? "codex-cli-reset"
         : "codex-cli";

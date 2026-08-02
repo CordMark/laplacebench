@@ -80,10 +80,14 @@ Deliberately outside the **Model Arena** scope:
   (`codex-cli-reset:<model>@<effort>` — fresh context every turn), a
   bounded-memo variant (`codex-cli-memo:<model>@<effort>` — fresh context every
   turn plus a capped, public strategy memo as the only carryover, recorded per
-  call in the run) and a notes-carry variant
+  call in the run), a notes-carry variant
   (`codex-cli-notes:<model>@<effort>` — fresh context every turn plus this
   side's own past move notes, the very text the spectator record publishes, as
-  the only carryover) exist for controlled context-lifetime ablations, but none is a public lane: the
+  the only carryover) and its guided twin
+  (`codex-cli-notes-guided:<model>@<effort>` — the identical mechanism whose
+  announcement additionally asks the note to state this move's purpose and what
+  the next turn's self will need, with no writing-form and no game-tactic hint)
+  exist for controlled context-lifetime ablations, but none is a public lane: the
   `PUBLIC_MATCHUP_HARNESSES` allowlist keeps every harness-conditioned match —
   same-model or cross-model — out of the default public matchups, so their
   games are never counted as model-versus-model results.

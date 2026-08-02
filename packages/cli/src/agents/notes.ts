@@ -26,18 +26,37 @@ import type { RecentEvent, TeamId } from "../types";
  *    prefix and a legality-failed attempt keeps no raw at all — carrying a
  *    rejected attempt would both break the equality with the public record
  *    and feed the model's future self a note about a move it never made.
+ *
+ * VARIANTS (docs/plans/2026-08-02-notes-guided.md). The mechanism above is the
+ * whole harness; the only thing a variant may change is the ANNOUNCEMENT text.
+ * `NOTES_V1` says nothing about what to write; `NOTES_GUIDED` adds one sentence
+ * of CONTENT direction (this move's purpose, and what the next turn's self will
+ * need) and nothing else. Because the announcement is the only difference,
+ * "guided vs v1" measures the pure effect of the instruction — so stage(),
+ * resolve(), the recordedNote equality and the whole lifecycle must stay free
+ * of any branch on the variant, and both denylists stay identical.
  */
 
-export const NOTES_HARNESS_REVISION = "notes-v1";
+/**
+ * The immutable configuration of one notes variant. Everything that varies
+ * lives here, which is what keeps the mechanism single-implementation.
+ */
+export interface NotesVariant {
+  /** The announcement injected on every turn, above the past notes. */
+  readonly announcement: string;
+  /** The declared harness revision recorded with the condition. */
+  readonly revision: string;
+  /** The spec prefix this variant is reachable as. */
+  readonly specHead: string;
+}
 
 /**
- * The carryover announcement injected on every turn, immediately above the
- * past notes.
+ * The carryover announcement of the original (unguided) notes harness.
  *
  * Every word here is under the denylist guard: it may tell the model WHAT the
  * block is and WHO the note is for, and nothing about how to write it.
  */
-export const NOTES_ANNOUNCEMENT = `## Your notes from your own past moves (your ONLY memory)
+const V1_ANNOUNCEMENT = `## Your notes from your own past moves (your ONLY memory)
 
 You keep nothing between turns. Each note you wrote after one of your own past
 moves in this game appears below, and it is all that remains of what you were
@@ -48,19 +67,58 @@ and it is the only memory your future self is given. Write it for that future
 self — whatever you would want to have when you come back to this game
 remembering none of it.`;
 
+/**
+ * The guided announcement: v1 verbatim plus ONE added sentence.
+ *
+ * The added sentence directs CONTENT (why this move, what the next turn's self
+ * needs) and deliberately not shape — it names no writing form, and it names no
+ * LAPLACE tactic either, because a hint about the game itself would make the
+ * arm a strategy injection rather than a memory-instruction ablation. It is
+ * guarded by the same token denylist as v1 in test/notes-guided.test.ts.
+ */
+const GUIDED_ANNOUNCEMENT =
+  `${V1_ANNOUNCEMENT} State the purpose behind the move you are making now,
+and what the you of the next turn will need to know.`;
+
+/** The unguided original: no direction about the note's content at all. */
+export const NOTES_V1: NotesVariant = {
+  announcement: V1_ANNOUNCEMENT,
+  revision: "notes-v1",
+  specHead: "codex-cli-notes",
+};
+
+/** Same mechanism, same framing, plus purpose-and-handoff content direction. */
+export const NOTES_GUIDED: NotesVariant = {
+  announcement: GUIDED_ANNOUNCEMENT,
+  revision: "notes-guided-v1",
+  specHead: "codex-cli-notes-guided",
+};
+
+/** Backward-compatible aliases for v1's fields (pre-variant call sites). */
+export const NOTES_HARNESS_REVISION = NOTES_V1.revision;
+export const NOTES_ANNOUNCEMENT = NOTES_V1.announcement;
+
 /** One carried note, keyed by the ply of the move it was written for. */
 export interface NoteEntry {
   ply: number;
   note: string;
 }
 
-/** The injection block placed after the match instructions on every call. */
-export function notesTurnPrelude(entries: readonly NoteEntry[]): string {
+/**
+ * The injection block placed after the match instructions on every call. The
+ * variant supplies the announcement and nothing else: the body below is
+ * identical for every variant, so the injected block differs by exactly the
+ * announcement text.
+ */
+export function notesTurnPrelude(
+  entries: readonly NoteEntry[],
+  variant: NotesVariant = NOTES_V1
+): string {
   const body =
     entries.length === 0
       ? "(nothing yet — this is your first move of the game)"
       : entries.map((e) => `[ply ${e.ply}]\n${e.note}`).join("\n\n");
-  return [NOTES_ANNOUNCEMENT, "", body].join("\n");
+  return [variant.announcement, "", body].join("\n");
 }
 
 /**
@@ -86,6 +144,13 @@ export function notesTurnPrelude(entries: readonly NoteEntry[]): string {
 export class NotesSession {
   private committed: NoteEntry[] = [];
   private pending: NoteEntry | null = null;
+
+  /**
+   * The variant this journal announces itself with. It is read (never branched
+   * on) by the codex adapter for the spec head, and it is the ONLY thing that
+   * distinguishes one notes harness from another.
+   */
+  constructor(readonly variant: NotesVariant = NOTES_V1) {}
 
   /**
    * Reset for a new game. The team/gameId identity MemoSession needs for its
@@ -114,7 +179,7 @@ export class NotesSession {
   /** The injected block and the number of notes it carries. */
   prelude(): { text: string; count: number } {
     return {
-      text: notesTurnPrelude(this.committed),
+      text: notesTurnPrelude(this.committed, this.variant),
       count: this.committed.length,
     };
   }

@@ -194,7 +194,8 @@ export function assertTurnScopedCleanRoom(
     if (
       kind === "codex-cli-reset" ||
       kind === "codex-cli-memo" ||
-      kind === "codex-cli-notes"
+      kind === "codex-cli-notes" ||
+      kind === "codex-cli-notes-guided"
     ) {
       throw new MatchPreflightError(
         `${spec}: turn-scoped 条件(${kind})は「持ち越しは宣言されたもののみ」という不変条件を ` +
@@ -285,6 +286,18 @@ async function makeAgent(
         model: parsed.model,
         effort: parsed.effort,
         notes: new NotesSession(),
+        isolation,
+      });
+      break;
+    }
+    case "codex-cli-notes-guided": {
+      // Same adapter, same session class: the variant is the whole difference.
+      const { codexCliAgent } = require("./agents/cli") as typeof import("./agents/cli");
+      const { NOTES_GUIDED, NotesSession } = require("./agents/notes") as typeof import("./agents/notes");
+      agent = codexCliAgent({
+        model: parsed.model,
+        effort: parsed.effort,
+        notes: new NotesSession(NOTES_GUIDED),
         isolation,
       });
       break;

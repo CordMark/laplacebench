@@ -188,6 +188,7 @@ export const RECOGNIZED_HARNESSES: readonly string[] = [
   "codex-cli-reset",
   "codex-cli-memo",
   "codex-cli-notes",
+  "codex-cli-notes-guided",
   "anthropic",
   "product-cpu",
 ];
@@ -205,6 +206,7 @@ export const LLM_HARNESSES: readonly string[] = [
   "codex-cli-reset",
   "codex-cli-memo",
   "codex-cli-notes",
+  "codex-cli-notes-guided",
   "anthropic",
 ];
 
@@ -289,6 +291,14 @@ export const HARNESS_CONDITIONS: Readonly<Record<string, HarnessConditions>> = {
     compaction: "n/a",
     mechanism:
       "fresh codex exec per turn; harness-injected journal (notes-v1) of this side's own ADOPTED move notes, each the same value the events log publishes (prompt.ts recordedNote); clean-room execution required (ambient refused — the notes must be the ONLY carryover)",
+  },
+  "codex-cli-notes-guided": {
+    context_lifetime: "turn-scoped + append-only public move-note carryover",
+    reasoning_retention:
+      "discarded except own past move notes (public, uncapped count, 2500 chars/note = spectator-record equality)",
+    compaction: "n/a",
+    mechanism:
+      "fresh codex exec per turn; harness-injected journal (notes-guided-v1) of this side's own ADOPTED move notes, each the same value the events log publishes (prompt.ts recordedNote); identical mechanism to codex-cli-notes, differing ONLY in that the announcement directs the note's CONTENT (this move's purpose and what the next turn's self needs) with no writing-form and no game-tactic hint; clean-room execution required (ambient refused — the notes must be the ONLY carryover)",
   },
   anthropic: {
     context_lifetime: "persistent client-managed transcript (whole game)",
