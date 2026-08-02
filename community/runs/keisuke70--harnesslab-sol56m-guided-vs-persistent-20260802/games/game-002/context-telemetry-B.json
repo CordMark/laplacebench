@@ -1,0 +1,198 @@
+{
+  "schema": "laplace-context-telemetry-v1",
+  "provider": "codex",
+  "harness": "codex-cli",
+  "ids": [
+    "019fc275-2bfd-73a1-9cb9-c25e94997331"
+  ],
+  "unobserved_timeouts": 0,
+  "status": "ok",
+  "complete": true,
+  "model_context_window": 258400,
+  "compaction_count": 0,
+  "compactions": [],
+  "token_counts": [
+    {
+      "input": 13535,
+      "cached": 8960,
+      "output": 304,
+      "reasoning": 250
+    },
+    {
+      "input": 14012,
+      "cached": 0,
+      "output": 865,
+      "reasoning": 797
+    },
+    {
+      "input": 15063,
+      "cached": 13056,
+      "output": 361,
+      "reasoning": 289
+    },
+    {
+      "input": 15610,
+      "cached": 14080,
+      "output": 537,
+      "reasoning": 457
+    },
+    {
+      "input": 16320,
+      "cached": 13056,
+      "output": 1010,
+      "reasoning": 934
+    },
+    {
+      "input": 17504,
+      "cached": 15104,
+      "output": 147,
+      "reasoning": 64
+    },
+    {
+      "input": 17835,
+      "cached": 17152,
+      "output": 1145,
+      "reasoning": 1070
+    },
+    {
+      "input": 19154,
+      "cached": 16128,
+      "output": 415,
+      "reasoning": 330
+    },
+    {
+      "input": 19742,
+      "cached": 17152,
+      "output": 499,
+      "reasoning": 401
+    },
+    {
+      "input": 20416,
+      "cached": 18176,
+      "output": 189,
+      "reasoning": 102
+    },
+    {
+      "input": 20800,
+      "cached": 20224,
+      "output": 586,
+      "reasoning": 491
+    },
+    {
+      "input": 21559,
+      "cached": 20224,
+      "output": 1197,
+      "reasoning": 1110
+    },
+    {
+      "input": 22931,
+      "cached": 19200,
+      "output": 260,
+      "reasoning": 182
+    },
+    {
+      "input": 23397,
+      "cached": 22272,
+      "output": 1835,
+      "reasoning": 1761
+    }
+  ],
+  "transcript_bytes": null,
+  "sources": [
+    {
+      "id": "019fc275-2bfd-73a1-9cb9-c25e94997331",
+      "file": "/var/folders/k7/54s7lzzd3cn_l9md79cv_vmc0000gn/T/laplace-cleanroom-EmKrE0/codex/sessions/2026/08/02/rollout-2026-08-02T21-31-26-019fc275-2bfd-73a1-9cb9-c25e94997331.jsonl",
+      "skipped_lines": 0,
+      "compaction_count": 0,
+      "compactions": [],
+      "model_context_window": 258400,
+      "token_counts": [
+        {
+          "input": 13535,
+          "cached": 8960,
+          "output": 304,
+          "reasoning": 250
+        },
+        {
+          "input": 14012,
+          "cached": 0,
+          "output": 865,
+          "reasoning": 797
+        },
+        {
+          "input": 15063,
+          "cached": 13056,
+          "output": 361,
+          "reasoning": 289
+        },
+        {
+          "input": 15610,
+          "cached": 14080,
+          "output": 537,
+          "reasoning": 457
+        },
+        {
+          "input": 16320,
+          "cached": 13056,
+          "output": 1010,
+          "reasoning": 934
+        },
+        {
+          "input": 17504,
+          "cached": 15104,
+          "output": 147,
+          "reasoning": 64
+        },
+        {
+          "input": 17835,
+          "cached": 17152,
+          "output": 1145,
+          "reasoning": 1070
+        },
+        {
+          "input": 19154,
+          "cached": 16128,
+          "output": 415,
+          "reasoning": 330
+        },
+        {
+          "input": 19742,
+          "cached": 17152,
+          "output": 499,
+          "reasoning": 401
+        },
+        {
+          "input": 20416,
+          "cached": 18176,
+          "output": 189,
+          "reasoning": 102
+        },
+        {
+          "input": 20800,
+          "cached": 20224,
+          "output": 586,
+          "reasoning": 491
+        },
+        {
+          "input": 21559,
+          "cached": 20224,
+          "output": 1197,
+          "reasoning": 1110
+        },
+        {
+          "input": 22931,
+          "cached": 19200,
+          "output": 260,
+          "reasoning": 182
+        },
+        {
+          "input": 23397,
+          "cached": 22272,
+          "output": 1835,
+          "reasoning": 1761
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "gameId": "game-001",
+  "ruleset": "laplace-8x8-v1",
+  "seed": 1042,
+  "winner": "A",
+  "reason": "center",
+  "plies": 11,
+  "losses": {
+    "Red": 1,
+    "Blue": 1,
+    "Yellow": 0,
+    "Green": 1
+  },
+  "teams": {
+    "A": {
+      "agent": "codex-cli-notes:gpt-5.6-sol@medium",
+      "turns": 6,
+      "moves": 6,
+      "actCalls": 6,
+      "formatFailures": 0,
+      "legalityFailures": 0,
+      "failedTurns": 0,
+      "forcedPasses": 0,
+      "timeoutSkips": 0,
+      "tokenBudgetSkips": 0,
+      "noteOmissions": 0,
+      "noteSuppressed": 0,
+      "inputTokens": 82768,
+      "outputTokens": 3106,
+      "cacheReadTokens": 22016,
+      "latencyMs": 139504,
+      "usage": {
+        "schema": "laplace-model-usage-v1",
+        "adapterCalls": 6,
+        "reportedCalls": 6,
+        "unreportedCalls": 0,
+        "legacyUnversionedCalls": 0,
+        "providers": [
+          "openai"
+        ],
+        "sources": [
+          "codex-cli"
+        ],
+        "inputTotalTokens": 82768,
+        "inputUncachedTokens": 60752,
+        "cacheReadTokens": 22016,
+        "cacheWriteTokens": 0,
+        "cacheWriteReportedCalls": 0,
+        "outputTotalTokens": 3106,
+        "reasoningTokens": 2669,
+        "reasoningReportedCalls": 6,
+        "applicationInputBytes": 60056,
+        "applicationOutputBytes": 1385
+      }
+    },
+    "B": {
+      "agent": "codex-cli-notes-guided:gpt-5.6-sol@medium",
+      "turns": 5,
+      "moves": 5,
+      "actCalls": 5,
+      "formatFailures": 0,
+      "legalityFailures": 0,
+      "failedTurns": 0,
+      "forcedPasses": 0,
+      "timeoutSkips": 0,
+      "tokenBudgetSkips": 0,
+      "noteOmissions": 0,
+      "noteSuppressed": 0,
+      "inputTokens": 69067,
+      "outputTokens": 7887,
+      "cacheReadTokens": 13056,
+      "latencyMs": 254070,
+      "usage": {
+        "schema": "laplace-model-usage-v1",
+        "adapterCalls": 5,
+        "reportedCalls": 5,
+        "unreportedCalls": 0,
+        "legacyUnversionedCalls": 0,
+        "providers": [
+          "openai"
+        ],
+        "sources": [
+          "codex-cli"
+        ],
+        "inputTotalTokens": 69067,
+        "inputUncachedTokens": 56011,
+        "cacheReadTokens": 13056,
+        "cacheWriteTokens": 0,
+        "cacheWriteReportedCalls": 0,
+        "outputTotalTokens": 7887,
+        "reasoningTokens": 7453,
+        "reasoningReportedCalls": 5,
+        "applicationInputBytes": 50466,
+        "applicationOutputBytes": 1392
+      }
+    }
+  }
+}

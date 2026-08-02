@@ -2,6 +2,47 @@
 
 Running log of what the discrimination pilot has told us. Newest first.
 
+## Runs 17-18 — notes-guided (write purpose + handoff every move): the instruction does not help at medium, and v1 wins the clean comparison
+
+`runs/harnesslab-sol56m-guided-vs-notes-20260802/` and
+`…-guided-vs-persistent-20260802/` (both verified 4/4, in the ledger and
+on the accumulating surface). Pre-registered serial pair in
+`docs/plans/2026-08-02-notes-guided.md`, testing the user's hypothesis
+that telling the model *what to carry* — "state the purpose behind this
+move, and what the you of the next turn needs to know" — is the
+strongest form of the notes harness. The two runs were labeled in
+advance: guided-vs-v1 is the **pure instruction effect** (identical
+mechanism, announcement is the only difference); guided-vs-persistent
+is a **system comparison** (no factor decomposition claimed).
+
+**Run 17, guided vs notes-v1: v1 3W-1L, two of the three wins from the
+second seat.** The pure-instruction comparison came out against the
+guidance: the un-instructed notes arm beat the purpose/handoff arm at
+essentially identical cost (1,375 vs 1,461 output tokens per move) and
+both arms were fully clean (zero illegal, zero failed turns). At n=4
+this is suggestive, not settled — but the direction is the opposite of
+the hypothesis, and the off-seat wins mean it is not a seat artifact.
+
+**Run 18, guided vs persistent: 2-2, every game won by the first mover**
+(the pre-committed reading: no W-L signal). The texture repeats Run 13
+almost exactly: persistent's wins were twin 11-ply center rushes;
+guided's wins were longer fights (45-ply center, 29-ply elimination).
+Persistent spent 345,724 output tokens to guided's 55,532 — **6.2x**
+for the same split. Reliability cut against guided here: 4 illegal
+moves and one fully failed turn vs persistent's zeros (echoing Run 14's
+notes-side blemish, and unlike Run 17 where guided was clean).
+
+Reading across the notes family so far: the *mechanism* (append-only
+accepted-note journal) keeps matching persistent at a flat fraction of
+its token bill, but *steering the content* of the notes has not paid
+for itself — v1's freely-written notes beat the purpose/handoff
+template at medium. The symmetric completion the plan names as the next
+set's headliner — guided-notes vs primed-persistent, where both arms
+get told what matters — is now the interesting question: is the loss
+in the template, or does medium-effort Sol simply not follow carried
+intent? **Compaction: still zero everywhere** (no game exceeded 50
+plies).
+
 ## Run 16 — flagship at high effort (claude-opus-5@high vs gpt-5.6-sol@high): Opus sweeps 4-0; the token and clock columns point in opposite directions
 
 `runs/arena-opus5h-vs-sol56h-uncapped-20260802/` (verified 4/4, in the

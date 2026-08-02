@@ -117,3 +117,14 @@ guided:gpt-5.6-sol@low vs random、1局 max-plies 4、clean-room 既定。完走
 CODEX_HOME は run 後に削除されるため rollout の事後 grep は不可 — smoke の
 役割は spec 受理〜記録の end-to-end 動作確認)。残作業: Run 17/18(Run 16
 完走後に直列)。
+
+## 完走処理レビュー (impl-notes-guided 続き): APPROVED (0.99)
+
+Run 17(guided vs v1、指示の純効果)= **v1 3-1**(うち後手2勝、コスト同等
+1,375/1,461 tok/手、両腕クリーン)。Run 18(guided vs persistent、システム
+比較)= 2-2 全局先手勝ち(事前約束: W-L 無信号)、persistent 6.2x コスト、
+guided に illegal 4 + failed turn 1。curated 5-6件目・FINDINGS Runs 17-18 節・
+arena golden 同一コミット再採取(bc5aa0e3…、構成的検証: 旧 golden バイト再現・
+公開局増ゼロ)。レビュアー独立再ビルド一致・全数値照合済み。初回チェーンの
+untracked 起動は preflight 中 kill(run 記録ゼロ、availability 記録不要)として
+開示。次セット本命: guided-notes vs primed-persistent。
