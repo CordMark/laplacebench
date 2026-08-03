@@ -1,7 +1,7 @@
 {
   "schema": "laplace-bench-harnesslab-catalog-v1",
-  "source_sha": "e36694196eafde5183251f18887f920122ed05ce",
-  "generated_at": "2026-08-03T15:06:28.000Z",
+  "source_sha": "1d415229bce0191f78c24fa89411b7d8b0c62dcd",
+  "generated_at": "2026-08-03T15:10:48.000Z",
   "experiment_count": 11,
   "game_count": 44,
   "experiments": [
