@@ -1,9 +1,9 @@
 {
   "schema": "laplace-bench-harnesslab-catalog-v1",
-  "source_sha": "b580c07640c21dea3b5e7142bac773dd6c09ea50",
-  "generated_at": "2026-08-03T07:35:11.000Z",
-  "experiment_count": 8,
-  "game_count": 32,
+  "source_sha": "f32374b0d89e47cf3d08caf2624918f493b45fac",
+  "generated_at": "2026-08-03T09:01:56.000Z",
+  "experiment_count": 9,
+  "game_count": 36,
   "experiments": [
     {
       "run": "keisuke70--harnesslab-sol56m-uncapped-persistent-vs-reset-20260802",
@@ -52,6 +52,12 @@
       "run_id": "harnesslab-sol56h-uncapped-memo-vs-reset-20260803",
       "description": "High-capability turn-scoped probe: bounded memo vs turn-reset, first direct pairing (GPT-5.6 Sol high)",
       "plan": "docs/plans/2026-08-03-high-turnscoped-vs-reset.md"
+    },
+    {
+      "run": "keisuke70--harnesslab-sol56m-uncapped-memo-vs-reset-20260803",
+      "run_id": "harnesslab-sol56m-uncapped-memo-vs-reset-20260803",
+      "description": "Effort baseline for the memo-reset pair: bounded memo vs turn-reset (GPT-5.6 Sol medium)",
+      "plan": "docs/plans/2026-08-03-memo-reset-medium-baseline.md"
     }
   ],
   "matchups": [
@@ -178,6 +184,135 @@
               "avg_latency_ms": 68349,
               "illegal_rate_per_turn": 0.118,
               "failed_turns": 1,
+              "compaction": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "codex-cli-memo:gpt-5.6-sol@medium vs codex-cli-reset:gpt-5.6-sol@medium",
+      "left_spec": "codex-cli-memo:gpt-5.6-sol@medium",
+      "right_spec": "codex-cli-reset:gpt-5.6-sol@medium",
+      "matchup_kind": "same-model-harness-ablation",
+      "harness_conditions": {
+        "left": {
+          "context_lifetime": "turn-scoped + bounded public memo carryover",
+          "reasoning_retention": "discarded every turn; the only carryover is a public, capped memo the model rewrites each turn",
+          "compaction": "n/a (context never grows; the memo cap is the bound)",
+          "mechanism": "fresh codex exec per turn; harness-injected memo (memo-v1, 1500-char cap) recorded per adapter call to memo/<gameId>/<team>.jsonl; clean-room execution required (ambient refused — the memo must be the ONLY carryover)"
+        },
+        "right": {
+          "context_lifetime": "turn-reset (fresh context every turn)",
+          "reasoning_retention": "discarded every turn (nothing carries over)",
+          "compaction": "n/a (no long-lived context to compact)",
+          "mechanism": "fresh codex exec per turn; rulebook + full-state observation resent every turn; clean-room execution required (ambient refused — a reused cwd with tools would be an undeclared carryover channel)"
+        }
+      },
+      "wins_left": 2,
+      "wins_right": 2,
+      "draws": 0,
+      "games": [
+        {
+          "run": "keisuke70--harnesslab-sol56m-uncapped-memo-vs-reset-20260803",
+          "game_id": "game-000",
+          "first_side": "left",
+          "winner": "left",
+          "reason": "center",
+          "plies": 29,
+          "played_at": "2026-08-03T08:43:40.882Z",
+          "replay": "1f7528da1107346f75bb691ef4acdc64c0d595613c84b251f04962c3b14bef6a",
+          "per_side": {
+            "left": {
+              "output_tokens": 17297,
+              "avg_latency_ms": 36558,
+              "illegal_rate_per_turn": 0.2,
+              "failed_turns": 1,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 20592,
+              "avg_latency_ms": 53762,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            }
+          }
+        },
+        {
+          "run": "keisuke70--harnesslab-sol56m-uncapped-memo-vs-reset-20260803",
+          "game_id": "game-001",
+          "first_side": "right",
+          "winner": "right",
+          "reason": "center",
+          "plies": 11,
+          "played_at": "2026-08-03T08:28:21.455Z",
+          "replay": "6af34cba44aca5e04418e6275c1ce2e7ee0d42b92113c6ce7a03e8884d0a47a6",
+          "per_side": {
+            "left": {
+              "output_tokens": 8025,
+              "avg_latency_ms": 64233,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 3200,
+              "avg_latency_ms": 22265,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            }
+          }
+        },
+        {
+          "run": "keisuke70--harnesslab-sol56m-uncapped-memo-vs-reset-20260803",
+          "game_id": "game-002",
+          "first_side": "left",
+          "winner": "left",
+          "reason": "elimination",
+          "plies": 39,
+          "played_at": "2026-08-03T08:53:14.202Z",
+          "replay": "929c45bdc6caca99098cbb96899057ece400efd0777a11c5280ffed1218c90fc",
+          "per_side": {
+            "left": {
+              "output_tokens": 26196,
+              "avg_latency_ms": 45265,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 27517,
+              "avg_latency_ms": 54849,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            }
+          }
+        },
+        {
+          "run": "keisuke70--harnesslab-sol56m-uncapped-memo-vs-reset-20260803",
+          "game_id": "game-003",
+          "first_side": "right",
+          "winner": "right",
+          "reason": "elimination",
+          "plies": 35,
+          "played_at": "2026-08-03T08:54:06.767Z",
+          "replay": "ebd3a5cd75ca593541601bd8ca2c77b88c8790722c72880922dcbb2fab83bb05",
+          "per_side": {
+            "left": {
+              "output_tokens": 32965,
+              "avg_latency_ms": 66842,
+              "illegal_rate_per_turn": 0.118,
+              "failed_turns": 1,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 21808,
+              "avg_latency_ms": 44270,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
               "compaction": null
             }
           }

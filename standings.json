@@ -1,8 +1,8 @@
 {
   "schema": "laplace-bench-standings-v2",
   "lane": "community",
-  "game_count": 59,
-  "run_count": 17,
+  "game_count": 63,
+  "run_count": 18,
   "matchup_count": 4,
   "matchups": [
     {
@@ -146,8 +146,8 @@
     },
     {
       "agent": "codex-cli-memo:gpt-5.6-sol@medium",
-      "games": 4,
-      "err_per_turn": 0
+      "games": 8,
+      "err_per_turn": 0.055
     },
     {
       "agent": "codex-cli-notes-guided:gpt-5.6-sol@medium",
@@ -171,8 +171,8 @@
     },
     {
       "agent": "codex-cli-reset:gpt-5.6-sol@medium",
-      "games": 16,
-      "err_per_turn": 0.02
+      "games": 20,
+      "err_per_turn": 0.016
     },
     {
       "agent": "codex-cli:gpt-5.6-sol@high",
