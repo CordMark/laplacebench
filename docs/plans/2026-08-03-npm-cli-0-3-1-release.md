@@ -1,9 +1,9 @@
 ---
-status: approved
+status: implemented
 direction: direction-npm-cli-0-2-7
 owner: bench
 risk_tier: heavy
-last_updated: 2026-08-03
+last_updated: 2026-08-04
 ---
 
 # `laplacebench` 0.3.1 npm release
@@ -227,3 +227,24 @@ repository/workspace/既存 cache の影響がない temp directory + isolated c
 - registry tarball integrity/shasum が final clean tarball と byte-identical。
 - public `--help`、baseline run/verify、interactive provider prompt の外部 acceptance が成功。
 - engine `1.0.0`、past versions/runs/catalog、Git tags/release automation が変更されていない。
+
+## Release result
+
+- clean source / registry `gitHead`:
+  `e36694196eafde5183251f18887f920122ed05ce`（GitHub `main`へpush、CI / Publish
+  community arenaともsuccess）
+- recovery history: `0.3.0` の一回だけのpiped publish commandはwrite-time EOTPで既知failure。
+  registry absentを確認し、同versionは再試行せず未発行のまま。live-TTYの単一commandへ直した
+  `0.3.1` がbrowser challenge完了後にsuccess
+- npm: `laplacebench@0.3.1` published `2026-08-03T15:09:40.116Z`、`latest=0.3.1`
+- final two-pack: 97 regular/classified text files、36 safe source maps、version `0.3.1`、
+  byte-identical。secret/private-key/home/state hitなし、bin mode `0755`
+- registry / expected integrity:
+  `sha512-xUV+5MPDO4kS9p+xCoYPBty1qnZmr5/UK+Sji8kH/Ggo68N5PW807S9bf5odA1vaRhVC8gwlj1HtiB/r5QDxYA==`
+- registry / expected shasum: `15378dcd8125f37e507bfeac0aff33a87d59f1b3`
+- isolated public install: fresh temp directory + isolated npm cacheで `laplacebench@latest` が
+  `0.3.1`。exit-1のcurrent usage、random-vs-greedy 1 game、1/1 replay verify、未提出を確認
+- external interactive acceptance: public `laplacebench@latest play` が Team A provider menu
+  （Claude / Codex / Anthropic API / LaPlace CPU / Baseline）まで到達。Escで中止し、モデル未選択・
+  対局未開始
+- canonical product-CPU lockはpublication後にreleaseし、working treeはcleanへ復帰

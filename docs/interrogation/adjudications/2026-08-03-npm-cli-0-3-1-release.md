@@ -158,6 +158,24 @@ Requirement source: ユーザー対話 2026-08-03。「では最新版までを�
   0.3.0 evidence、high-risk correction、live-TTY webauth、owner/source/digest/lock境界、immutable
   0.2.6、symmetric no-retryを確認）
 
+## Publication evidence
+
+- unissued recovery boundary: `0.3.0` one-shot commandはknown EOTP failure、registry E404を確認し
+  retryなし
+- clean source / registry `gitHead`:
+  `e36694196eafde5183251f18887f920122ed05ce`
+- final two-pack: 97 files / 36 safe source maps / version `0.3.1` / byte-identical /
+  inventory・secret scan・isolated install・usage・baseline・verify・ambient fail-closed smoke pass
+- expected and registry integrity:
+  `sha512-xUV+5MPDO4kS9p+xCoYPBty1qnZmr5/UK+Sji8kH/Ggo68N5PW807S9bf5odA1vaRhVC8gwlj1HtiB/r5QDxYA==`
+- expected and registry shasum: `15378dcd8125f37e507bfeac0aff33a87d59f1b3`
+- npm `latest=0.3.1`; published `2026-08-03T15:09:40.116Z`
+- GitHub source commit checks: CI success、Publish community arena success
+- isolated external acceptance: public `laplacebench@latest` manifest `0.3.1`、current usage、baseline
+  game、1/1 verify、未提出を確認。interactive `play` は Team A provider menuまで到達しEscで中止、
+  モデル未選択・対局未開始
+- canonical package lock released、working tree clean
+
 
 ```json
 {
