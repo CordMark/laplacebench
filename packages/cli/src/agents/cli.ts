@@ -442,10 +442,10 @@ export function codexCliAgent(opts: {
   const model = opts.model ?? "";
   const policy: CodexContextPolicy =
     opts.memo || opts.notes ? "turn-reset" : opts.contextPolicy ?? "persistent";
-  // A notes variant names itself: the adapter reads the spec head off the
-  // session's variant rather than growing a branch per notes harness.
+  // A carryover session names itself: the adapter reads the spec head off
+  // the session rather than growing a branch per harness variant.
   const specHead = opts.memo
-    ? "codex-cli-memo"
+    ? opts.memo.specHead
     : opts.notes
       ? opts.notes.variant.specHead
       : policy === "turn-reset"

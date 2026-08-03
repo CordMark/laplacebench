@@ -194,6 +194,7 @@ export function assertTurnScopedCleanRoom(
     if (
       kind === "codex-cli-reset" ||
       kind === "codex-cli-memo" ||
+      kind === "codex-cli-memo-primed" ||
       kind === "codex-cli-notes" ||
       kind === "codex-cli-notes-guided"
     ) {
@@ -275,6 +276,20 @@ async function makeAgent(
         model: parsed.model,
         effort: parsed.effort,
         memo: new MemoSession(ctx.runDir),
+        isolation,
+      });
+      break;
+    }
+    case "codex-cli-memo-primed": {
+      // Same adapter, same session class: the frozen primer is the whole
+      // difference (docs/plans/2026-08-03-memo-primed.md).
+      const { codexCliAgent } = require("./agents/cli") as typeof import("./agents/cli");
+      const { MemoSession } = require("./agents/memo") as typeof import("./agents/memo");
+      const { PRIMER_TEXT } = require("./agents/primer") as typeof import("./agents/primer");
+      agent = codexCliAgent({
+        model: parsed.model,
+        effort: parsed.effort,
+        memo: new MemoSession(ctx.runDir, PRIMER_TEXT),
         isolation,
       });
       break;

@@ -85,9 +85,15 @@ export function applyMemoReply(
   return { memo: extracted, status: "updated" };
 }
 
-/** The injection block placed after the match instructions on every call. */
-export function memoTurnPrelude(current: string): string {
+/**
+ * The injection block placed after the match instructions on every call.
+ * `primer` (codex-cli-memo-primed only) is a fixed public strategy text
+ * prepended before the memo instructions; omitted, the output is
+ * byte-identical to memo-v1 — the primer is the variant's ONLY delta.
+ */
+export function memoTurnPrelude(current: string, primer?: string): string {
   return [
+    ...(primer ? [primer, ""] : []),
     MEMO_INSTRUCTIONS,
     "",
     "## Your memo from last turn",
@@ -115,7 +121,20 @@ export class MemoSession {
   private gameId = "";
   private team: TeamId | "" = "";
 
-  constructor(private readonly runDir: string) {}
+  /**
+   * `primer` switches the session to the primed variant: the fixed public
+   * text is prepended to every prelude and the session names itself
+   * `codex-cli-memo-primed`. Default (undefined) is memo-v1, byte-unchanged.
+   */
+  constructor(
+    private readonly runDir: string,
+    private readonly primer?: string
+  ) {}
+
+  /** The spec head this session's agent reports as its harness identity. */
+  get specHead(): "codex-cli-memo" | "codex-cli-memo-primed" {
+    return this.primer ? "codex-cli-memo-primed" : "codex-cli-memo";
+  }
 
   startGame(team: TeamId, gameId: string): void {
     this.memo = "";
@@ -124,7 +143,7 @@ export class MemoSession {
   }
 
   prelude(): string {
-    return memoTurnPrelude(this.memo);
+    return memoTurnPrelude(this.memo, this.primer);
   }
 
   /** Record one adapter-call transition and return its status. */

@@ -128,3 +128,21 @@ Plan: `docs/plans/2026-08-03-memo-primed.md`(direction: direction-memo-primed)�
   再検査が検出。開示済み)**。(6) smoke spec が未登録の短縮名。→ 両方修正。
 - R3: 全解消・primer 実測 1,986-1,987 字 → **APPROVED (0.99)**。
 - ラウンド 3・指摘計 6 件で APPROVED(confidence 0.99)
+
+## Impl review (impl-memo-primed): APPROVED (0.99)
+
+1ラウンド・指摘0。primer 凍結はプラン fenced block とバイト一致(1,986字)を
+レビュアー独立検証。ambient fail-closed は run ディレクトリ生成前の
+assertTurnScopedCleanRoom が実ゲートであることを確認。差分同一性(primed −
+primer = memo-v1 全 call バイト一致・memo JSONL 同一)・接頭辞順序・公開
+matchup 除外はテストで固定。フルスイート 312+13 green・typecheck 緑・
+memo-harness.test.ts 無編集 green(v1 バイト不変の証明)。
+- ラウンド 1・指摘計 0 件で APPROVED(confidence 0.99)
+
+## 実機 smoke (2026-08-03): `runs/smoke-primed-lowvsrandom-20260803`
+
+primed:sol@low vs random、1局 max-plies 4、clean-room 既定。初回起動は
+preflight で codex positive canary 1回死亡(canary 指示未注入)→ fail-closed
+拒否・記録ゼロ → 同一 run-id で1度だけ再試行(Run 16 と同じ既知 flake 処置)。
+再試行は preflight 合格・完走(horizon_draw、4 plies)。spec 受理・run.json
+harness_conditions に primer-v1 mechanism 宣言・memo 遷移 2/2 updated を確認。

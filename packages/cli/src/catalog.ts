@@ -187,6 +187,7 @@ export const RECOGNIZED_HARNESSES: readonly string[] = [
   "codex-cli",
   "codex-cli-reset",
   "codex-cli-memo",
+  "codex-cli-memo-primed",
   "codex-cli-notes",
   "codex-cli-notes-guided",
   "anthropic",
@@ -205,6 +206,7 @@ export const LLM_HARNESSES: readonly string[] = [
   "codex-cli",
   "codex-cli-reset",
   "codex-cli-memo",
+  "codex-cli-memo-primed",
   "codex-cli-notes",
   "codex-cli-notes-guided",
   "anthropic",
@@ -283,6 +285,14 @@ export const HARNESS_CONDITIONS: Readonly<Record<string, HarnessConditions>> = {
     compaction: "n/a (context never grows; the memo cap is the bound)",
     mechanism:
       "fresh codex exec per turn; harness-injected memo (memo-v1, 1500-char cap) recorded per adapter call to memo/<gameId>/<team>.jsonl; clean-room execution required (ambient refused — the memo must be the ONLY carryover)",
+  },
+  "codex-cli-memo-primed": {
+    context_lifetime: "turn-scoped + bounded public memo carryover",
+    reasoning_retention:
+      "discarded every turn; the only carryover is a public, capped memo the model rewrites each turn",
+    compaction: "n/a (context never grows; the memo cap is the bound)",
+    mechanism:
+      "fresh codex exec per turn; harness-injected memo (memo-v1, 1500-char cap) recorded per adapter call to memo/<gameId>/<team>.jsonl; plus a fixed public strategy primer (primer-v1, frozen operator-authored constant, agents/primer.ts) injected before the memo instructions on every call — identical every turn, so it is knowledge, not a carryover channel; clean-room execution required (ambient refused — the memo must be the ONLY carryover)",
   },
   "codex-cli-notes": {
     context_lifetime: "turn-scoped + append-only public move-note carryover",
