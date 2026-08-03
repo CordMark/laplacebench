@@ -2,6 +2,65 @@
 
 Running log of what the discrimination pilot has told us. Newest first.
 
+## Runs 19-20 — turn-scoped memory vs reset at high effort: the bounded memo sweeps 4-0 with two off-seat wins — the first W-L break of reset by a designed carryover
+
+`runs/harnesslab-sol56h-uncapped-notes-vs-reset-20260803/` and
+`…-memo-vs-reset-20260803/` (both verified 4/4, in the ledger and on the
+accumulating surface). Pre-registered serial pair in
+`docs/plans/2026-08-03-high-turnscoped-vs-reset.md`, testing the user's
+hypothesis that the flat notes/memo results at medium are a capability
+floor: medium-effort Sol may be too weak to *exploit* a carried plan, so
+raising effort should let the designed carryover show up in W-L. Both
+preflights passed first try (no canary retries).
+
+**Run 19, notes-carry vs reset at high: 2-2, all four games to the first
+seat** (the pre-committed reading: no W-L signal). Decision reasons:
+3/4 center occupations, 1/4 elimination (the notes arm's 41-ply g0).
+What did move is reliability, in the opposite direction from medium: at
+medium the notes arm carried the only blemish (0.068 illegal/turn in
+the uncapped pair); at high notes is fully clean and **reset takes the
+blemishes** (0.044 illegal/turn plus one fully failed turn). Cost and
+clock are near-equal (2,754 vs 2,627 output tokens/move; 107s vs
+95s/move) — with both arms rebuilding input every turn, the flat-cost
+advantage that notes holds over persistent has nothing to bite on here.
+
+**Run 20, bounded memo vs reset at high — the first direct pairing of
+these arms anywhere in the lab: memo 4W-0L, including both games from
+the second seat** (34-ply eliminations in each). Decision reasons flip
+against the lab's usual texture: 1/4 center occupation, 3/4
+eliminations. This is the first harness-ablation result in the lab that
+breaks seat dominance against reset, and the first time any
+designed-memory arm has beaten reset on W-L rather than on cost. The off-seat wins were not center races: memo
+won the center-capture contest 5-0 and 5-1 in those games and drove
+through to elimination. Reset again took the reliability blemishes
+(0.038 illegal/turn, one failed turn; memo zero) at near-equal cost
+(2,359 vs 2,148 output tokens/move) and clock (80s vs 74s/move). Memo
+format compliance was clean throughout (no omissions, no over-cap
+discards).
+
+Why memo and not notes? One verified observation, then a hypothesis —
+this pair cannot separate the candidate causes. The observation: the
+memo genuinely carries attack lines across turns. In game-001 the
+winning double-capture (6,3)->(6,4) appears as the standing plan in the
+ply-29 memo, two of its turns before it is played at ply 33 — a carried
+plan, not a per-move rationale. The hypothesis: the memo-v1 template
+(`agents/memo.ts`) *structurally requires* a rewritten position read,
+standing plan, opponent tendencies, and lessons every turn, and that
+designed rewrite may be what beats fresh re-derivation. But the notes
+artifacts do not support the strong version of that reading: the
+high-effort notes also contain conditional multi-turn plans ("On Red’s
+next turn, the key tactic remains…", g0), not just board-re-derivable
+rationale — and notes still tied. Whether the 4-0 comes from the
+structured single-document rewrite, from the bounded form itself, from
+high effort finally exploiting a carried plan, or from run variance is
+not isolatable at n=4 with this design. Two further honest limits:
+memo-vs-reset was never run at medium, so "high effort unlocked it" is
+an inference across the notes pair, not a measured within-arm flip; and
+n=4 per rule stays suggestive — though a 4-0 with two off-seat
+eliminations is the strongest single-run harness signal the lab has
+produced. **Compaction: still zero everywhere** (no game exceeded 41
+plies).
+
 ## Runs 17-18 — notes-guided (write purpose + handoff every move): the instruction does not help at medium, and v1 wins the clean comparison
 
 `runs/harnesslab-sol56m-guided-vs-notes-20260802/` and
