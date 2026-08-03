@@ -1,0 +1,124 @@
+# work item: npm-cli-0-3-0-release — tier: heavy
+
+Slice: npm `laplacebench@0.2.6` 以降の current `main` を、既定契約変更を正直に示す
+`0.3.0` として clean Git source から検証・公開する。プラン:
+`docs/plans/2026-08-03-npm-cli-0-3-0-release.md`。
+
+Requirement source: ユーザー対話 2026-08-03。「では最新版までを反映しようか認証は
+こっちでやるよ」。
+
+## Direction dialogue (human-direction-proxy)
+
+```json
+{
+  "direction_trace_v1": {
+    "event": {
+      "event_id": "61ad5053-ca8b-4128-ac4e-6491793d6b7a",
+      "work_item_id": "npm-cli-0-2-7",
+      "session_key": "direction-npm-cli-0-2-7",
+      "occurred_at": "2026-08-03T14:43:30.436Z",
+      "phase": "direction",
+      "method": "human_direction_proxy",
+      "method_version": "skill:57065644ef2aaebacb2b3a90de7c880b29efcee9066aa29ce4aba8af99b72c25;runner-prompt:36ae571bb41025d0b95c7eabe2326d8d4cc552d35e4d060cf2991bd990e5ede2;schema:fbcf01d4a0fee3d9fecdf88782a9e9f04512c0505e1797843f4fcbe7dce0aa3f;providers:claude;model:claude-fable-5;retrieval:ce7971d6242529f40b6ae48c108d897201caae653b1657cea77522f6b121ae2d",
+      "decision": "CHANGE",
+      "dialogue_status": "completed",
+      "tensions": [
+        {
+          "id": "T001",
+          "families": [
+            "external-reality",
+            "value-cost"
+          ],
+          "question": "patch (0.2.7) は ^0.2.x 利用者へ自動配布される。35 commits の中に CLI 外部契約（コマンド・フラグ・デフォルト・出力・ファイル形式）の変更が実際に無いことを diff/ログで確認したか。追加のみなら patch で良いが、既存挙動の意味が変わるなら minor が正直。",
+          "context_refs": [
+            "docs/plans/2026-07-27-npm-cli-release.md"
+          ],
+          "author_position": "REVISE",
+          "outcome": "changed",
+          "effect": "premise-corrected",
+          "requested_evidence": null
+        }
+      ],
+      "duration_ms": 40229,
+      "input_tokens": 36003,
+      "cached_input_tokens": 3107,
+      "output_tokens": 1990,
+      "tool_calls": 0,
+      "accounting_records": [
+        {
+          "turn": 1,
+          "provider": "claude",
+          "mode": "per_turn",
+          "prior_raw_total": null,
+          "current_raw_total": {
+            "input_tokens": 16616,
+            "cached_input_tokens": 1434,
+            "output_tokens": 1291
+          },
+          "normalized_delta": {
+            "input_tokens": 16616,
+            "cached_input_tokens": 1434,
+            "output_tokens": 1291
+          },
+          "reason": null
+        },
+        {
+          "turn": 2,
+          "provider": "claude",
+          "mode": "per_turn",
+          "prior_raw_total": null,
+          "current_raw_total": {
+            "input_tokens": 19387,
+            "cached_input_tokens": 1673,
+            "output_tokens": 699
+          },
+          "normalized_delta": {
+            "input_tokens": 19387,
+            "cached_input_tokens": 1673,
+            "output_tokens": 699
+          },
+          "reason": null
+        }
+      ],
+      "active_provider": "claude",
+      "providers_used": [
+        "claude"
+      ],
+      "fallback_count": 0
+    },
+    "transcript_hash": "b07b9b2b331d81f705b9e26db352c412153300d058480da7946e52536c1ec6a6",
+    "decision_context_hash": "6d57180d1e8c25c16ae7d4d15d68b94be02e7210b8f24606edb31e5ebcaf445f",
+    "method_version": "skill:57065644ef2aaebacb2b3a90de7c880b29efcee9066aa29ce4aba8af99b72c25;runner-prompt:36ae571bb41025d0b95c7eabe2326d8d4cc552d35e4d060cf2991bd990e5ede2;schema:fbcf01d4a0fee3d9fecdf88782a9e9f04512c0505e1797843f4fcbe7dce0aa3f;providers:claude;model:claude-fable-5;retrieval:ce7971d6242529f40b6ae48c108d897201caae653b1657cea77522f6b121ae2d",
+    "turns": 2
+  }
+}
+```
+
+## Plan review (codex-plan-review, session plan-npm-cli-0-3-0-release)
+
+- Q(review/package-lock-boundary): default `npm pack` が checkout に tarball を書き、
+  `--ignore-scripts` が product-CPU concurrency lock を迂回するため、clean tree / immutable
+  payload gate が実装不能 → 受理。external `--pack-destination` を使い、canonical lock を
+  final two-pack、verification、one-shot publish 全体で明示保持し、tracked diff・allowlisted
+  lock sentinel・payload digest を publish 直前まで fail-closed に再確認する
+  (revise, class: A)。
+- Q(review/publisher-identity): `npm whoami` の「expected owner」が未定義で、任意の認証済み
+  account を不可逆 publish 前に受理できる → 受理。registry owner/maintainer の sole account
+  `ykei` を allowlist とし、公開直前の owner drift は停止、`whoami === ykei` を必須にする
+  (revise, class: A)。
+- Q(review/help-version-smoke): 現CLIの `--help` は exit 1 で version を出さないため、計画した
+  success/version smoke は通らない → 受理。version は installed package manifest と registryで
+  検証し、usage は既存 contract の exit 1 と current content を明示 assertする。help/version
+  runtime変更は本releaseへ混ぜない(revise, class: B)。
+- ラウンド 2・指摘計 3 件で APPROVED（confidence 0.98）
+
+## 2026-08-03 npm CLI 0.3.0 release [impl]（tier: heavy）
+
+- ラウンド 1・指摘計 0 件で APPROVED（confidence 0.95。残る clean release commit後の
+  final two-pack、digest再確認、one-shot publishはapproved planの不可逆境界gateとして維持）
+
+## Impl review (codex-impl-review, session impl-npm-cli-0-3-0-release)
+
+- ラウンド 1・指摘計 0 件で APPROVED（confidence 0.98。metadata diff、immutable 0.2.6、
+  owner/auth、canonical lock、inventory/leak、one-shot publish境界を確認。final two-pack、push、
+  auth、publish、external acceptanceはapproved planどおりpost-commitで実行）
