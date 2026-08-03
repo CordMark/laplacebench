@@ -1,8 +1,9 @@
-# work item: npm-cli-0-3-0-release — tier: heavy
+# work item: npm-cli-0-3-1-release — tier: heavy
 
 Slice: npm `laplacebench@0.2.6` 以降の current `main` を、既定契約変更を正直に示す
-`0.3.0` として clean Git source から検証・公開する。プラン:
-`docs/plans/2026-08-03-npm-cli-0-3-0-release.md`。
+recovery version `0.3.1` として clean Git source から検証・公開する。未発行 `0.3.0` は
+一回だけのEOTP failure後にregistry absentを確認済みで、永久に再試行しない。プラン:
+`docs/plans/2026-08-03-npm-cli-0-3-1-release.md`。
 
 Requirement source: ユーザー対話 2026-08-03。「では最新版までを反映しようか認証は
 こっちでやるよ」。
@@ -94,6 +95,20 @@ Requirement source: ユーザー対話 2026-08-03。「では最新版までを�
 }
 ```
 
+## Runtime publication reconciliation / plan revisit
+
+- Q(author/write-time-webauth): `npm whoami === ykei` のbrowser login後も、piped stdoutで実行した
+  one-shot `npm publish` はEOTPとwrite-time `authUrl`を返して終了し、registryに `0.3.0` は
+  作られなかった。同versionを再試行してよいか。
+  - 弁明: approved planはsuccess/failureを問わず同versionを再試行しない。npm 11.17.0
+    `lib/utils/auth.js#otplease` の実コードはstdin/stdout両方がTTYのときだけweb authを開いて
+    同一command内部でOTP付きrequestへ進む。前回は `tee` pipeがstdoutのTTY性を失わせた。
+  - 裁定: plan-revisit。`0.3.0`を永久に未発行のまま再利用せず、`0.3.1` recoveryへ進める。
+    publish commandはpipe/redirectなしのlive TTYで一度だけ実行し、同じinvocation内のbrowser
+    challenge完了を待つ。
+  - by: auto
+  - prediction: none
+
 ## Plan review (codex-plan-review, session plan-npm-cli-0-3-0-release)
 
 - Q(review/package-lock-boundary): default `npm pack` が checkout に tarball を書き、
@@ -122,3 +137,43 @@ Requirement source: ユーザー対話 2026-08-03。「では最新版までを�
 - ラウンド 1・指摘計 0 件で APPROVED（confidence 0.98。metadata diff、immutable 0.2.6、
   owner/auth、canonical lock、inventory/leak、one-shot publish境界を確認。final two-pack、push、
   auth、publish、external acceptanceはapproved planどおりpost-commitで実行）
+
+## Recovery plan review (codex-plan-review, same session plan-npm-cli-0-3-0-release)
+
+- Q(review/stale-slice-summary): current work-item要約だけが correction後も `0.3.0` publishを
+  主張していた → 受理。current要約を `0.3.1` recoveryと未発行 `0.3.0` の永久no-retryへ
+  更新し、historical trace/review entryは変更しない(revise, class: C)。
+- ラウンド 2・指摘計 1 件で APPROVED（confidence 0.99。live-TTY single-invocation webauth、
+  canonical lock、exact artifact、owner allowlist、no-retry/no-overwrite境界を確認）
+
+## 2026-08-03 npm CLI 0.3.1 recovery [impl]（tier: heavy）
+
+- ラウンド 1・指摘計 0 件で APPROVED（confidence 0.95。recovery delta、direction correction、
+  npm 11.17.0 live-TTY webauth premise、0.3.0/0.3.1 symmetric no-retryを確認。browser challengeと
+  publicationはapproved planどおりpost-commitの単一invocationで実行）
+
+## Recovery impl review (codex-impl-review, same session impl-npm-cli-0-3-0-release)
+
+- ラウンド 1・指摘計 0 件で APPROVED（confidence 0.99。manifest/lockの0.3.1整合、historical
+  0.3.0 evidence、high-risk correction、live-TTY webauth、owner/source/digest/lock境界、immutable
+  0.2.6、symmetric no-retryを確認）
+
+
+```json
+{
+  "direction_correction_v1": {
+    "correction_id": "f83b3da5-bc65-4293-8b2a-5318e9884418",
+    "related_direction_event_id": "61ad5053-ca8b-4128-ac4e-6491793d6b7a",
+    "occurred_at": "2026-08-03T15:00:35.201Z",
+    "source": "author-runtime",
+    "missed_families": [
+      "external-reality",
+      "process",
+      "time-scope"
+    ],
+    "summary": "The one allowed 0.3.0 publish attempt failed before issuance because npm required a write-time web authentication challenge. Registry reconciliation confirms 0.3.0 is absent; the approved no-retry rule therefore requires a reviewed 0.3.1 recovery release.",
+    "effect": "premise-corrected",
+    "high_risk": true
+  }
+}
+```

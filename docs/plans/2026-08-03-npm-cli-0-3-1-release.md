@@ -6,12 +6,12 @@ risk_tier: heavy
 last_updated: 2026-08-03
 ---
 
-# `laplacebench` 0.3.0 npm release
+# `laplacebench` 0.3.1 npm release
 
 ## Direction Brief
 
 1. **Purpose** — npm の `laplacebench@latest` を、公開済み `0.2.6` の source commit
-   `b45f9b8` から 35 commits 進んだ current `main` の CLI と一致させる。clone していない
+   `b45f9b8` から進んだ current `main` の CLI と一致させる。clone していない
    利用者が、既に repository で提供・検証されている clean-room 実行、無制限を既定とする
    token policy、Harness Lab の各 harness と publication artifact を npm から利用できる状態にする。
 
@@ -20,7 +20,10 @@ last_updated: 2026-08-03
    root `package-lock.json` は workspace metadata を追随する。npm の `gitHead` と tarball digest
    が公開物を source commit に結ぶ。凍結ルールセットは引き続き `laplace-engine@1.0.0` が所有する。
 
-3. **Lifecycle and scope** — version metadata を `0.3.0` に更新し、current CLI 全体を full
+3. **Lifecycle and scope** — 未発行 `0.3.0` の一回だけの publish command は npm の
+   write-time web authentication 要求で既知の failure となり、registry reconciliation でも
+   version absent を確認した。no-retry policy に従って同versionを再利用せず、recovery version
+   metadata を `0.3.1` に更新し、current CLI 全体を full
    validation、exact package inventory、secret/source-map scan、clean tarball install/smoke に
    通す。review 済み release commit を GitHub `main` へ先に push し、同じ clean commit から
    npm publish を一度だけ行い、registry と外部 `npx` を検証して完了する。npm auth は不可逆
@@ -32,17 +35,20 @@ last_updated: 2026-08-03
    version commit/push 済み・npm 未公開になる一時状態は回復可能として許容するが、dirty
    tree publish、同じ version の再試行、既定挙動変更を patch として静かに配ることは許容しない。
 
-5. **Adopted direction** — `0.2.7` ではなく `0.3.0` とする。公開 `0.2.6` では LLM 対局に
+5. **Adopted direction** — 当初の minor signal `0.3.0` を同じcommandで再試行せず、recovery
+   patch `0.3.1` を最初の発行済み `0.3.x` とする。公開 `0.2.6` では LLM 対局に
    250,000 output-token の既定 cap があり subscription CLI は ambient 条件だったが、current
    `main` は cap を明示 flag 時だけにし、clean-room + canary preflight を既定にする。同じ
    command の費用・終了条件・実行環境が変わるため、`^0.2.x` 利用者へ自動配布されない minor
-   version が正直な契約である。engine は再公開せず、Git tag、release automation、互換 shim
+   version が正直な契約であり、`0.3.1` も `^0.2.x` 利用者へ自動配布されない。engine は
+   再公開せず、Git tag、release automation、互換 shim
    は追加しない。clean pushed commit から二回 byte-identical に pack し、その入力から一回だけ
    directory publish して `gitHead` を保持する。
 
 6. **What disappears / is not protected** — npm `latest` が古い `0.2.6` のままの状態、既定契約
    変更を patch として扱う案、dirty-tree publish の手軽さを捨てる。`0.2.6` の上書き/unpublish、
-   `0.2.x` consumer への自動 upgrade、engine 再公開、過去 run/catalog の書換え、Git tag、
+   `0.2.x` consumer への自動 upgrade、未発行 `0.3.0` の再利用、engine 再公開、過去
+   run/catalog の書換え、Git tag、
    一般化した release automation は本スライスで守らない。
 
 ## Tier: heavy
@@ -61,11 +67,11 @@ Requirement source: 2026-08-03 のユーザー指示「では最新版までを�
 |---|---|
 | npm `latest` | `laplacebench@0.2.6`, modified `2026-07-28T03:15:44.977Z` |
 | npm `gitHead` | `b45f9b8708166ffdcfbab0a8dfc603619ae9653c` |
-| current clean `main` | `f2a51d1c609edae64569ac6d877e40bfafed0a58`, `origin/main` と一致 |
-| source distance | npm `gitHead` から current `main` まで 35 commits |
-| version availability | registry に `laplacebench@0.3.0` は存在しない（E404） |
-| local CLI manifest / lock | どちらも `0.2.6` |
-| npm auth | `npm whoami` は E401。公開直前にユーザー認証が必要 |
+| current clean `main` | `f00e07afc6d7262119ba326b5c53c30e2b6d91f3`, `origin/main` と一致 |
+| source distance | npm `gitHead` から current `main` まで 36 commits（最後はreview済み0.3.0 metadata commit） |
+| version availability | registry に `laplacebench@0.3.0` / `0.3.1` は存在しない（両方E404） |
+| local CLI manifest / lock | どちらも未発行 `0.3.0`。次の実装で `0.3.1` へ進める |
+| npm auth | browser login後の `npm whoami` は `ykei`。write時は別のweb authentication challengeが必要 |
 | npm authorized owner | registry の `npm owner ls` / `maintainers` は `ykei <k.yamamoto@cordmark.co.jp>` の1件 |
 | toolchain | Node `v26.5.0`, npm `11.17.0` |
 | engine delta | published CLI source commit から `packages/engine/**` の変更なし |
@@ -85,14 +91,15 @@ Search/evidence: `git diff b45f9b8..HEAD` と commit log を `packages/cli/src/c
 | `packages/cli/src/runner.ts` / replay builders | canonical run/replay contract | isolation・context・note suppression 等の記録を追加。既存 run を書換えない |
 | `README.md`, `packages/cli/README.md`, `packages/cli/FINDINGS.md` | canonical user/package docs | current command、harness、既定条件を説明済み。packed docs と help の整合を再確認 |
 | prior `laplacebench@0.2.6` | immutable issued artifact | 上書き・unpublish・内容変更なし |
-| `laplacebench@0.3.0` | new external contract | 上記 contract change を minor signal として発行し `latest` にする |
+| attempted `laplacebench@0.3.0` | unissued reserved identifier | EOTP response後のregistry reconciliationでabsent。同versionを再試行しない |
+| `laplacebench@0.3.1` | new external contract | 上記 contract change を minor signal として発行し `latest` にする |
 
 ## Source-of-truth and package inventory
 
 | Path / external surface | Classification | Release responsibility |
 |---|---|---|
-| `packages/cli/package.json` | canonical metadata | version `0.3.0` と package/bin/files/dependency contract |
-| `package-lock.json#packages["packages/cli"]` | derived metadata | CLI workspace version を `0.3.0` と一致 |
+| `packages/cli/package.json` | canonical metadata | version `0.3.1` と package/bin/files/dependency contract |
+| `package-lock.json#packages["packages/cli"]` | derived metadata | CLI workspace version を `0.3.1` と一致 |
 | `packages/cli/bin/laplacebench.js` | canonical entrypoint | packed build を起動 |
 | `packages/cli/dist/**` | generated payload | clean build の JS/map。map は `sourcesContent` と absolute/host path を持たない |
 | `packages/cli/{bridge,rulebook,skills}/**` | intentional payload | product CPU bridge、frozen rulebook、learning skill。全 entry を分類・監査 |
@@ -100,17 +107,18 @@ Search/evidence: `git diff b45f9b8..HEAD` と commit log を `packages/cli/src/c
 | packed `package.json`, `LICENSE` | generated/auto-included payload | source manifest と root MIT license に一致 |
 | `packages/engine/package.json` | frozen ruleset owner | `1.0.0` のまま非公開、runtime 無変更 |
 | GitHub `origin/main` | source identity owner | release metadata commit を npm より先に push |
-| npm `laplacebench@latest` | external distribution owner | publish 後 `0.3.0`、expected `gitHead`/digest と一致 |
+| npm `laplacebench@latest` | external distribution owner | publish 後 `0.3.1`、expected `gitHead`/digest と一致 |
 | Git tags / release automation | explicit absence | 新設しない |
 
 ## Implementation
 
-1. `npm version 0.3.0 --workspace packages/cli --no-git-tag-version` 相当で CLI manifest と root
-   lock の workspace version だけを更新する。runtime version 定数、engine version、dependency
+1. `npm version 0.3.1 --workspace packages/cli --no-git-tag-version` 相当で未発行 `0.3.0` の
+   CLI manifest と root lock の workspace version だけを `0.3.1` へ更新する。runtime version
+   定数、engine version、dependency
    range は変えない。
 2. diff が version metadata だけであることを確認する。packaging/acceptance で実害が見つかった
    ときだけ、requirement に直接必要な最小修正と focused regression を追加し、全 gate を再実行する。
-3. `0.3.0` が registry に未発行であることを公開直前にも再確認する。
+3. `0.3.1` が registry に未発行であることを公開直前にも再確認する。
 
 ## Pre-publication verification
 
@@ -125,7 +133,7 @@ Search/evidence: `git diff b45f9b8..HEAD` と commit log を `packages/cli/src/c
 4. tarball を展開し、全 text payload を token/key、`.env`、home path、run/state/log identifiers、
    private absolute path の targeted scan に通す。binary/unreadable entry は個別分類する。
 5. clean temp directory + isolated npm cache へ exact tarball を install し、次を確認する。
-   - installed `node_modules/laplacebench/package.json` が version `0.3.0` を持つ。
+   - installed `node_modules/laplacebench/package.json` が version `0.3.1` を持つ。
    - `npx laplacebench --help` は current contract どおり exit `1` で usage を出し、その usage が
      current commands、新しい no-default-budget と clean-room help を持つ。success exit や version
      表示は要求せず、通常の `--help`/`--version` behavior追加を本releaseへ混ぜない。
@@ -134,12 +142,12 @@ Search/evidence: `git diff b45f9b8..HEAD` と commit log を `packages/cli/src/c
    - `npx laplacebench play --team-a codex-cli-reset:gpt-5.6-sol@medium --team-b random --ambient-cli-env`
      は provider を起動する前に turn-scoped ambient contract を fail-closed で拒否し、run dir を残さない。
 6. packed `package.json` の name/version/bin/files/dependencies が source manifest と一致し、version が
-   `0.3.0` であることを確認する。
+   `0.3.1` であることを確認する。
 
 ## Heavy implementation checkpoint and review
 
 `/interrogation` へ approved plan、actual diff、published-to-current contract inventory、full validation、
-tarball inventory/scan、clean install smoke、`0.3.0` 未公開、engine 非公開/無変更、dirty tree/source
+tarball inventory/scan、clean install smoke、`0.3.1` 未公開、engine 非公開/無変更、dirty tree/source
 identity/rollback 弁明を渡す。APPROVED 後、`/codex-impl-review` が version diff と release evidence を
 approved brief および immutable-issued-artifact fixed check に照合する。両方の APPROVED 前に
 commit/push/publish しない。
@@ -169,17 +177,22 @@ commit/push/publish しない。
 1. registry の `npm owner ls laplacebench` と `npm view laplacebench maintainers` を再取得し、
    authorized publisher allowlist が事前観測どおり npm account `ykei` の1件であることを確認する。
    変化があれば公開を止めて人間へエスカレーションする。ユーザーに npm 認証を依頼し、
-   `npm whoami` が厳密に `ykei` と一致するまで publish しない。token、email、auth出力を
+   `npm whoami` が厳密に `ykei` と一致するまで publish しない。ただし `whoami` はwrite-time
+   2FAを代替しない。token、email、auth出力を
    repository/artifact に保存しない。
-2. registry を再読し、`laplacebench@0.3.0` が未発行、current `latest` が expected predecessor で
+2. registry を再読し、`laplacebench@0.3.1` が未発行、current `latest` が expected predecessor で
    あることを確認する。
 3. canonical product-CPU lock を final pack から継続保持し、tracked tree、allowlisted lock sentinel、
    final payload digest を再確認した同じ clean release commit から
-   `npm publish --workspace packages/cli --access public --ignore-scripts` を一度だけ実行する。
+   `npm publish --workspace packages/cli --access public --ignore-scripts` を **stdin/stdoutともlive TTYの
+   直接command（pipe、redirect、`tee`なし）** として一度だけ実行する。npm 11.17.0 の
+   `otplease` は両streamがTTYのときだけEOTPの `authUrl` / `doneUrl` を `webAuthOpener` で開き、
+   ユーザーのbrowser認証完了後に同じcommand内部で取得したOTPを同じtarball publishへ渡す。
+   画面を開いた後はcommandをcancel/restartせず、そのinvocation自身の完了を待つ。
    `--ignore-scripts` で npm lifecycle lock は起動しないため、手動 lock の継続保持が必須である。
    directory publish は npm が `gitHead` を設定するため維持する。publish結果とregistry観測後に
    `trap` で lock をreleaseし、完全にcleanなworking treeへ戻ったことを確認する。
-4. success/failure/timeout/connection loss の別を問わず同じ `0.3.0` publish を再試行しない。不明時は
+4. success/failure/timeout/connection loss の別を問わず同じ `0.3.1` publish を再試行しない。不明時は
    registry を観測して external-state reconciliation として停止する。回復 publish は別の reviewed
    version だけを使う。
 5. registry の `latest`, `version`, `gitHead`, tarball URL, integrity, shasum を取得し、release commit
@@ -189,7 +202,7 @@ commit/push/publish しない。
 
 repository/workspace/既存 cache の影響がない temp directory + isolated cache で:
 
-1. public install の `node_modules/laplacebench/package.json` と registry metadata が version `0.3.0`
+1. public install の `node_modules/laplacebench/package.json` と registry metadata が version `0.3.1`
    を示す。`npx --yes laplacebench@latest --help` は既存contractどおり exit `1` で current usageを
    表示することを明示的にassertする。
 2. baseline 1 game と `verify` を public tarball から再実行する。
@@ -201,13 +214,15 @@ repository/workspace/既存 cache の影響がない temp directory + isolated c
 - publish前の failureは修正し全 gate を再実行する。version commit/push後にauth blockedならその状態を
   正直に残す。
 - publish command応答不明時は同versionを再試行せず、registry観測結果と不確実性を報告する。
-- publish後のdefectは `0.3.0` を上書き/unpublishしない。必要ならdeprecate理由とreplacementを示し、
+- `0.3.0` の既知EOTP failureは発行ではないが、既存planのno-retry ruleに従い永久に再利用しない。
+  `0.3.1` のlive-TTY commandもfailure/timeoutなら同versionを再試行しない。
+- publish後のdefectは `0.3.1` を上書き/unpublishしない。必要ならdeprecate理由とreplacementを示し、
   別途review済みpatchを発行する。
 - `latest` tagだけが誤っている場合も、既存の検証済みversionへのdist-tag変更を別の不可逆操作として扱う。
 
 ## Completion criteria
 
-- npm `latest` が `laplacebench@0.3.0`。
+- npm `latest` が `laplacebench@0.3.1`。
 - registry `gitHead` が GitHub `main` の clean release commit と一致。
 - registry tarball integrity/shasum が final clean tarball と byte-identical。
 - public `--help`、baseline run/verify、interactive provider prompt の外部 acceptance が成功。
