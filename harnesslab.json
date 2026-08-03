@@ -1,9 +1,9 @@
 {
   "schema": "laplace-bench-harnesslab-catalog-v1",
-  "source_sha": "f32374b0d89e47cf3d08caf2624918f493b45fac",
-  "generated_at": "2026-08-03T09:01:56.000Z",
-  "experiment_count": 9,
-  "game_count": 36,
+  "source_sha": "f2a51d1c609edae64569ac6d877e40bfafed0a58",
+  "generated_at": "2026-08-03T12:11:48.000Z",
+  "experiment_count": 11,
+  "game_count": 44,
   "experiments": [
     {
       "run": "keisuke70--harnesslab-sol56m-uncapped-persistent-vs-reset-20260802",
@@ -58,9 +58,279 @@
       "run_id": "harnesslab-sol56m-uncapped-memo-vs-reset-20260803",
       "description": "Effort baseline for the memo-reset pair: bounded memo vs turn-reset (GPT-5.6 Sol medium)",
       "plan": "docs/plans/2026-08-03-memo-reset-medium-baseline.md"
+    },
+    {
+      "run": "keisuke70--harnesslab-sol56h-uncapped-primed-vs-reset-20260803",
+      "run_id": "harnesslab-sol56h-uncapped-primed-vs-reset-20260803",
+      "description": "Operator-primer system test: memo-primed vs turn-reset (GPT-5.6 Sol high)",
+      "plan": "docs/plans/2026-08-03-memo-primed.md"
+    },
+    {
+      "run": "keisuke70--harnesslab-sol56h-uncapped-primed-vs-memo-20260803",
+      "run_id": "harnesslab-sol56h-uncapped-primed-vs-memo-20260803",
+      "description": "Pure primer effect: memo-primed vs memo-v1, identical mechanism (GPT-5.6 Sol high)",
+      "plan": "docs/plans/2026-08-03-memo-primed.md"
     }
   ],
   "matchups": [
+    {
+      "id": "codex-cli-memo-primed:gpt-5.6-sol@high vs codex-cli-memo:gpt-5.6-sol@high",
+      "left_spec": "codex-cli-memo-primed:gpt-5.6-sol@high",
+      "right_spec": "codex-cli-memo:gpt-5.6-sol@high",
+      "matchup_kind": "same-model-harness-ablation",
+      "harness_conditions": {
+        "left": {
+          "context_lifetime": "turn-scoped + bounded public memo carryover",
+          "reasoning_retention": "discarded every turn; the only carryover is a public, capped memo the model rewrites each turn",
+          "compaction": "n/a (context never grows; the memo cap is the bound)",
+          "mechanism": "fresh codex exec per turn; harness-injected memo (memo-v1, 1500-char cap) recorded per adapter call to memo/<gameId>/<team>.jsonl; plus a fixed public strategy primer (primer-v1, frozen operator-authored constant, agents/primer.ts) injected before the memo instructions on every call — identical every turn, so it is knowledge, not a carryover channel; clean-room execution required (ambient refused — the memo must be the ONLY carryover)"
+        },
+        "right": {
+          "context_lifetime": "turn-scoped + bounded public memo carryover",
+          "reasoning_retention": "discarded every turn; the only carryover is a public, capped memo the model rewrites each turn",
+          "compaction": "n/a (context never grows; the memo cap is the bound)",
+          "mechanism": "fresh codex exec per turn; harness-injected memo (memo-v1, 1500-char cap) recorded per adapter call to memo/<gameId>/<team>.jsonl; clean-room execution required (ambient refused — the memo must be the ONLY carryover)"
+        }
+      },
+      "wins_left": 4,
+      "wins_right": 0,
+      "draws": 0,
+      "games": [
+        {
+          "run": "keisuke70--harnesslab-sol56h-uncapped-primed-vs-memo-20260803",
+          "game_id": "game-000",
+          "first_side": "left",
+          "winner": "left",
+          "reason": "center",
+          "plies": 41,
+          "played_at": "2026-08-03T12:06:58.204Z",
+          "replay": "e57303651e558b78971c324e2fb1bf0c5a3d0e39dd744a20bf31236b8ea51390",
+          "per_side": {
+            "left": {
+              "output_tokens": 68755,
+              "avg_latency_ms": 100598,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 59375,
+              "avg_latency_ms": 90313,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            }
+          }
+        },
+        {
+          "run": "keisuke70--harnesslab-sol56h-uncapped-primed-vs-memo-20260803",
+          "game_id": "game-001",
+          "first_side": "right",
+          "winner": "left",
+          "reason": "center",
+          "plies": 16,
+          "played_at": "2026-08-03T11:23:01.330Z",
+          "replay": "e47ffc0808f61c9803650e1bec40b32092a4aa3bba98624b1bdb5201da2f1338",
+          "per_side": {
+            "left": {
+              "output_tokens": 18413,
+              "avg_latency_ms": 75477,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 21086,
+              "avg_latency_ms": 84783,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            }
+          }
+        },
+        {
+          "run": "keisuke70--harnesslab-sol56h-uncapped-primed-vs-memo-20260803",
+          "game_id": "game-002",
+          "first_side": "left",
+          "winner": "left",
+          "reason": "elimination",
+          "plies": 35,
+          "played_at": "2026-08-03T11:59:23.846Z",
+          "replay": "62340167100f095f3103c344131dca92490c105f7213e95e238db60ee272c26e",
+          "per_side": {
+            "left": {
+              "output_tokens": 51644,
+              "avg_latency_ms": 87431,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 62964,
+              "avg_latency_ms": 111221,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            }
+          }
+        },
+        {
+          "run": "keisuke70--harnesslab-sol56h-uncapped-primed-vs-memo-20260803",
+          "game_id": "game-003",
+          "first_side": "right",
+          "winner": "left",
+          "reason": "elimination",
+          "plies": 36,
+          "played_at": "2026-08-03T12:04:29.847Z",
+          "replay": "4acc7920132910c79cf61ba69b17bbc518e5beed1ca4da12d62490cf53ba1afd",
+          "per_side": {
+            "left": {
+              "output_tokens": 53033,
+              "avg_latency_ms": 127712,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 49427,
+              "avg_latency_ms": 81762,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "codex-cli-memo-primed:gpt-5.6-sol@high vs codex-cli-reset:gpt-5.6-sol@high",
+      "left_spec": "codex-cli-memo-primed:gpt-5.6-sol@high",
+      "right_spec": "codex-cli-reset:gpt-5.6-sol@high",
+      "matchup_kind": "same-model-harness-ablation",
+      "harness_conditions": {
+        "left": {
+          "context_lifetime": "turn-scoped + bounded public memo carryover",
+          "reasoning_retention": "discarded every turn; the only carryover is a public, capped memo the model rewrites each turn",
+          "compaction": "n/a (context never grows; the memo cap is the bound)",
+          "mechanism": "fresh codex exec per turn; harness-injected memo (memo-v1, 1500-char cap) recorded per adapter call to memo/<gameId>/<team>.jsonl; plus a fixed public strategy primer (primer-v1, frozen operator-authored constant, agents/primer.ts) injected before the memo instructions on every call — identical every turn, so it is knowledge, not a carryover channel; clean-room execution required (ambient refused — the memo must be the ONLY carryover)"
+        },
+        "right": {
+          "context_lifetime": "turn-reset (fresh context every turn)",
+          "reasoning_retention": "discarded every turn (nothing carries over)",
+          "compaction": "n/a (no long-lived context to compact)",
+          "mechanism": "fresh codex exec per turn; rulebook + full-state observation resent every turn; clean-room execution required (ambient refused — a reused cwd with tools would be an undeclared carryover channel)"
+        }
+      },
+      "wins_left": 3,
+      "wins_right": 1,
+      "draws": 0,
+      "games": [
+        {
+          "run": "keisuke70--harnesslab-sol56h-uncapped-primed-vs-reset-20260803",
+          "game_id": "game-000",
+          "first_side": "left",
+          "winner": "left",
+          "reason": "elimination",
+          "plies": 39,
+          "played_at": "2026-08-03T09:57:57.616Z",
+          "replay": "e783d8cd50582c10999847e95b259d45363739e13f4b0a62f4258b37768300e6",
+          "per_side": {
+            "left": {
+              "output_tokens": 59190,
+              "avg_latency_ms": 94814,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 60701,
+              "avg_latency_ms": 98075,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            }
+          }
+        },
+        {
+          "run": "keisuke70--harnesslab-sol56h-uncapped-primed-vs-reset-20260803",
+          "game_id": "game-001",
+          "first_side": "right",
+          "winner": "right",
+          "reason": "center",
+          "plies": 23,
+          "played_at": "2026-08-03T09:41:14.841Z",
+          "replay": "7fa7371e8b1120b84fb55eabbcab54c95f045e3fdc0d2eb3b1ac14b2189443ec",
+          "per_side": {
+            "left": {
+              "output_tokens": 52466,
+              "avg_latency_ms": 178385,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 21457,
+              "avg_latency_ms": 66228,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            }
+          }
+        },
+        {
+          "run": "keisuke70--harnesslab-sol56h-uncapped-primed-vs-reset-20260803",
+          "game_id": "game-002",
+          "first_side": "left",
+          "winner": "left",
+          "reason": "elimination",
+          "plies": 79,
+          "played_at": "2026-08-03T11:00:11.491Z",
+          "replay": "362d936b1ee86885e65aa341aac8752d730283222dfd3dc96fa9b345125c4aad",
+          "per_side": {
+            "left": {
+              "output_tokens": 156543,
+              "avg_latency_ms": 118295,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 0,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 90103,
+              "avg_latency_ms": 69041,
+              "illegal_rate_per_turn": 0.051,
+              "failed_turns": 1,
+              "compaction": null
+            }
+          }
+        },
+        {
+          "run": "keisuke70--harnesslab-sol56h-uncapped-primed-vs-reset-20260803",
+          "game_id": "game-003",
+          "first_side": "right",
+          "winner": "left",
+          "reason": "center",
+          "plies": 36,
+          "played_at": "2026-08-03T10:17:03.638Z",
+          "replay": "81dbe73743b0a61b384c3a1e6c2a979aa7236c67832f4eb6457d01999a0565b8",
+          "per_side": {
+            "left": {
+              "output_tokens": 50117,
+              "avg_latency_ms": 93376,
+              "illegal_rate_per_turn": 0.111,
+              "failed_turns": 1,
+              "compaction": null
+            },
+            "right": {
+              "output_tokens": 61662,
+              "avg_latency_ms": 173976,
+              "illegal_rate_per_turn": 0,
+              "failed_turns": 1,
+              "compaction": null
+            }
+          }
+        }
+      ]
+    },
     {
       "id": "codex-cli-memo:gpt-5.6-sol@high vs codex-cli-reset:gpt-5.6-sol@high",
       "left_spec": "codex-cli-memo:gpt-5.6-sol@high",
