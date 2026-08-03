@@ -2,6 +2,58 @@
 
 Running log of what the discrimination pilot has told us. Newest first.
 
+## Runs 22-23 — the operator primer (memo-primed): 3-1 over reset, and a clean 4-0 over memo-v1 with both off-seat games — the first content intervention that wins
+
+`runs/harnesslab-sol56h-uncapped-primed-vs-reset-20260803/` and
+`…-primed-vs-memo-20260803/` (both verified 4/4, in the ledger and on
+the accumulating surface). Pre-registered serial pair in
+`docs/plans/2026-08-03-memo-primed.md`: `codex-cli-memo-primed` is
+memo-v1 plus one frozen, operator-authored strategy primer (primer-v1,
+1,986 chars, full text in the plan) injected before the memo
+instructions every turn — the differential test pins that the primer is
+the arm's only delta. The pair was labeled in advance: primed-vs-reset
+is the **system test** of the user's proposition ("a proper harness
+beats reset"); primed-vs-memo is the **pure primer effect** (identical
+mechanism, the primer is the only difference).
+
+**Run 22, primed vs reset at high: primed 3-1**, with one off-seat
+center win (36 plies). The loss was reset's first-seat 23-ply center
+race, uncontested (0-0 center captures) — the one game where nothing
+the primer teaches got to matter. Decision reasons 2/4 center, 2/4
+elimination; primed took every contested center-capture exchange
+(5-3, 5-3, 3-0). Reliability near-parity (primed 0.022 illegal/turn +
+1 failed turn, reset 0.023 + 2). The cost column is the honest
+counterweight: primed spent 3,577 output tokens/move to reset's 2,658
+(1.35x) at 115s/move — the primer does not buy back its own reading
+cost here, and the average game ran long (44 plies, one 79-ply grind).
+
+**Run 23, primed vs memo-v1 at high — the pure effect: primed 4-0,
+including BOTH off-seat games** (16-ply center, 36-ply elimination).
+Both arms fully clean (zero illegal, zero failed turns, all 128 memo
+transitions `updated`). Output tokens/move is roughly flat (primed
+2,951 vs memo 3,061) — but the primer rides on the input side, and the
+totals show it: ~17,399 total tokens/turn for primed vs ~17,051 for
+memo (fresh ~12,098 vs ~11,903). The output-side parity does NOT
+offset the primer's input, so the plan's net-light criterion was not
+met — the primer did not demonstrate net token-cost payback; what it
+demonstrated is a clean W-L flip at a small net-cost premium. Primed
+won every center-capture contest (3-1, 3-0, 4-2, 6-0). Whatever Run
+22's larger output inflation was, the within-mechanism comparison does
+not reproduce it.
+
+Read against Run 17 (guided vs v1 at medium: the content instruction
+LOST 1-3), this is the first content-level intervention in the lab
+that wins on W-L — at high effort, in the same direction as the Run
+20/21 capability story: medium could not exploit
+carried content, high can, and high with *better* content wins more.
+Ranking claims stay bounded: n=4 per pairing, and 22/23 are different
+opponents, so "primed > memo > reset" is a reading across pairings,
+not a measured round-robin. What disappears next per the plan's
+absences: no self-distilled primer yet (the named follow-up: can the
+model's own rulebook distillation match the operator's?), no medium
+primed run, no template change. **Compaction: still zero** (longest
+game 79 plies).
+
 ## Run 21 — the missing baseline: memo vs reset at medium is 2-2 on a pure seat split — directional evidence consistent with effort unlocking the carryover
 
 `runs/harnesslab-sol56m-uncapped-memo-vs-reset-20260803/` (verified 4/4,

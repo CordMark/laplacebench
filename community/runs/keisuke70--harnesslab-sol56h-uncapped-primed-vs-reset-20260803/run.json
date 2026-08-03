@@ -1,0 +1,151 @@
+{
+  "run_id": "harnesslab-sol56h-uncapped-primed-vs-reset-20260803",
+  "ruleset": "laplace-8x8-v1",
+  "prompt_rev": "p3-move-note",
+  "team_a": "codex-cli-memo-primed:gpt-5.6-sol@high",
+  "team_b": "codex-cli-reset:gpt-5.6-sol@high",
+  "games": 4,
+  "swap": true,
+  "seed": 42,
+  "max_plies": 100,
+  "turn_timeout_ms": 1200000,
+  "output_token_budget_per_team_per_game": null,
+  "output_token_budget_metric": "in-game output_tokens_total (reasoning inclusive)",
+  "sampling": "provider-default (no temperature control on current models)",
+  "usage_schema": "laplace-model-usage-v1",
+  "usage_scope": "in-game act calls, including repair attempts; excludes post-game learning",
+  "cli_versions": {
+    "claude": null,
+    "codex": "codex-cli 0.144.5"
+  },
+  "isolation": {
+    "schema": "laplace-isolation-v1",
+    "mode": "clean-room",
+    "revision": "clean-room-v1",
+    "providers": {
+      "codex": {
+        "cli_version": "codex-cli 0.144.5",
+        "mechanism": {
+          "config_home": "isolated dir carrying only auth material (symlink) — claude adds minimal onboarding state",
+          "os_home": "isolated empty dir",
+          "cwd": "per-agent empty scratch dir"
+        },
+        "flags": [
+          "--ignore-user-config",
+          "--ignore-rules",
+          "-c",
+          "sandbox_mode=\"read-only\"",
+          "--disable",
+          "shell_tool",
+          "--disable",
+          "hooks",
+          "--disable",
+          "plugins",
+          "--disable",
+          "browser_use",
+          "--disable",
+          "computer_use",
+          "--disable",
+          "in_app_browser",
+          "--disable",
+          "image_generation",
+          "--disable",
+          "multi_agent"
+        ],
+        "allowed_env_keys": [
+          "PATH",
+          "SHELL",
+          "TERM",
+          "LANG",
+          "LC_ALL",
+          "LC_CTYPE",
+          "TMPDIR",
+          "USER",
+          "LOGNAME"
+        ],
+        "surfaces": {
+          "instructions": "canary-verified",
+          "config_source": "canary-verified",
+          "env_overrides": "canary-verified",
+          "home_artifacts": "artifact-absent",
+          "mcp": "flag-suppressed",
+          "shell_tools": "canary-verified",
+          "network_web_search": "feature-state-recorded",
+          "managed_policy": "checked-absent"
+        },
+        "canary": {
+          "model": "codex-cli-default",
+          "effort": "low",
+          "outcomes": {
+            "instructions_positive": "detected",
+            "instructions_negative": "clean",
+            "config_positive": "config-read-failed-as-expected",
+            "config_negative": "config-suppressed",
+            "shell_positive": "shell-available",
+            "shell_negative": "shell-removed"
+          },
+          "enabledFeatures": [
+            "apps",
+            "auth_elicitation",
+            "browser_use",
+            "browser_use_external",
+            "browser_use_full_cdp_access",
+            "code_mode_host",
+            "collaboration_modes",
+            "computer_use",
+            "enable_request_compression",
+            "fast_mode",
+            "goals",
+            "guardian_approval",
+            "hooks",
+            "image_generation",
+            "in_app_browser",
+            "mentions_v2",
+            "multi_agent",
+            "personality",
+            "plugin_sharing",
+            "plugins",
+            "remote_compaction_v2",
+            "remote_plugin",
+            "resize_all_images",
+            "shell_snapshot",
+            "shell_tool",
+            "skill_mcp_dependency_install",
+            "sqlite",
+            "steer",
+            "terminal_resize_reflow",
+            "tool_call_mcp_elicitation",
+            "tool_search_always_defer_mcp_tools",
+            "tool_suggest",
+            "tui_app_server",
+            "unified_exec",
+            "workspace_dependencies"
+          ]
+        },
+        "managed_policy_paths_checked": [
+          "/Library/Application Support/ClaudeCode/managed-settings.json",
+          "/etc/claude-code/managed-settings.json"
+        ],
+        "opaque_condition_note": "provider may change CLI behavior under an unchanged version id; the recorded CLI name+version is the provider-harness condition unit and is otherwise opaque"
+      }
+    }
+  },
+  "matchup_kind": "same-model-harness-ablation",
+  "harness_conditions": {
+    "team_a": {
+      "context_lifetime": "turn-scoped + bounded public memo carryover",
+      "reasoning_retention": "discarded every turn; the only carryover is a public, capped memo the model rewrites each turn",
+      "compaction": "n/a (context never grows; the memo cap is the bound)",
+      "mechanism": "fresh codex exec per turn; harness-injected memo (memo-v1, 1500-char cap) recorded per adapter call to memo/<gameId>/<team>.jsonl; plus a fixed public strategy primer (primer-v1, frozen operator-authored constant, agents/primer.ts) injected before the memo instructions on every call — identical every turn, so it is knowledge, not a carryover channel; clean-room execution required (ambient refused — the memo must be the ONLY carryover)"
+    },
+    "team_b": {
+      "context_lifetime": "turn-reset (fresh context every turn)",
+      "reasoning_retention": "discarded every turn (nothing carries over)",
+      "compaction": "n/a (no long-lived context to compact)",
+      "mechanism": "fresh codex exec per turn; rulebook + full-state observation resent every turn; clean-room execution required (ambient refused — a reused cwd with tools would be an undeclared carryover channel)"
+    }
+  },
+  "product_cpu": null,
+  "execution": "parallel",
+  "started_at": "2026-08-03T08:55:17.805Z"
+}

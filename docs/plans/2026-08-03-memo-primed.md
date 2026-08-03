@@ -1,5 +1,5 @@
 ---
-status: approved
+status: implemented
 direction: direction-memo-primed
 owner: bench
 risk_tier: standard

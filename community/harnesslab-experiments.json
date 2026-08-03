@@ -45,6 +45,16 @@
       "run": "keisuke70--harnesslab-sol56m-uncapped-memo-vs-reset-20260803",
       "description": "Effort baseline for the memo-reset pair: bounded memo vs turn-reset (GPT-5.6 Sol medium)",
       "plan": "docs/plans/2026-08-03-memo-reset-medium-baseline.md"
+    },
+    {
+      "run": "keisuke70--harnesslab-sol56h-uncapped-primed-vs-reset-20260803",
+      "description": "Operator-primer system test: memo-primed vs turn-reset (GPT-5.6 Sol high)",
+      "plan": "docs/plans/2026-08-03-memo-primed.md"
+    },
+    {
+      "run": "keisuke70--harnesslab-sol56h-uncapped-primed-vs-memo-20260803",
+      "description": "Pure primer effect: memo-primed vs memo-v1, identical mechanism (GPT-5.6 Sol high)",
+      "plan": "docs/plans/2026-08-03-memo-primed.md"
     }
   ]
 }

@@ -146,3 +146,37 @@ preflight で codex positive canary 1回死亡(canary 指示未注入)→ fail-c
 拒否・記録ゼロ → 同一 run-id で1度だけ再試行(Run 16 と同じ既知 flake 処置)。
 再試行は preflight 合格・完走(horizon_draw、4 plies)。spec 受理・run.json
 harness_conditions に primer-v1 mechanism 宣言・memo 遷移 2/2 updated を確認。
+
+## 実験実行記録 (Run 22/23)
+
+- Run 22 `harnesslab-sol56h-uncapped-primed-vs-reset-20260803`(システム比較・
+  先行): preflight 一発合格・完走・verify 4/4。**primed 3-1**(後手 center
+  36手勝ち含む。敗局は先手 reset の23手 center 快走 = center 捕獲 0-0 の
+  無抵抗レース)。center 決着 2/4。コスト列は逆風: primed 3,577 vs reset
+  2,658 out tok/move(1.35x)・平均44手(79手の長期戦含む)。
+- Run 23 `harnesslab-sol56h-uncapped-primed-vs-memo-20260803`(純効果・後続):
+  preflight 一発合格・完走・verify 4/4。**primed 4-0・後手2勝**・両腕
+  illegal/failed 全ゼロ・memo 遷移 128/128 updated・コスト同等(2,951 vs
+  3,061 — primed 側がわずかに安い)。center 捕獲コンテスト全勝。
+- 両 run とも起動前に summary の run_dir を相対に正規化して収載(Run 21 の
+  レビュー裁定の慣行に従う)。curated 10-11件目。arena golden 同一コミット
+  再採取(8255620c…、構成的検証: 旧台帳→旧 golden バイト再現・公開局増ゼロ・
+  counts 18->20 runs / 63->71 games)。
+- FINDINGS Runs 22-23 節: 「primed > memo > reset は pairing 横断の読みで
+  round-robin 実測ではない」を明記。Run 17(guided 逆効果)との対比で
+  「内容介入が初めてペイした」+ Run 20/21 の能力物語と同方向。
+
+## Follow-up review (impl-memo-primed 続き・Run 22/23 landing)
+
+R1 NEEDS_CHANGES (0.98): 台帳・curated・条件宣言・相対 run_dir・全数値一致は
+認定の上で —
+
+- Q(review/net-cost-overclaim) major — 「pays for itself / at equal cost」が
+  出力列の平坦さを純コスト主張へ拡大(総トークン/turn は primed 17,399 vs
+  17,051、fresh 12,098 vs 11,903 で primer 入力分は相殺されていない = プランの
+  net-light 基準未達)。裁定: accept。修正: 見出しを「wins」へ、本文に
+  総/fresh トークンの実測と「純コスト回収は未実証・小さな純コスト増での
+  W-L 反転」を明記。
+
+R2: 解消確認 → APPROVED (0.99)。
+- (Run 22/23 landing)ラウンド 2・指摘計 1 件で APPROVED(confidence 0.99)
