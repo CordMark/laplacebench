@@ -40,6 +40,11 @@
       "run": "keisuke70--harnesslab-sol56h-uncapped-memo-vs-reset-20260803",
       "description": "High-capability turn-scoped probe: bounded memo vs turn-reset, first direct pairing (GPT-5.6 Sol high)",
       "plan": "docs/plans/2026-08-03-high-turnscoped-vs-reset.md"
+    },
+    {
+      "run": "keisuke70--harnesslab-sol56m-uncapped-memo-vs-reset-20260803",
+      "description": "Effort baseline for the memo-reset pair: bounded memo vs turn-reset (GPT-5.6 Sol medium)",
+      "plan": "docs/plans/2026-08-03-memo-reset-medium-baseline.md"
     }
   ]
 }

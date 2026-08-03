@@ -123,15 +123,15 @@ test("current ledger publishes deterministic content-addressed public games", ()
  * under community/runs legitimately changes, re-capture this value in the same
  * commit and say so — never "fix" it to make an unexplained diff go away.
  */
-// Re-captured 2026-08-03 in the same commit that admitted Run 19/20 (the
-// turn-scoped high-effort pair) into community/runs — a legitimate ledger
-// change per the rule above. Constructively verified: the ledger MINUS the two
-// new runs reproduces the previous golden bc5aa0e3… byte-for-byte (builder
-// unchanged); no new public games (memo/notes/reset arms are not
-// public-matchup eligible); only the verified counts move (runs 15->17,
-// games 51->59, public stays 11).
+// Re-captured 2026-08-03 in the same commit that admitted Run 21 (the
+// memo-reset medium baseline) into community/runs — a legitimate ledger
+// change per the rule above. Constructively verified: the ledger MINUS the
+// new run reproduces the previous golden 4419d13b… byte-for-byte (builder
+// unchanged); no new public games (memo/reset arms are not public-matchup
+// eligible); only the verified counts move (runs 17->18, games 59->63,
+// public stays 11).
 const ARENA_GOLDEN_SHA256 =
-  "4419d13b05c5f7149fcc5572228e44adc1d4ac4bbf2dd10b3c7d23db59dd5956";
+  "4b3f94bf70daf801d3431c7c43dddde0e0414d4d03d324d357f3c825ca366bad";
 
 test("arena.json bytes stay identical to the pre-harnesslab implementation", () => {
   const artifacts = buildArenaArtifacts(RUNS, SHA, GENERATED);

@@ -2,6 +2,40 @@
 
 Running log of what the discrimination pilot has told us. Newest first.
 
+## Run 21 — the missing baseline: memo vs reset at medium is 2-2 on a pure seat split — directional evidence consistent with effort unlocking the carryover
+
+`runs/harnesslab-sol56m-uncapped-memo-vs-reset-20260803/` (verified 4/4,
+in the ledger and on the accumulating surface). Pre-registered in
+`docs/plans/2026-08-03-memo-reset-medium-baseline.md` to close the limit
+Run 20 named explicitly: memo-vs-reset had no medium baseline, so "high
+effort unlocked it" was an inference across the notes pair.
+
+**Result: 2-2, all four games to the first seat** (the pre-committed
+reading: no W-L signal). Decision reasons split 2/4 center, 2/4
+elimination; winners took the center-capture contest in three of the
+four games. The same pair that at high effort produced memo's 4-0 with
+two off-seat eliminations produces, at medium, exactly the seat-split
+texture of every other medium uncapped pair. The within-pair effort
+comparison now reads: **medium 2-2 (seat) → high 4-0 (two off-seat
+wins)** — n=4 each, but the direction matches the capability
+hypothesis, and it is no longer resting on a cross-pair analogy.
+
+The reliability column tells the same story from another angle. At
+medium the carryover arm takes the blemishes: memo 0.088 illegal/turn
+and TWO fully failed turns (reset: zeros) — echoing Run 12-14's
+notes-side illegals at medium. At high the roles were exactly reversed
+(memo clean, reset 0.038 + one failed turn). Format compliance is not
+the issue: all 60 memo transitions across the run are `updated`, no
+omissions, no over-cap discards. Medium-effort Sol writes the memo
+reliably — it plays worse *around* it. Cost is memo 1,482 vs reset
+1,283 output tokens/move (~1.16x), clock 51s vs 48s/move.
+
+Honest limits: n=4 per arm per rule; and effort is the only varied
+condition but these are different games (different lengths, different
+tactical paths), so "unlocked" stays a directional reading, not a
+measured per-position effect. **Compaction: zero** (longest game 39
+plies).
+
 ## Runs 19-20 — turn-scoped memory vs reset at high effort: the bounded memo sweeps 4-0 with two off-seat wins — the first W-L break of reset by a designed carryover
 
 `runs/harnesslab-sol56h-uncapped-notes-vs-reset-20260803/` and
