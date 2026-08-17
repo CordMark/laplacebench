@@ -24,7 +24,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/keisuke70/laplacebench.git",
+    "url": "git+https://github.com/CordMark/laplacebench.git",
     "directory": "packages/engine"
   },
   "devDependencies": {

@@ -127,6 +127,14 @@ function makeRun(games: GameAgents[] = [
 const ran = (calls: Call[], cmd: string, first: string) =>
   calls.some((c) => c.cmd === cmd && c.args[0] === first);
 
+test("submission routing pins the transferred canonical repository owner", () => {
+  assert.equal(UPSTREAM_REPO, "CordMark/laplacebench");
+  assert.equal(
+    rawRunUrl("main", "alice--run-1"),
+    "https://raw.githubusercontent.com/CordMark/laplacebench/main/community/runs/alice--run-1",
+  );
+});
+
 test("a run that fails replay verification is never published", () => {
   const { deps, calls, printed } = harness({ verifyThrows: "game-000: winner mismatch" });
   const out = submitRun(makeRun(), deps);
@@ -220,11 +228,24 @@ test("no GitHub auth prints instructions and stops — it is not a crash", () =>
 });
 
 test("an account with push access publishes straight to main, no pull request", () => {
-  const { deps, calls, printed } = harness({ canPush: true, login: "keisuke70" });
+  const { deps, calls, printed, work } = harness({ canPush: true, login: "keisuke70" });
   const out = submitRun(makeRun(), deps);
   assert.equal(out.status, "submitted");
   assert.equal((out as { lane: string }).lane, "direct");
 
+  const permission = calls.find(
+    (c) => c.cmd === "gh" && c.args[0] === "api" && c.args[1]?.startsWith("repos/"),
+  );
+  assert.deepEqual(permission?.args, [
+    "api", "repos/CordMark/laplacebench", "--jq", ".permissions.push",
+  ]);
+  const clone = calls.find(
+    (c) => c.cmd === "gh" && c.args[0] === "repo" && c.args[1] === "clone",
+  );
+  assert.deepEqual(clone?.args, [
+    "repo", "clone", "CordMark/laplacebench", path.join(work, "laplacebench"),
+    "--", "--depth", "1",
+  ]);
   assert.ok(!calls.some((c) => c.cmd === "gh" && c.args[0] === "repo" && c.args[1] === "fork"));
   assert.ok(!calls.some((c) => c.cmd === "gh" && c.args[0] === "pr"));
   const push = calls.find((c) => c.cmd === "git" && c.args[0] === "push");
@@ -241,7 +262,32 @@ test("an account without push access forks and opens a pull request", () => {
   assert.equal((out as { lane: string }).lane, "pull-request");
   assert.equal((out as { url: string }).url, "https://github.com/x/y/pull/9");
 
-  assert.ok(calls.some((c) => c.cmd === "gh" && c.args[1] === "fork"));
+  const permission = calls.find(
+    (c) => c.cmd === "gh" && c.args[0] === "api" && c.args[1]?.startsWith("repos/"),
+  );
+  assert.deepEqual(permission?.args, [
+    "api", "repos/CordMark/laplacebench", "--jq", ".permissions.push",
+  ]);
+  const fork = calls.find((c) => c.cmd === "gh" && c.args[1] === "fork");
+  assert.deepEqual(fork?.args, [
+    "repo", "fork", "CordMark/laplacebench", "--clone=false", "--remote=false",
+  ]);
+  const clone = calls.find(
+    (c) => c.cmd === "gh" && c.args[0] === "repo" && c.args[1] === "clone",
+  );
+  assert.deepEqual(clone?.args, [
+    "repo", "clone", "alice/laplacebench", path.join(work, "laplacebench"),
+    "--", "--depth", "1",
+  ]);
+  const pr = calls.find((c) => c.cmd === "gh" && c.args[0] === "pr");
+  assert.deepEqual(pr?.args, [
+    "pr", "create",
+    "--repo", "CordMark/laplacebench",
+    "--head", "alice:submit/alice--20260725-a-vs-b",
+    "--title", "Add community run alice--20260725-a-vs-b",
+    "--body",
+    "`laplacebench submit` による自動提出。CI がリプレイ検証を通せば自動マージされます。",
+  ]);
   const branch = calls.find((c) => c.cmd === "git" && c.args[0] === "checkout");
   assert.match(String(branch?.args[2]), /^submit\/alice--/);
   assert.ok(printed.join("\n").includes("提出PR"));

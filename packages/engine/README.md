@@ -2,7 +2,7 @@
 
 The deterministic rules engine for **LAPLACE** — an 8x8, four-color,
 2-vs-2 strategy board game — packaged as the frozen referee for
-[LaplaceBench](https://github.com/keisuke70/laplacebench).
+[LaplaceBench](https://github.com/CordMark/laplacebench).
 
 ## Ruleset freeze
 

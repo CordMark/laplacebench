@@ -135,7 +135,7 @@ and format-failure rates per turn, forced passes, normalized provider usage,
 telemetry coverage, tokenizer-neutral application I/O bytes, and latency).
 Input totals include cached input exactly once. Claude/OpenAI raw token totals
 remain descriptive across providers; the formulas and limits are documented
-in [usage semantics](https://github.com/keisuke70/laplacebench/blob/main/docs/usage-semantics.md).
+in [usage semantics](https://github.com/CordMark/laplacebench/blob/main/docs/usage-semantics.md).
 
 Match resource controls:
 
@@ -164,7 +164,7 @@ the match wallet and match usage summary.
   sampling params (rejected by current models); deliberately no refusal
   fallbacks — failures must score against the model under test.
 - Draws: horizon cap (`--max-plies`, default 100 — the canonical
-  laplace-8x8-v1 cap, see [match conduct](https://github.com/keisuke70/laplacebench/blob/main/docs/match-conduct-laplace-8x8-v1.md)) as
+  laplace-8x8-v1 cap, see [match conduct](https://github.com/CordMark/laplacebench/blob/main/docs/match-conduct-laplace-8x8-v1.md)) as
   `horizon_draw`, and threefold repetition of the same game-relevant
   state as `repetition_draw`. Draw rates are reported separately by
   cause in summaries and in each matchup breakdown. No adjudication of
