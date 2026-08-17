@@ -18,7 +18,7 @@ import { buildPublicReplay } from "./publicreplay";
  * docs/plans/2026-07-25-community-lane-v2.md
  */
 
-export const UPSTREAM_REPO = "keisuke70/laplacebench";
+export const UPSTREAM_REPO = "CordMark/laplacebench";
 
 export interface SubmitDeps {
   /** Run a command; throws on non-zero exit. */
